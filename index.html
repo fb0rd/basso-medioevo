@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>La rinascita dell’Occidente dopo l’anno Mille</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&family=IM+Fell+English:ital@0;1&family=UnifrakturCook:wght@700&display=swap">
+<style>
+/* Il menu generale: stessa pergamena, stessi caratteri e stessi colori delle cinque aree. */
+:root{
+  --perg:#efe0b4; --perg-ombra:#d9c18a; --perg-chiara:#f7edcf; --inchiostro:#2a1b10; --minio:#a23a22; --lapislazzuli:#2f5f86;
+  --oro:#c4932a; --foglia:#5d7d36; --terra:#8a5330; --ok:#3f6f2a; --ko:#9c2f1c;
+  --font-titoli:"IM Fell English","Palatino Linotype",Georgia,serif;
+  --font-testo:"Crimson Pro",Georgia,"Times New Roman",serif;
+  --font-iniziale:"UnifrakturCook","IM Fell English",Georgia,serif;
+  color-scheme:light;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;color:var(--inchiostro);font-family:var(--font-testo);font-size:18px;line-height:1.4;
+  background:radial-gradient(ellipse at 50% 40%,#e8d6a5,#d2b97c 70%,#b99a5c);overflow:hidden}
+button{font-family:inherit;font-size:1rem;color:inherit}
+:focus-visible{outline:3px solid var(--lapislazzuli);outline-offset:2px}
+.btn{border:2px solid var(--inchiostro);background:var(--perg);padding:5px 12px;cursor:pointer;line-height:1.2;box-shadow:2px 2px 0 var(--inchiostro)}
+.btn:hover{background:var(--perg-chiara)}
+.btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--inchiostro)}
+.btn.primario{background:var(--minio);color:var(--perg-chiara);font-weight:700}
+.btn.primario:hover{background:#8d2f1a}
+.btn.piccolo{padding:3px 9px;font-size:.92rem}
+.pix{image-rendering:pixelated;image-rendering:crisp-edges;display:block}
+
+/* la schermata del menu */
+#menu{position:fixed;inset:0;overflow:auto;display:grid;place-items:center;padding:14px max(14px,env(safe-area-inset-right,0px)) 14px max(14px,env(safe-area-inset-left,0px))}
+.foglio{width:min(1240px,100%);background:
+  radial-gradient(ellipse at 20% 0%,var(--perg-chiara),transparent 60%),
+  radial-gradient(ellipse at 100% 100%,var(--perg-ombra),transparent 55%),var(--perg);
+  border:3px solid var(--inchiostro);box-shadow:0 0 0 6px var(--perg),0 0 0 8px var(--oro),0 18px 40px rgba(0,0,0,.35);padding:26px 36px 20px}
+.sopra{font-size:.85rem;letter-spacing:.14em;text-transform:uppercase;color:var(--minio);font-weight:700;margin:0 0 4px}
+h1{font-family:var(--font-titoli);font-weight:400;font-size:2.5rem;line-height:1.05;margin:0;text-wrap:balance}
+.filetto{height:8px;margin:14px 0 18px;background:repeating-linear-gradient(90deg,var(--lapislazzuli) 0 14px,var(--minio) 14px 28px);border-top:1.5px solid var(--inchiostro);border-bottom:1.5px solid var(--inchiostro);opacity:.9}
+.presenta{margin:0 0 30px;font-size:1.22rem;line-height:1.38}
+.iniziale{float:left;font-family:var(--font-iniziale);font-size:3rem;line-height:.82;color:var(--minio);background:var(--oro);border:2px solid var(--inchiostro);padding:6px 8px 4px;margin:2px 10px 0 0}
+.aree{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:20px;clear:both}
+.area{position:relative;background:var(--perg-chiara);border:2px solid var(--inchiostro);padding:16px 12px 16px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;min-width:0}
+.area.consigliata{box-shadow:0 0 0 3px var(--perg),0 0 0 5px var(--oro),0 0 18px 4px rgba(196,147,42,.55)}
+.area .consiglio{position:absolute;top:-11px;left:50%;transform:translateX(-50%);white-space:nowrap;background:var(--oro);border:1.5px solid var(--inchiostro);font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:0 8px}
+.area .pix{width:68px;height:68px;margin-top:4px}
+.area .lettera{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--minio);font-weight:700}
+.area h2{font-family:var(--font-titoli);font-weight:400;font-size:1.22rem;line-height:1.1;margin:0;text-wrap:balance}
+.area .tema{font-size:.9rem;color:var(--terra);font-style:italic;line-height:1.2;flex:1}
+.area .stato{font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;border:1.5px solid currentColor;padding:0 8px;color:var(--terra)}
+.area .stato.corso{color:var(--lapislazzuli)}
+.area .stato.completata{color:var(--ok)}
+.area .punti{font-family:var(--font-titoli);font-size:1.15rem;font-variant-numeric:tabular-nums;min-height:1.5em}
+.piede{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;margin-top:26px;padding-top:14px;border-top:1.5px dashed rgba(42,27,16,.35)}
+.totale{font-family:var(--font-titoli);font-size:1.45rem;font-variant-numeric:tabular-nums}
+.totale small{font-family:var(--font-testo);font-size:.95rem;color:var(--terra)}
+.banner{background:var(--foglia);color:var(--perg-chiara);padding:8px 14px;border:2px solid var(--inchiostro);margin:14px 0 0;font-weight:600;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}
+.azioni{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.firma{font-style:italic;font-size:.8rem;color:var(--terra);opacity:.8;margin:16px 0 0;text-align:center}
+.uova{display:flex;gap:6px;align-items:center;font-size:.95rem;color:var(--terra)}
+.uova i{display:inline-block;width:13px;height:16px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;border:1.5px solid var(--inchiostro);background:var(--perg)}
+.uova i.trovato{background:var(--oro);box-shadow:0 0 6px 1px rgba(196,147,42,.7)}
+.premio.extra{margin-top:10px;padding:8px 12px}
+.premio.extra .pix{width:68px;height:68px}
+.premio.extra h3{font-size:1.2rem}
+.premio.extra .motivo{font-size:.95rem;margin-top:4px}
+
+/* l’area aperta, a tutto schermo */
+#cornice{position:fixed;inset:0;background:#120b06}
+#cornice iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+
+/* il sipario delle transizioni */
+#sipario{position:fixed;inset:0;z-index:50;background:#120b06;color:#efe0b4;display:grid;place-items:center;text-align:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .7s}
+#sipario.su{opacity:1;pointer-events:auto}
+#sipario.vuoto>div{visibility:hidden}
+#sipario .tempo{font-style:italic;font-size:1.3rem;color:#d9c18a;margin:0 0 18px}
+#sipario .sopra{color:#c4932a;font-size:1rem}
+#sipario h2{font-family:var(--font-titoli);font-weight:400;font-size:2.6rem;line-height:1.1;margin:0;text-wrap:balance}
+#sipario .filetto{width:min(360px,70vw);margin:16px auto 0}
+
+/* i titoli di testa */
+#titoli{position:fixed;inset:0;z-index:60;background:#0b0705;color:#ecd98f;display:grid;place-items:center;text-align:center;padding:24px;transition:opacity .9s;cursor:pointer;overflow:hidden}
+#titoli::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 38%,#b3301c,#8a1f12 55%,#5a120a);opacity:0;transition:opacity 1.4s}
+#titoli[data-fase="titolo"]::before{opacity:1}
+#titoli.via{opacity:0;pointer-events:none}
+#titoli>*{grid-area:1/1;position:relative;opacity:0;transition:opacity 1.2s;pointer-events:none;margin:0}
+#titoli[data-fase="a"] .t-a,#titoli[data-fase="b"] .t-b,#titoli[data-fase="titolo"] .t-titolo,#titoli[data-fase="attesa"] .t-avvio{opacity:1}
+#titoli[data-fase="attesa"] .t-avvio span{animation:t-batte 1.8s ease-in-out infinite}
+#titoli:not([data-fase="attesa"]):not([data-fase="titolo"]){cursor:default}
+.t-credito{font-family:var(--font-titoli);font-style:italic;font-size:clamp(1.5rem,3.4vw,2.6rem);line-height:1.35;max-width:22em;text-wrap:balance;text-shadow:0 0 18px rgba(236,217,143,.25)}
+.t-credito span{display:block;font-size:.72em;margin-top:.5em;color:#cdb96f}
+.t-b{font-size:clamp(1.2rem,2.5vw,1.9rem)}
+.t-titolo{display:grid;justify-items:center;gap:clamp(8px,1.6vh,18px);width:100%}
+.t-sopra{font-size:.9rem;letter-spacing:.2em;text-transform:uppercase;color:#f2c14a;font-weight:700;margin:0}
+.t-titolo h1{font-family:var(--font-titoli);font-weight:400;font-size:clamp(1.9rem,5vw,3.9rem);line-height:1.04;color:#fbe8a6;text-shadow:3px 3px 0 #3a0d08,0 0 26px rgba(251,232,166,.28);margin:0}
+.t-foto{width:min(1040px,94vw,calc((100vh - 300px) * 2.58));border:3px solid #2a1b10;box-shadow:0 0 0 5px #f2c14a,0 0 0 8px #2a1b10,0 16px 34px rgba(0,0,0,.5);background:#efe0b4;line-height:0}
+.t-foto canvas{display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges}
+.t-premi{font-family:var(--font-titoli);font-style:italic;font-size:clamp(1.05rem,2vw,1.45rem);color:#fbe8a6;margin:0}
+#titoli[data-fase="titolo"] .t-premi span{animation:t-batte 1.8s ease-in-out infinite}
+.t-dito{display:none}
+@media (pointer:coarse){.t-tasto{display:none}.t-dito{display:inline}}
+@keyframes t-batte{0%,100%{opacity:.35}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){#titoli .t-premi span{animation:none}}
+.t-avvio{font-size:clamp(1.15rem,2.2vw,1.6rem)}
+
+/* le finestre: conferme, schermata finale, strumento della docente */
+.velo{position:fixed;inset:0;z-index:30;background:rgba(42,27,16,.55);display:grid;place-items:center;padding:16px}
+.pagina{position:relative;width:min(640px,100%);max-height:100%;overflow:auto;background:
+  radial-gradient(ellipse at 20% 0%,var(--perg-chiara),transparent 60%),
+  radial-gradient(ellipse at 100% 100%,var(--perg-ombra),transparent 55%),var(--perg);
+  border:3px solid var(--inchiostro);box-shadow:0 0 0 6px var(--perg),0 0 0 8px var(--oro),0 18px 40px rgba(0,0,0,.45);padding:22px 26px 20px}
+.pagina:focus{outline:none}
+.pagina h2{font-family:var(--font-titoli);font-weight:400;font-size:1.9rem;line-height:1.1;margin:0 0 4px;text-wrap:balance}
+.pagina p{margin:0 0 10px}
+.fine{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;align-items:center;margin-top:14px}
+.pagina.larga{width:min(980px,100%)}
+.esito{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px 26px;align-items:start}
+.esito ul{list-style:none;margin:6px 0 0;padding:0}
+.esito li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dotted var(--terra);padding:2px 0;font-variant-numeric:tabular-nums}
+.tot{font-family:var(--font-titoli);font-size:2rem;font-variant-numeric:tabular-nums}
+.tot small{font-family:var(--font-testo);font-size:1rem;color:var(--terra)}
+.premio{background:var(--perg-chiara);border:2px solid var(--inchiostro);padding:12px 14px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:center}
+.premio .pix{width:102px;height:102px;grid-row:1/3}
+.premio .fascia{font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;color:var(--minio);font-weight:700}
+.premio h3{font-family:var(--font-titoli);font-weight:400;font-size:1.5rem;line-height:1.1;margin:0}
+.premio .motivo{grid-column:1/-1;margin:6px 0 0;font-style:italic}
+.docente label{display:grid;grid-template-columns:5.2em minmax(0,1fr) 5em auto;gap:8px;align-items:center;margin:4px 0}
+.docente input{font:inherit;padding:1px 6px;border:1.5px solid var(--inchiostro);background:var(--perg-chiara);width:100%}
+@media (max-width:980px){
+  body{overflow:auto} #menu{position:static;display:block;min-height:100%}
+  .aree{grid-template-columns:repeat(2,minmax(0,1fr))}
+  h1{font-size:1.9rem}
+  .esito{grid-template-columns:1fr}
+}
+@media (max-width:520px){
+  body{font-size:17px}
+  .foglio{padding:16px 14px}
+  .aree{grid-template-columns:1fr}
+  .area{flex-direction:row;flex-wrap:wrap;text-align:left;justify-content:flex-start}
+  .area .tema{flex:1 1 100%}
+  .pagina{padding:16px 14px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<main id="menu">
+  <div class="foglio">
+    <p class="sopra">Unità 1 · Il Basso Medioevo · un ripasso in cinque aree</p>
+    <h1>La rinascita dell’Occidente dopo l’anno Mille</h1>
+    <div class="filetto"></div>
+    <p class="presenta"><span class="iniziale">D</span>opo l’anno Mille l’Europa cambia volto: i campi rendono di più, i boschi arretrano, tornano i mercati, le città si riempiono e imparano a governarsi da sole. In questo gioco ripassi la <b>rinascita dell’Occidente</b>, dalle campagne al Comune, seguendo una famiglia per tre generazioni: un contadino, suo figlio Bruno e suo nipote Martino. Ogni area ha i suoi luoghi, le sue fonti e i suoi esercizi: completale tutte e cinque, meglio se <b>in ordine dalla A alla E</b>, e scopri quale riconoscimento ti sei meritato.</p>
+    <div class="aree" id="aree"></div>
+    <div class="banner" id="tutte" hidden><span>Hai completato tutte e cinque le aree: il percorso è concluso!</span><button class="btn" id="btnFinale" type="button">Vai alla schermata finale</button></div>
+    <div class="piede">
+      <div class="totale" id="totale"></div>
+      <div class="uova" id="uova" aria-live="polite"></div>
+      <div class="azioni"><button class="btn piccolo" id="btnMusica" type="button" aria-pressed="true" title="Musica del menu">Musica: sì</button><button class="btn piccolo" id="btnAzzera" type="button">Ricomincia da capo</button></div>
+    </div>
+    <p class="firma">Sviluppato in Claude dal prof. Francesco Bordoni, per i suoi studenti (ottobre/novembre 2026)</p>
+  </div>
+</main>
+<audio id="musica" src="media/intro.mp3" loop preload="auto"></audio>
+
+<div id="cornice" hidden></div>
+<div id="sipario" aria-live="polite"><div><p class="tempo" id="sipTempo" hidden></p><p class="sopra" id="sipSopra"></p><h2 id="sipTitolo"></h2><div class="filetto"></div></div></div>
+<div id="titoli" hidden>
+  <p class="t-premi t-avvio"><span class="t-tasto">Premi un tasto qualsiasi</span><span class="t-dito">Tocca lo schermo</span></p>
+  <p class="t-credito t-a">Bordoni &amp; Co.<br><span>presenta</span></p>
+  <p class="t-credito t-b">un’avventura interattiva amorevolmente curata, cesellata e generata con Claude<br>per il ripasso di storia della classe 3ACAT<br><span>a.s. 2026/27</span></p>
+  <div class="t-titolo">
+    <p class="t-sopra">Unità 1 · Il Basso Medioevo</p>
+    <h1>La rinascita dell’Occidente<br>dopo l’anno Mille</h1>
+    <div class="t-foto" id="titoliFoto" role="img" aria-label="Foto di gruppo in pixel art: davanti al mulino, alla selva, alle tende della fiera, alle mura con il porto e al palazzo del Comune stanno in fila i personaggi delle cinque aree, dalla guardia del castello al viandante, da Bruno e Agnese con il piccolo Martino fino a Martino notaio, al podestà e al vescovo"></div>
+    <p class="t-premi"><span class="t-tasto">Premi un tasto qualsiasi per continuare</span><span class="t-dito">Tocca lo schermo per continuare</span></p>
+  </div>
+</div>
+<div class="velo" id="velo" hidden><div class="pagina" id="pagina" role="dialog" aria-modal="true" aria-labelledby="finTitolo" tabindex="-1"></div></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   LE CINQUE AREE E I PREMI
+   I testi di questa sezione (presentazione, temi, premi e motivazioni) sono scritti per il menu: la docente può correggerli qui.
+   ===================================================================== */
+const AREE = [
+  { id: 'A', file: 'aree/area_A.html', titolo: 'Campagne in rinascita', tema: 'Aratro pesante, rotazione triennale, mulino e fabbro', max: 155 },
+  { id: 'B', file: 'aree/area_B.html', titolo: 'Campagne in espansione', tema: 'Disboscamento, bonifica, borghi nuovi, contadini liberi', max: 155 },
+  { id: 'C', file: 'aree/area_C.html', titolo: 'La rinascita dei commerci', tema: 'Mercato, fiera, commenda e cambiavalute', max: 135 },
+  { id: 'D', file: 'aree/area_D.html', titolo: 'La rinascita delle città', tema: 'Mura, borghesia, Arti e repubbliche marinare', max: 155 },
+  { id: 'E', file: 'aree/area_E.html', titolo: 'Il Comune', tema: 'Ceti urbani, consoli, podestà e Capitano del popolo', max: 200 }
+];
+const AREA = id => AREE.find(a => a.id === id);
+/* i sette premi, dal più prezioso: soglia = percentuale minima sul totale */
+const PREMI = [
+  { soglia: 100, fascia: 'Eccellente', icona: 'privilegio', nome: 'Il privilegio con il sigillo d’oro',
+    motivo: 'I consoli, il podestà e il Capitano del popolo, riuniti nell’Arengo, ti concedono questo privilegio, munito del sigillo d’oro del Comune: nessuno ha fatto meglio di te.' },
+  { soglia: 95, fascia: 'Ottimo', icona: 'vetrata', nome: 'La vetrata della cattedrale',
+    motivo: 'Il Comune e i canonici fanno dipingere una vetrata con il tuo nome, perché chi entra in cattedrale si ricordi di te.' },
+  { soglia: 90, fascia: 'Distinto', icona: 'gonfalone', nome: 'Il gonfalone del popolo',
+    motivo: 'Il popolo di Francavilla ti affida il suo gonfalone: lo porterai in piazza nei giorni di festa e in quelli di pericolo.' },
+  { soglia: 80, fascia: 'Buono', icona: 'seggio', nome: 'Un seggio nel Consiglio',
+    motivo: 'Per voto dei cittadini siedi nel Consiglio del Comune: la tua voce conterà quando si decideranno le tasse, le mura e la pace.' },
+  { soglia: 70, fascia: 'Discreto', icona: 'insegna', nome: 'L’insegna di mastro',
+    motivo: 'Esaminata la tua opera, l’Arte ti riconosce mastro: puoi aprire bottega sulla via e appendere la tua insegna.' },
+  { soglia: 60, fascia: 'Sufficiente', icona: 'matricola', nome: 'La matricola dell’Arte',
+    motivo: 'I priori dell’Arte della Lana ti iscrivono nel libro della matricola: da oggi sei dei nostri, con i doveri e i diritti di ogni lavorante.' },
+  { soglia: 0, fascia: 'Insufficiente', icona: 'scodella', nome: 'La scodella del garzone',
+    motivo: 'Il mastro ti tiene a bottega come garzone: vitto, alloggio e una scodella tutta tua. Hai ancora molto da imparare: rimettiti in cammino e riprova, ché nessuno nasce mastro.' }
+];
+const premioPer = (punti, max) => PREMI.find(p => punti * 100 >= p.soglia * max);
+/* i tre premi supplementari, per chi trova gli easter egg nascosti nelle aree (con 2 o meno: nessun premio) */
+const PREMI_UOVA = [
+  { minimo: 5, icona: 'chiave', nome: 'La chiave d’oro della città',
+    motivo: 'Non c’è angolo di queste terre che tu non abbia esplorato: Francavilla ti consegna la chiave d’oro delle sue porte.' },
+  { minimo: 4, icona: 'lanterna', nome: 'La lanterna d’ottone',
+    motivo: 'Chi cerca negli angoli bui ha bisogno di luce: con quattro scoperte ti sei meritato la lanterna delle guardie di notte.' },
+  { minimo: 3, icona: 'bisaccia', nome: 'La bisaccia del viandante curioso',
+    motivo: 'Hai lasciato la strada maestra tre volte, e tre volte ne è valsa la pena: tieni questa bisaccia per le prossime scoperte.' }
+];
+const premioUova = n => PREMI_UOVA.find(p => n >= p.minimo) || null;
+
+/* =====================================================================
+   PIXEL ART: icone delle aree e dei premi, griglia 32×32 con contorno scuro, su fondo bruno con cornice (come i ritratti)
+   ===================================================================== */
+const INK = '#2a1b10';
+const DISEGNI = {
+  A: r => { r(15, 12, 2, 16, '#8a7a30'); for (let i = 0; i < 5; i++) { r(11, 5 + i * 3, 4, 3, '#e0bf4c'); r(17, 5 + i * 3, 4, 3, '#e0bf4c'); r(12, 6 + i * 3, 2, 1, '#f3dc7a'); r(18, 6 + i * 3, 2, 1, '#f3dc7a'); } r(15, 2, 2, 4, '#e0bf4c'); r(13, 24, 2, 2, '#7da446'); r(17, 22, 3, 2, '#7da446'); },
+  B: r => { r(4, 25, 24, 2, '#5d7d36'); r(6, 5, 12, 10, '#3f7a35'); r(8, 3, 8, 2, '#3f7a35'); r(4, 8, 2, 5, '#3f7a35'); r(18, 7, 2, 6, '#3f7a35'); r(8, 6, 4, 3, '#5c9a48'); r(11, 15, 2, 10, '#6b3f22'); r(20, 20, 6, 5, '#a5693c'); r(20, 19, 6, 1, '#e2cb90'); r(22, 10, 1, 9, '#6b3f22'); r(23, 10, 3, 4, '#9aa1a8'); },
+  C: r => { r(11, 5, 10, 22, '#f2c14a'); r(8, 8, 16, 16, '#f2c14a'); r(9, 6, 14, 20, '#f2c14a'); r(6, 11, 20, 10, '#f2c14a'); r(11, 9, 10, 14, '#e0a92e'); r(9, 11, 14, 10, '#e0a92e'); r(15, 10, 2, 12, '#8a5a12'); r(10, 15, 12, 2, '#8a5a12'); r(10, 7, 4, 2, '#fbe59a'); },
+  D: r => { r(4, 17, 24, 10, '#b9b2a3'); [4, 9, 20, 25].forEach(x => r(x, 14, 3, 3, '#b9b2a3')); r(12, 6, 8, 21, '#d6cfbf'); [12, 15, 18].forEach(x => r(x, 3, 2, 3, '#d6cfbf')); r(14, 20, 4, 7, '#4a3420'); r(15, 10, 2, 4, INK); r(5, 20, 5, 1, '#9a9284'); r(21, 22, 5, 1, '#9a9284'); r(5, 24, 4, 1, '#9a9284'); },
+  E: r => { r(8, 5, 8, 15, '#f2c14a'); r(16, 5, 8, 15, '#2f5f86'); r(9, 20, 7, 2, '#f2c14a'); r(16, 20, 7, 2, '#2f5f86'); r(11, 22, 5, 2, '#f2c14a'); r(16, 22, 5, 2, '#2f5f86'); r(13, 24, 3, 2, '#f2c14a'); r(16, 24, 3, 2, '#2f5f86'); r(15, 26, 2, 1, '#f2c14a'); r(10, 10, 4, 9, '#a23a22'); r(10, 8, 1, 2, '#a23a22'); r(13, 8, 1, 2, '#a23a22'); r(11, 15, 2, 4, INK); r(18, 13, 5, 2, '#f4e6bc'); r(19, 15, 3, 1, '#f4e6bc'); r(20, 8, 1, 5, '#f4e6bc'); r(21, 9, 2, 3, '#f4e6bc'); r(8, 3, 16, 2, '#c9c2b2'); [8, 12, 16, 20].forEach(x => r(x + 1, 2, 2, 1, '#c9c2b2')); },
+  scodella: r => { r(7, 16, 18, 2, '#8a5330'); r(8, 18, 16, 3, '#a5693c'); r(10, 21, 12, 2, '#8a5330'); r(12, 23, 8, 2, '#6b3f22'); r(9, 16, 14, 1, '#e8c97a'); r(21, 9, 2, 7, '#c9b28a'); r(20, 6, 4, 4, '#c9b28a'); r(11, 9, 1, 4, '#f2ead2'); r(12, 7, 1, 3, '#f2ead2'); r(15, 10, 1, 4, '#f2ead2'); r(16, 8, 1, 3, '#f2ead2'); },
+  matricola: r => { r(4, 22, 24, 2, '#a23a22'); r(5, 9, 10, 14, '#f4e6bc'); r(17, 9, 10, 14, '#f4e6bc'); r(15, 8, 2, 16, '#8a5330'); [12, 15, 18].forEach(y => { r(7, y, 6, 1, '#6b4a2a'); r(19, y, 6, 1, '#6b4a2a'); }); r(7, 20, 4, 1, '#6b4a2a'); r(22, 19, 3, 3, '#a23a22'); r(15, 24, 2, 4, '#c4932a'); },
+  insegna: r => { r(6, 5, 2, 22, '#3a3a3a'); r(6, 5, 19, 2, '#3a3a3a'); r(8, 7, 3, 1, '#3a3a3a'); r(12, 7, 1, 4, '#3a3a3a'); r(22, 7, 1, 4, '#3a3a3a'); r(10, 11, 15, 12, '#c4932a'); r(11, 12, 13, 10, '#f0dc9c'); r(15, 14, 5, 6, '#2f5f86'); r(14, 15, 7, 4, '#2f5f86'); r(16, 15, 2, 1, '#6f9bbf'); r(20, 19, 2, 2, '#2f5f86'); },
+  seggio: r => { r(10, 4, 12, 15, '#8a5330'); r(12, 6, 8, 10, '#a23a22'); r(14, 8, 4, 5, '#c4932a'); r(9, 3, 2, 3, '#c4932a'); r(21, 3, 2, 3, '#c4932a'); r(7, 14, 2, 6, '#6b3f22'); r(23, 14, 2, 6, '#6b3f22'); r(7, 19, 18, 3, '#a5693c'); r(9, 22, 2, 6, '#6b3f22'); r(21, 22, 2, 6, '#6b3f22'); r(11, 22, 10, 1, '#6b3f22'); },
+  gonfalone: r => { r(7, 4, 2, 25, '#6b3f22'); r(6, 2, 4, 2, '#f2c14a'); r(9, 5, 16, 15, '#a23a22'); r(9, 20, 5, 4, '#a23a22'); r(20, 20, 5, 4, '#a23a22'); r(14, 20, 6, 2, '#a23a22'); r(16, 7, 2, 11, '#f4e6bc'); r(12, 11, 10, 2, '#f4e6bc'); r(9, 5, 16, 1, '#f2c14a'); },
+  vetrata: r => { r(9, 9, 14, 19, '#77726a'); r(11, 6, 10, 3, '#77726a'); r(13, 4, 6, 2, '#77726a'); r(15, 3, 2, 1, '#77726a'); r(11, 10, 4, 8, '#2f5f86'); r(17, 10, 4, 8, '#a23a22'); r(11, 19, 4, 7, '#d8a43a'); r(17, 19, 4, 7, '#5d7d36'); r(13, 6, 6, 3, '#7a4b8a'); r(12, 11, 1, 3, '#7fb0d6'); r(18, 11, 1, 3, '#d87a66'); r(12, 20, 1, 3, '#f3dc7a'); },
+  bisaccia: r => { r(11, 5, 2, 8, '#6b3f22'); r(19, 5, 2, 8, '#6b3f22'); r(11, 4, 10, 2, '#6b3f22'); r(7, 12, 18, 14, '#a5693c'); r(8, 26, 16, 1, '#8a5330'); r(7, 12, 18, 6, '#8a5330'); r(9, 18, 14, 1, '#6b3f22'); r(15, 16, 2, 5, '#f2c14a'); r(9, 21, 3, 3, '#c08a55'); r(20, 21, 3, 3, '#c08a55'); },
+  lanterna: r => { r(14, 3, 4, 2, '#c4932a'); r(15, 5, 2, 2, '#c4932a'); r(11, 7, 10, 2, '#e0a92e'); r(10, 9, 12, 14, '#3a2c1c'); r(12, 10, 8, 12, '#fbe59a'); r(14, 13, 4, 7, '#f2a23a'); r(15, 15, 2, 5, '#fff3c4'); r(10, 9, 2, 14, '#e0a92e'); r(20, 9, 2, 14, '#e0a92e'); r(15, 9, 2, 14, '#c4932a'); r(9, 23, 14, 2, '#e0a92e'); r(11, 25, 10, 2, '#c4932a'); },
+  chiave: r => { r(6, 8, 10, 10, '#f2c14a'); r(8, 6, 6, 14, '#f2c14a'); r(9, 10, 4, 6, '#5a4634'); r(16, 12, 12, 3, '#f2c14a'); r(22, 15, 2, 4, '#f2c14a'); r(26, 15, 2, 5, '#f2c14a'); r(8, 7, 3, 2, '#fbe59a'); r(16, 12, 12, 1, '#fbe59a'); r(7, 17, 8, 1, '#c4932a'); },
+  privilegio: r => { r(6, 4, 20, 19, '#f4e6bc'); r(5, 3, 22, 2, '#e2cb90'); r(5, 22, 22, 2, '#e2cb90'); r(9, 8, 14, 1, '#6b4a2a'); r(9, 11, 12, 1, '#6b4a2a'); r(9, 14, 14, 1, '#6b4a2a'); r(9, 17, 8, 1, '#6b4a2a'); r(9, 7, 2, 3, '#a23a22'); r(13, 22, 2, 6, '#a23a22'); r(18, 22, 2, 5, '#a23a22'); r(13, 23, 7, 6, '#f2c14a'); r(14, 22, 5, 8, '#f2c14a'); r(15, 24, 3, 4, '#c4932a'); r(16, 25, 1, 2, '#fbe59a'); }
+};
+const ICONE = {};
+function icona(nome) {
+  if (ICONE[nome]) return ICONE[nome];
+  const c = document.createElement('canvas'); c.width = c.height = 32; const g = c.getContext('2d');
+  DISEGNI[nome]((x, y, w, h, col) => { g.fillStyle = col; g.fillRect(x, y, w, h); });
+  // contorno scuro attorno alla figura
+  const im = g.getImageData(0, 0, 32, 32), d = im.data, pieno = (x, y) => x >= 0 && y >= 0 && x < 32 && y < 32 && d[(y * 32 + x) * 4 + 3] > 0, bordo = [];
+  for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) if (!pieno(x, y) && (pieno(x - 1, y) || pieno(x + 1, y) || pieno(x, y - 1) || pieno(x, y + 1))) bordo.push([x, y]);
+  g.fillStyle = INK; bordo.forEach(([x, y]) => g.fillRect(x, y, 1, 1));
+  const f = document.createElement('canvas'); f.width = f.height = 34; const h = f.getContext('2d');
+  h.fillStyle = INK; h.fillRect(0, 0, 34, 34); h.fillStyle = '#c4932a'; h.fillRect(1, 1, 32, 32); h.fillStyle = '#5a4634'; h.fillRect(2, 2, 30, 30); h.fillStyle = '#6a543f'; h.fillRect(2, 2, 30, 14);
+  h.drawImage(c, 1, 1);
+  return ICONE[nome] = f;
+}
+function imgIcona(nome, alt) { const im = document.createElement('img'); im.className = 'pix'; im.src = icona(nome).toDataURL(); im.alt = alt || ''; return im; }
+
+/* =====================================================================
+   LO STATO DELLA PARTITA: in localStorage se c’è, altrimenti solo in memoria (vale per la sessione)
+   ===================================================================== */
+const CHIAVE = 'rinascita-occidente-partita-v1';
+const statoNuovo = () => ({ v: 1, aree: Object.fromEntries(AREE.map(a => [a.id, { stato: 'nuova', punti: 0, max: a.max }])), uova: [], finaleVisto: false });
+const uovaTrovate = () => PARTITA.uova.length;
+let PARTITA = statoNuovo();
+function carica() {
+  try { const t = window.localStorage.getItem(CHIAVE); if (!t) return; const p = JSON.parse(t); if (!p || p.v !== 1 || !p.aree) return;
+    const n = statoNuovo(); AREE.forEach(a => { const s = p.aree[a.id]; if (s && ['nuova', 'corso', 'completata'].includes(s.stato)) n.aree[a.id] = { stato: s.stato === 'corso' ? 'nuova' : s.stato, punti: Math.min(+s.punti || 0, a.max), max: a.max }; });   // un’area lasciata a metà riparte da capo: le aree non salvano i loro progressi
+    n.uova = Array.isArray(p.uova) ? AREE.map(a => a.id).filter(id => p.uova.includes(id)) : [];
+    n.finaleVisto = !!p.finaleVisto; PARTITA = n;
+  } catch (e) { /* localStorage non disponibile o dati illeggibili: si parte da capo */ }
+}
+function salva() { try { window.localStorage.setItem(CHIAVE, JSON.stringify(PARTITA)); } catch (e) { /* la partita vale solo per questa sessione */ } }
+const completate = () => AREE.filter(a => PARTITA.aree[a.id].stato === 'completata');
+const puntiTotali = () => completate().reduce((s, a) => s + PARTITA.aree[a.id].punti, 0);
+const maxTotale = () => AREE.reduce((s, a) => s + PARTITA.aree[a.id].max, 0);
+const prossimaConsigliata = () => AREE.find(a => PARTITA.aree[a.id].stato !== 'completata') || null;
+
+/* =====================================================================
+   IL MENU
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+const ETICHETTE_STATO = { nuova: 'Da fare', corso: 'In corso', completata: 'Completata' };
+function disegnaMenu() {
+  const box = $('#aree'); box.innerHTML = ''; const cons = prossimaConsigliata();
+  AREE.forEach(a => {
+    const s = PARTITA.aree[a.id], viva = VIVA && VIVA.id === a.id, card = el('section', 'area' + (cons && cons.id === a.id ? ' consigliata' : ''));
+    card.dataset.area = a.id;
+    if (cons && cons.id === a.id) card.append(el('span', 'consiglio', completate().length ? 'Prossima tappa' : 'Comincia da qui'));
+    card.append(imgIcona(a.id, ''), el('div', 'lettera', 'Area ' + a.id), el('h2', '', a.titolo), el('div', 'tema', a.tema));
+    card.append(el('div', 'stato ' + s.stato, ETICHETTE_STATO[s.stato]));
+    card.append(el('div', 'punti', s.stato === 'completata' ? `${s.punti} / ${s.max} punti` : ''));
+    const b = el('button', 'btn' + (cons && cons.id === a.id ? ' primario' : ''), viva ? 'Riprendi' : s.stato === 'completata' ? 'Rigioca' : 'Entra'); b.type = 'button';
+    b.setAttribute('aria-label', `${b.textContent}: Area ${a.id}, ${a.titolo}`); b.onclick = () => chiediArea(a.id); card.append(b);
+    box.append(card);
+  });
+  const n = completate().length;
+  $('#totale').innerHTML = `Punteggio generale: <b>${puntiTotali()}</b> / ${maxTotale()} <small>· aree completate: ${n} su ${AREE.length}</small>`;
+  $('#tutte').hidden = n < AREE.length;
+  // gli easter egg: quanti, non dove
+  const u = uovaTrovate(); $('#uova').innerHTML = `<span>Easter egg trovati: <b>${u}</b> / ${AREE.length}</span>` + AREE.map((a, i) => `<i class="${i < u ? 'trovato' : ''}"></i>`).join('');
+}
+
+/* le finestre del menu */
+let chiusuraVelo = null;
+function apriVelo(larga, costruisci, alChiudi) {
+  const pag = $('#pagina'); pag.innerHTML = ''; pag.className = 'pagina' + (larga ? ' larga' : ''); costruisci(pag);
+  chiusuraVelo = alChiudi || null; $('#velo').hidden = false; pag.scrollTop = 0;
+  setTimeout(() => { const b = pag.querySelector('.fine .btn.primario') || pag.querySelector('.btn'); if (b) b.focus(); else pag.focus(); }, 30);
+}
+function chiudiVelo() { if ($('#velo').hidden) return; $('#velo').hidden = true; const f = chiusuraVelo; chiusuraVelo = null; if (f) f(); }
+function testata(pag, sopra, titolo) { const h = el('h2', '', titolo); h.id = 'finTitolo'; pag.append(el('p', 'sopra', sopra), h, el('div', 'filetto')); }
+function pulsanti(pag, lista) { const f = el('div', 'fine'); lista.forEach(([t, primario, fn]) => { const b = el('button', 'btn' + (primario ? ' primario' : ''), t); b.type = 'button'; b.onclick = fn; f.append(b); }); pag.append(f); return f; }
+function conferma(sopra, titolo, righe, si, no, alSi) {
+  apriVelo(false, pag => { testata(pag, sopra, titolo); righe.forEach(r => pag.append(el('p', '', r))); pulsanti(pag, [[no, false, chiudiVelo], [si, true, () => { chiudiVelo(); alSi(); }]]); });
+}
+
+/* =====================================================================
+   APRIRE UN’AREA: l’iframe a tutto schermo, il sipario, i messaggi
+   ===================================================================== */
+let VIVA = null;              // l’area caricata nell’iframe: { id, iframe, pronta }; ne resta viva una sola alla volta
+const sipario = { el: $('#sipario'), su: false };
+function alzaSipario(sopra, titolo, tempo, subito) {
+  $('#sipSopra').textContent = sopra; $('#sipTitolo').textContent = titolo; $('#sipTempo').textContent = tempo || ''; $('#sipTempo').hidden = !tempo;
+  if (subito) { sipario.el.style.transition = 'none'; sipario.el.classList.add('su'); sipario.el.offsetWidth; sipario.el.style.transition = ''; } else sipario.el.classList.add('su');
+  sipario.su = true;
+}
+function calaSipario() { sipario.el.classList.remove('su'); sipario.su = false; }
+function manda(tipo) { if (VIVA) try { VIVA.iframe.contentWindow.postMessage({ origine: 'menu-rinascita', tipo }, '*'); } catch (e) {} }
+/* =====================================================================
+   I SUONI DEL MENU: la musica (fonti/INTRO.mp3, in media/intro.mp3) e lo squillo di tromba quando si sceglie un’area.
+   Tutto parte solo dopo il primo gesto. Lo squillo è sintetizzato con Web Audio: nessun file in più.
+   ===================================================================== */
+const MUSICA = { el: $('#musica'), attiva: true, vol: 0.55, sfuma: 0 };
+function volumeMusica(arrivo, ms) {
+  clearInterval(MUSICA.sfuma); const a = MUSICA.el, da = a.volume, t0 = Date.now();
+  if (arrivo > 0 && MUSICA.attiva && a.paused) { const p = a.play(); if (p && p.catch) p.catch(() => {}); }
+  MUSICA.sfuma = setInterval(() => { const k = Math.min(1, (Date.now() - t0) / ms); a.volume = Math.max(0, Math.min(1, da + (arrivo - da) * k)); if (k >= 1) { clearInterval(MUSICA.sfuma); if (arrivo === 0) a.pause(); } }, 40);
+}
+const nelMenu = () => !$('#menu').hidden && !sipario.su;
+function avviaMusica() { if (MUSICA.attiva && nelMenu()) volumeMusica(MUSICA.vol, 900); }
+function gestoMenu() { if (typeof TITOLI !== 'undefined' && TITOLI.fase !== 'spenti') return; if (MUSICA.el.paused) { MUSICA.el.volume = 0; avviaMusica(); } }
+window.addEventListener('pointerdown', gestoMenu, true); window.addEventListener('keydown', gestoMenu, true);
+$('#btnMusica').onclick = function () { MUSICA.attiva = !MUSICA.attiva; this.textContent = MUSICA.attiva ? 'Musica: sì' : 'Musica: no'; this.setAttribute('aria-pressed', MUSICA.attiva ? 'true' : 'false'); if (MUSICA.attiva) avviaMusica(); else volumeMusica(0, 300); };
+/* lo squillo di tromba, diverso per ogni area: sommesso nelle campagne dell’Area A, via via più pieno e trionfale fino al Comune.
+   Ogni nota: [frequenza, quando, durata, altre voci (rapporti di frequenza)]; «timpani»: i colpi di tamburo che lo accompagnano */
+const DO4 = 261.63, MI4 = 329.63, SOL4 = 392, DO5 = 523.25, MI5 = 659.25, SOL5 = 783.99, DO6 = 1046.5, SOL3 = 196;
+const SQUILLI = {
+  A: { vol: .085, luce: 1300, note: [[SOL3, 0, .22], [DO4, .26, .62]] },
+  B: { vol: .11, luce: 1900, note: [[DO4, 0, .14], [MI4, .17, .14], [SOL4, .34, .6]] },
+  C: { vol: .15, luce: 2800, note: [[SOL4, 0, .13], [DO5, .15, .13], [MI5, .30, .13], [SOL5, .45, .62]] },
+  D: { vol: .17, luce: 3400, note: [[SOL4, 0, .12, [.5]], [SOL4, .14, .12, [.5]], [DO5, .28, .13, [.8]], [MI5, .43, .13, [.8]], [SOL5, .58, .8, [.8, .667]]], timpani: [0, .58] },
+  E: { vol: .19, luce: 4200, note: [[SOL4, 0, .11, [.5]], [SOL4, .12, .11, [.5]], [SOL4, .24, .11, [.5]], [DO5, .38, .22, [.8, .5]], [MI5, .62, .12, [.8]], [SOL5, .76, .12, [.8]], [MI5, .90, .12, [.8]], [SOL5, 1.04, .2, [.8, .667]], [DO6, 1.28, 1.25, [.75, .625, .5, .25]]], timpani: [0, .38, 1.04, 1.16, 1.28] }
+};
+let AC = null;
+function squillo(area) {
+  try {
+    const S = SQUILLI[area] || SQUILLI.C, C = window.AudioContext || window.webkitAudioContext; if (!C) return; if (!AC) AC = new C(); if (AC.state === 'suspended') AC.resume();
+    const t0 = AC.currentTime + .03, usc = AC.createGain(); usc.gain.value = S.vol; usc.connect(AC.destination);
+    S.note.forEach(([f0, quando, dur, voci]) => [1].concat(voci || []).forEach((rapporto, v) => {
+      const f = f0 * rapporto, t = t0 + quando, g = AC.createGain(), filtro = AC.createBiquadFilter(); filtro.type = 'lowpass'; filtro.Q.value = 2.2;
+      filtro.frequency.setValueAtTime(S.luce * .25, t); filtro.frequency.linearRampToValueAtTime(S.luce, t + .05); filtro.frequency.linearRampToValueAtTime(S.luce * .55, t + dur);
+      const forza = v ? .55 : 1; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(forza, t + .025); g.gain.setValueAtTime(forza * .85, t + dur * .7); g.gain.linearRampToValueAtTime(0, t + dur + .1);
+      [0, 5, -4].forEach((stonatura, i) => { const o = AC.createOscillator(); o.type = i ? 'square' : 'sawtooth'; o.frequency.value = f; o.detune.value = stonatura; const p = AC.createGain(); p.gain.value = i ? .16 : .7;
+        if (dur > .3) { const lfo = AC.createOscillator(), lg = AC.createGain(); lfo.frequency.value = 5.5; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(7, t + dur); lfo.connect(lg); lg.connect(o.detune); lfo.start(t); lfo.stop(t + dur + .15); }
+        o.connect(p); p.connect(filtro); o.start(t); o.stop(t + dur + .15); });
+      filtro.connect(g); g.connect(usc);
+    }));
+    (S.timpani || []).forEach(quando => { const t = t0 + quando, o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(62, t + .22);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(2.2, t + .01); g.gain.exponentialRampToValueAtTime(.001, t + .45); o.connect(g); g.connect(usc); o.start(t); o.stop(t + .5); });
+  } catch (e) { /* senza audio il menu funziona lo stesso */ }
+}
+/* la musica dell’area sul riquadro iniziale: la suona il menu, finché l’area non può suonare da sé (vedi lavoro/ponte.js) */
+const BRANO = { buf: null, src: null, gain: null, inizio: 0, durata: 0, t0: 0, orologio: 0, di: null };
+function fermaBrano(ms) {
+  clearInterval(BRANO.orologio); const s = BRANO.src, g = BRANO.gain; BRANO.src = BRANO.gain = null; if (!s || !AC) return;
+  try { const t = AC.currentTime; g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t); g.gain.linearRampToValueAtTime(0, t + ms / 1000); s.stop(t + ms / 1000 + .05); } catch (e) {}
+}
+function suonaBrano() {      // parte quando il brano è decodificato e l’area è comparsa
+  if (!VIVA || VIVA.branoFatto || !VIVA.mostrata || BRANO.di !== VIVA || !BRANO.buf || !AC) return; VIVA.branoFatto = true;
+  try { if (AC.state === 'suspended') AC.resume();
+    const s = AC.createBufferSource(), g = AC.createGain(), t = AC.currentTime; s.buffer = BRANO.buf; s.loop = true; s.loopStart = BRANO.inizio; s.loopEnd = BRANO.inizio + BRANO.durata;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.75, t + 3); s.connect(g); g.connect(AC.destination); s.start(t + .05, BRANO.inizio); BRANO.src = s; BRANO.gain = g; BRANO.t0 = t + .05;
+    const v = VIVA; BRANO.orologio = setInterval(() => { if (VIVA !== v || !BRANO.src) { clearInterval(BRANO.orologio); return; } try { v.iframe.contentWindow.postMessage({ origine: 'menu-rinascita', tipo: 'tempo', pos: BRANO.inizio + ((AC.currentTime - BRANO.t0) % BRANO.durata + BRANO.durata) % BRANO.durata }, '*'); } catch (e) {} }, 200);
+  } catch (e) { /* senza audio si gioca lo stesso */ }
+}
+function riceviBrano(m, v) {
+  try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; if (!AC) AC = new C();
+    const bin = atob(m.b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    const fatto = buf => { if (VIVA !== v) return; BRANO.buf = buf; BRANO.inizio = m.inizio; BRANO.durata = m.durata; BRANO.di = v; suonaBrano(); };
+    const p = AC.decodeAudioData(u.buffer, fatto, () => {}); if (p && p.catch) p.catch(() => {});
+  } catch (e) {}
+}
+function mostraMenu() {
+  fermaBrano(400);
+  if (VIVA) manda('pausa');
+  $('#cornice').hidden = true; $('#menu').hidden = false; disegnaMenu(); calaSipario(); setTimeout(avviaMusica, 700);
+  const b = document.querySelector('.area.consigliata .btn') || document.querySelector('.area .btn'); if (b) b.focus();
+}
+function mostraArea() {
+  $('#menu').hidden = true; $('#cornice').hidden = false; chiudiVelo();
+  manda('riprendi'); try { VIVA.iframe.focus(); VIVA.iframe.contentWindow.focus(); } catch (e) {}
+}
+function chiediArea(id) {
+  const a = AREA(id), s = PARTITA.aree[id];
+  if (VIVA && VIVA.id === id) { squillo(id); volumeMusica(0, 500); mostraArea(); return; }
+  const apri = () => { squillo(id); apriArea(id); };
+  // un’altra area è aperta e non è finita: aprirne una nuova la fa ripartire da capo
+  const persa = () => { const v = VIVA && PARTITA.aree[VIVA.id]; if (VIVA && VIVA.iniziata && !VIVA.completata) { conferma('Un’area alla volta', `Lasci a metà l’Area ${VIVA.id}?`, [`L’<b>Area ${VIVA.id}</b>, «${AREA(VIVA.id).titolo}», è ancora in corso. Se apri un’altra area, quando tornerai dovrai ricominciarla da capo.`], `Apri l’Area ${id}`, 'Resto qui', apri); } else apri(); };
+  const cons = prossimaConsigliata();
+  if (s.stato !== 'completata' && cons && AREE.indexOf(a) > AREE.indexOf(cons)) {
+    conferma('L’ordine consigliato', `Vuoi saltare all’Area ${id}?`,
+      [`Le cinque aree raccontano una storia sola, che va dalla A alla E: ti consiglio di proseguire con l’<b>Area ${cons.id}</b>, «${cons.titolo}».`, 'Puoi comunque aprire qualsiasi area quando vuoi.'],
+      `Apri lo stesso l’Area ${id}`, `Torno all’Area ${cons.id}`, persa);
+  } else persa();
+}
+function apriArea(id, daPassaggio) {
+  const a = AREA(id);
+  alzaSipario('Area ' + id, a.titolo, daPassaggio && id === 'E' ? 'Vent’anni dopo…' : '', !!daPassaggio); volumeMusica(0, 900);
+  const attesa = daPassaggio ? 2600 : 1500, t0 = Date.now();
+  setTimeout(() => {
+    fermaBrano(300); $('#cornice').innerHTML = ''; const f = document.createElement('iframe'); f.title = `Area ${id}: ${a.titolo}`; f.setAttribute('allow', 'autoplay');
+    VIVA = { id, iframe: f, pronta: false, iniziata: false, completata: false };
+    const mostra = () => { if (!VIVA || VIVA.iframe !== f || VIVA.mostrata) return; VIVA.mostrata = true; setTimeout(() => { mostraArea(); calaSipario(); suonaBrano(); }, Math.max(0, attesa - (Date.now() - t0))); };
+    VIVA.mostra = mostra; f.addEventListener('load', () => setTimeout(mostra, 1200));      // se l’area non manda «pronta», si mostra lo stesso
+    f.src = a.file; $('#cornice').hidden = false; $('#cornice').append(f); $('#menu').hidden = true;
+  }, daPassaggio ? 50 : 720);
+}
+window.addEventListener('message', e => {
+  const m = e.data; if (!m || m.origine !== 'area-rinascita' || !VIVA || e.source !== VIVA.iframe.contentWindow || m.area !== VIVA.id) return;
+  const s = PARTITA.aree[VIVA.id];
+  if (m.tipo === 'pronta') { VIVA.pronta = true; if (m.max > 0) { s.max = m.max; salva(); } VIVA.mostra(); }
+  if (m.tipo === 'stato') {
+    VIVA.iniziata = !!m.iniziata; VIVA.completata = !!m.completata; if (m.max > 0) s.max = m.max;
+    if (m.completata) { s.punti = s.stato === 'completata' ? Math.max(s.punti, m.punti) : m.punti; s.stato = 'completata'; }      // se l’area viene rifatta, vale il punteggio migliore
+    else if (m.iniziata && s.stato === 'nuova') s.stato = 'corso';
+    salva();
+  }
+  if (m.tipo === 'musica' && !VIVA.branoChiesto) { VIVA.branoChiesto = true; riceviBrano(m, VIVA); }
+  if (m.tipo === 'musicaArea') fermaBrano(3000);      // l’area suona da sé: il menu sfuma
+  if (m.tipo === 'uovo') { if (!PARTITA.uova.includes(VIVA.id)) { PARTITA.uova.push(VIVA.id); salva(); } }
+  if (m.tipo === 'menu') { sipario.el.classList.add('vuoto'); alzaSipario('', '', '', true); setTimeout(() => sipario.el.classList.remove('vuoto'), 900); mostraMenu(); if (completate().length === AREE.length && !PARTITA.finaleVisto) apriFinale(); }
+  if (m.tipo === 'passaggio') { const v = AREA(m.verso); if (!v) return; alzaSipario('Area ' + v.id, v.titolo, v.id === 'E' ? 'Vent’anni dopo…' : '', true); $('#cornice').innerHTML = ''; VIVA = null; squillo(v.id); apriArea(v.id, true); }
+});
+
+/* =====================================================================
+   LA SCHERMATA FINALE: punteggi, premio, immagine da salvare, ricominciare da capo
+   ===================================================================== */
+const oggi = () => new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+function apriFinale() {
+  PARTITA.finaleVisto = true; salva();
+  const tot = puntiTotali(), max = maxTotale(), pr = premioPer(tot, max), perc = Math.floor(tot * 100 / max);
+  apriVelo(true, pag => {
+    testata(pag, 'Il percorso è concluso · ' + oggi(), 'La rinascita dell’Occidente dopo l’anno Mille');
+    const g = el('div', 'esito'), sx = el('div', ''), dx = el('div', 'premio');
+    sx.append(el('div', 'tot', `${tot} / ${max} punti <small>· ${perc}%</small>`));
+    const ul = el('ul'); AREE.forEach(a => { const s = PARTITA.aree[a.id]; ul.append(el('li', '', `<span><b>Area ${a.id}</b> · ${a.titolo}</span><span>${s.punti} / ${s.max}</span>`)); }); sx.append(ul);
+    dx.append(imgIcona(pr.icona, 'Pixel art: ' + pr.nome), el('div', 'fascia', pr.fascia), el('h3', '', pr.nome), el('p', 'motivo', pr.motivo));
+    const u = uovaTrovate(), pu = premioUova(u), col = el('div', ''); col.append(dx);
+    sx.append(el('p', '', `Easter egg trovati: <b>${u}</b> su ${AREE.length}${pu ? '' : u < AREE.length ? ' · con almeno tre c’è un premio in più' : ''}`)); sx.lastChild.style.margin = '10px 0 0';
+    if (pu) { const ex = el('div', 'premio extra'); ex.append(imgIcona(pu.icona, 'Pixel art: ' + pu.nome), el('div', 'fascia', `Premio dell’esploratore · ${u} easter egg`), el('h3', '', pu.nome), el('p', 'motivo', pu.motivo)); col.append(ex); }
+    g.append(sx, col); pag.append(g);
+    pulsanti(pag, [['Ricomincia da capo', false, chiediAzzera], ['Torna al menu', false, chiudiVelo], ['Salva l’immagine', true, salvaImmagine]]);
+  });
+}
+/* il PNG: la stessa schermata, ridisegnata su un canvas (nessuna libreria) */
+function disegnaAttestato() {
+  const Wd = 1200, Hd = 800, c = document.createElement('canvas'); c.width = Wd; c.height = Hd; const g = c.getContext('2d');
+  const tot = puntiTotali(), max = maxTotale(), pr = premioPer(tot, max), perc = Math.floor(tot * 100 / max);
+  const TIT = '"IM Fell English","Palatino Linotype",Georgia,serif', TES = '"Crimson Pro",Georgia,"Times New Roman",serif';
+  g.fillStyle = '#efe0b4'; g.fillRect(0, 0, Wd, Hd);
+  let gr = g.createRadialGradient(240, 0, 0, 240, 0, 760); gr.addColorStop(0, '#f7edcf'); gr.addColorStop(1, 'rgba(247,237,207,0)'); g.fillStyle = gr; g.fillRect(0, 0, Wd, Hd);
+  gr = g.createRadialGradient(Wd, Hd, 0, Wd, Hd, 700); gr.addColorStop(0, '#d9c18a'); gr.addColorStop(1, 'rgba(217,193,138,0)'); g.fillStyle = gr; g.fillRect(0, 0, Wd, Hd);
+  g.strokeStyle = '#c4932a'; g.lineWidth = 6; g.strokeRect(13, 13, Wd - 26, Hd - 26); g.strokeStyle = INK; g.lineWidth = 3; g.strokeRect(20, 20, Wd - 40, Hd - 40);
+  g.fillStyle = '#a23a22'; g.font = `700 19px ${TES}`; g.textBaseline = 'alphabetic'; g.fillText(('IL PERCORSO È CONCLUSO · ' + oggi()).toUpperCase().split('').join(' '), 60, 78);
+  g.fillStyle = INK; g.font = `400 54px ${TIT}`; g.fillText('La rinascita dell’Occidente dopo l’anno Mille', 58, 136);
+  for (let x = 60, i = 0; x < Wd - 60; x += 14, i++) { g.fillStyle = i % 2 ? '#a23a22' : '#2f5f86'; g.fillRect(x, 156, Math.min(14, Wd - 60 - x), 8); } g.strokeStyle = INK; g.lineWidth = 1.5; g.strokeRect(60, 156, Wd - 120, 8);
+  // a sinistra: totale e aree
+  g.fillStyle = INK; g.font = `400 50px ${TIT}`; g.fillText(`${tot} / ${max} punti`, 60, 236);
+  g.fillStyle = '#8a5330'; g.font = `400 26px ${TES}`; g.fillText(`${perc}% del punteggio massimo`, 62, 272);
+  AREE.forEach((a, i) => { const s = PARTITA.aree[a.id], y = 330 + i * 46;
+    g.fillStyle = INK; g.font = `700 25px ${TES}`; g.textAlign = 'left'; g.fillText('Area ' + a.id, 60, y); g.font = `400 25px ${TES}`; g.fillText('· ' + a.titolo, 138, y);
+    g.textAlign = 'right'; g.fillText(`${s.punti} / ${s.max}`, 560, y); g.textAlign = 'left';
+    g.strokeStyle = '#8a5330'; g.setLineDash([2, 4]); g.lineWidth = 1; g.beginPath(); g.moveTo(60, y + 11); g.lineTo(560, y + 11); g.stroke(); g.setLineDash([]); });
+  // a destra: il premio
+  const nUova = uovaTrovate(), pu = premioUova(nUova);
+  g.fillStyle = INK; g.font = `400 25px ${TES}`; g.fillText(`Easter egg trovati: ${nUova} su ${AREE.length}`, 60, 330 + AREE.length * 46 + 14);
+  if (pu) {      // il premio dell’esploratore, sotto il premio principale
+    const ex = 610, ey = 596, ew = 530, eh = 128;
+    g.fillStyle = '#f7edcf'; g.fillRect(ex, ey, ew, eh); g.strokeStyle = INK; g.lineWidth = 2.5; g.strokeRect(ex, ey, ew, eh);
+    g.imageSmoothingEnabled = false; g.drawImage(icona(pu.icona), ex + 16, ey + 16, 96, 96); g.imageSmoothingEnabled = true;
+    g.fillStyle = '#a23a22'; g.font = `700 16px ${TES}`; g.fillText(`PREMIO DELL’ESPLORATORE · ${nUova} EASTER EGG`.split('').join(' '), ex + 128, ey + 34);
+    g.fillStyle = INK; g.font = `400 27px ${TIT}`; g.fillText(pu.nome, ex + 128, ey + 66);
+    g.font = `italic 400 17px ${TES}`; aCapo(g, pu.motivo, ex + 128, ey + 90, ew - 144, 21);
+  }
+  const bx = 610, by = 196, bw = 530, bh = 384;
+  g.fillStyle = '#f7edcf'; g.fillRect(bx, by, bw, bh); g.strokeStyle = INK; g.lineWidth = 2.5; g.strokeRect(bx, by, bw, bh);
+  g.imageSmoothingEnabled = false; g.drawImage(icona(pr.icona), bx + 24, by + 24, 136, 136); g.imageSmoothingEnabled = true;
+  g.fillStyle = '#a23a22'; g.font = `700 19px ${TES}`; g.fillText(pr.fascia.toUpperCase().split('').join(' '), bx + 184, by + 62);
+  g.fillStyle = INK; g.font = `400 36px ${TIT}`; aCapo(g, pr.nome, bx + 184, by + 104, bw - 208, 40);
+  g.font = `italic 400 24px ${TES}`; aCapo(g, pr.motivo, bx + 24, by + 204, bw - 48, 31);
+  g.fillStyle = '#8a5330'; g.font = `italic 400 22px ${TES}`; g.fillText('Un ripasso in cinque aree: campagne, nuove terre, commerci, città e Comune.', 60, Hd - 62);
+  return c;
+}
+function aCapo(g, testo, x, y, larg, passo) { let riga = ''; testo.split(' ').forEach(p => { const prova = riga ? riga + ' ' + p : p; if (g.measureText(prova).width > larg && riga) { g.fillText(riga, x, y); y += passo; riga = p; } else riga = prova; }); if (riga) g.fillText(riga, x, y); return y; }
+function salvaImmagine() {
+  const fai = () => { const c = disegnaAttestato(), nome = 'rinascita-occidente-' + new Date().toISOString().slice(0, 10) + '.png';
+    const scarica = url => { const a = document.createElement('a'); a.href = url; a.download = nome; document.body.append(a); a.click(); a.remove(); };
+    if (c.toBlob) c.toBlob(b => { if (!b) { scarica(c.toDataURL('image/png')); return; } const u = URL.createObjectURL(b); scarica(u); setTimeout(() => URL.revokeObjectURL(u), 4000); }, 'image/png'); else scarica(c.toDataURL('image/png')); };
+  if (document.fonts && document.fonts.load) Promise.all([document.fonts.load('54px "IM Fell English"'), document.fonts.load('24px "Crimson Pro"'), document.fonts.load('italic 24px "Crimson Pro"'), document.fonts.load('700 24px "Crimson Pro"')]).then(fai, fai); else fai();
+}
+function chiediAzzera() {
+  conferma('Ricomincia da capo', 'Azzerare tutta la partita?', ['Tutte le aree tornano <b>da fare</b> e il punteggio generale torna a zero: potrai rifare il percorso per ottenere un risultato migliore.', 'Questa scelta non si può annullare.'], 'Sì, ricomincia da capo', 'No, tengo la partita',
+    () => { PARTITA = statoNuovo(); salva(); VIVA = null; $('#cornice').innerHTML = ''; mostraMenu(); });
+}
+$('#btnFinale').onclick = apriFinale;
+$('#btnAzzera').onclick = chiediAzzera;
+
+/* =====================================================================
+   STRUMENTO PER LA DOCENTE: Maiusc + T nel menu. Segna le aree come completate con un punteggio a scelta,
+   per controllare i premi senza giocare tutto. Non compare in nessun punto dell’interfaccia.
+   ===================================================================== */
+function apriDocente() {
+  apriVelo(false, pag => {
+    pag.classList.add('docente'); testata(pag, 'Strumento per la docente · Maiusc + T', 'Simula la partita');
+    pag.append(el('p', '', 'Scrivi il punteggio di ogni area (vuoto = area da fare), oppure scegli una percentuale: tutte le aree risultano completate con quel risultato.'));
+    const campi = {};
+    AREE.forEach(a => { const s = PARTITA.aree[a.id], l = el('label', '', `<b>Area ${a.id}</b>`), i = el('input'); i.type = 'number'; i.min = 0; i.max = s.max; i.value = s.stato === 'completata' ? s.punti : ''; i.setAttribute('aria-label', 'Punti Area ' + a.id); campi[a.id] = i; l.append(i, el('span', '', '/ ' + s.max)); pag.append(l); });
+    const perc = el('div', 'azioni'); perc.style.margin = '10px 0 0';
+    [100, 97, 92, 85, 75, 65, 40].forEach(p => { const b = el('button', 'btn piccolo', p + '%'); b.type = 'button'; b.onclick = () => { const max = maxTotale(); let resto = Math.ceil(max * p / 100); AREE.forEach((a, k) => { const m = PARTITA.aree[a.id].max, v = k === AREE.length - 1 ? resto : Math.min(m, Math.floor(m * p / 100)); campi[a.id].value = Math.max(0, Math.min(m, v)); resto -= +campi[a.id].value; }); }; perc.append(b); });
+    pag.append(perc);
+    const lu = el('label', '', '<b>Easter egg</b>'), iu = el('input'); iu.type = 'number'; iu.min = 0; iu.max = AREE.length; iu.value = uovaTrovate(); iu.setAttribute('aria-label', 'Easter egg trovati'); lu.append(iu, el('span', '', '/ ' + AREE.length)); lu.style.marginTop = '12px'; pag.append(lu);
+    const applica = () => { PARTITA.uova = AREE.map(a => a.id).slice(0, Math.max(0, Math.min(AREE.length, Math.round(+iu.value) || 0))); AREE.forEach(a => { const s = PARTITA.aree[a.id], t = campi[a.id].value.trim(); if (t === '') { s.stato = 'nuova'; s.punti = 0; } else { s.stato = 'completata'; s.punti = Math.max(0, Math.min(s.max, Math.round(+t) || 0)); } }); PARTITA.finaleVisto = false; salva(); disegnaMenu(); };
+    pulsanti(pag, [['Chiudi', false, chiudiVelo], ['Applica', false, () => { applica(); chiudiVelo(); }], ['Applica e apri il finale', true, () => { applica(); chiudiVelo(); if (completate().length === AREE.length) apriFinale(); }]]);
+  });
+}
+window.addEventListener('keydown', e => {
+  if (TITOLI.fase !== 'spenti') return;
+  if (e.code === 'Escape' && !$('#velo').hidden) { e.preventDefault(); chiudiVelo(); return; }
+  if (e.code === 'KeyT' && e.shiftKey && !e.repeat && !$('#menu').hidden && !sipario.su && !(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName))) { e.preventDefault(); apriDocente(); }
+});
+
+/* =====================================================================
+   I TITOLI DI TESTA: schermo nero, la musica, due crediti, poi la schermata del titolo con la foto di gruppo animata.
+   I titoli partono da soli. La musica parte subito se il browser lo permette; molti browser (Chrome fra questi) la
+   bloccano finché chi guarda non preme un tasto o fa un clic: in quel caso comincia al primo gesto.
+   Con #menu in fondo all’indirizzo (index.html#menu) i titoli si saltano: serve ai controlli automatici.
+   ===================================================================== */
+const TITOLI = { el: $('#titoli'), fase: 'spenti', orologi: [], pronto: 0, scena: null };
+/* la foto di gruppo in pixel art, come un piccolo teatro: si apre il sipario, i personaggi delle cinque aree entrano
+   uno dopo l’altro e salutano; dietro di loro il bue tira l’aratro, la ruota del mulino gira, la nave solca il mare di Francavilla */
+function fotoDiGruppo() {
+  const LW = 320, LH = 124, BASE = 114, tela = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+  const R = g => (x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
+  const contorno = c => { const w = c.width, h = c.height, g = c.getContext('2d'), d = g.getImageData(0, 0, w, h).data, pieno = (x, y) => x >= 0 && y >= 0 && x < w && y < h && d[(y * w + x) * 4 + 3] > 0, b = [];
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (!pieno(x, y) && (pieno(x - 1, y) || pieno(x + 1, y) || pieno(x, y - 1) || pieno(x, y + 1))) b.push([x, y]); g.fillStyle = INK; b.forEach(([x, y]) => g.fillRect(x, y, 1, 1)); return c; };
+  const figura = (w, h, fn) => { const c = tela(w, h); fn(R(c.getContext('2d'))); return contorno(c); };
+  // --- il fondale fisso: cielo, colline, terreno (campagna a sinistra, selciato della città a destra)
+  const fondo = tela(LW, LH), r0 = R(fondo.getContext('2d'));
+  ['#f6e7b4', '#f3dfa2', '#efd590', '#ecca7e'].forEach((c, i) => r0(0, i * 14, LW, 14, c)); r0(0, 56, LW, 40, '#e8c170');
+  for (let x = 0; x < 150; x++) { const h = Math.round(10 + 6 * Math.sin(x / 17) + 4 * Math.sin(x / 7 + 1)); r0(x, 78 - h, 1, h + 20, '#a9bf6a'); }
+  r0(0, 92, 176, 32, '#8fae55'); r0(176, 92, 144, 32, '#d9cba0'); for (let x = 178; x < 320; x += 9) for (let y = 95; y < 124; y += 6) r0(x + (y % 12 ? 4 : 0), y, 6, 1, '#c4b388');
+  for (let x = 2; x < 174; x += 5) r0(x + (x % 3), 96 + (x * 7) % 24, 1, 2, '#7a9a45');
+  r0(0, 92, 176, 1, '#6f8f3e'); r0(176, 92, 144, 1, '#b3a377');
+  // --- gli edifici fissi (con il contorno scuro): mulino, selva, tende, mura, palazzo del Comune, cattedrale
+  const edifici = figura(LW, LH, r1 => {
+    r1(4, 68, 22, 20, '#e9dcc0'); r1(2, 62, 26, 6, '#a5482f'); r1(5, 59, 20, 3, '#a5482f'); r1(12, 76, 6, 12, '#5a3a1c'); r1(7, 72, 4, 4, '#3a2a1a'); r1(18, 54, 4, 6, '#8a6a5a'); r1(22, 88, 22, 3, '#5f9ec0');
+    for (let i = 0; i < 6; i++) r1(46 + i * 2, 91 - i, 30, 1, i % 2 ? '#7d5a32' : '#94703f');
+    [[84, 60, 9], [96, 54, 11], [109, 62, 8], [119, 57, 9]].forEach(([x, y, r]) => { r1(x - 1, y + r - 2, 3, 92 - y - r + 2, '#6b3f22'); r1(x - r, y - r + 3, 2 * r, 2 * r - 5, '#3f7a35'); r1(x - r + 2, y - r, 2 * r - 4, 2 * r, '#3f7a35'); r1(x - r + 3, y - r + 2, 4, 3, '#5c9a48'); });
+    r1(78, 87, 6, 5, '#a5693c'); r1(78, 86, 6, 1, '#e2cb90'); r1(124, 88, 5, 4, '#a5693c'); r1(124, 87, 5, 1, '#e2cb90'); r1(81, 80, 1, 7, '#6b3f22'); r1(82, 80, 3, 3, '#9aa1a8');
+    [[138, '#a23a22', '#f2ead2'], [158, '#2f5f86', '#e0bf4c']].forEach(([x, a, b]) => { for (let i = 0; i < 12; i++) { const w = 4 + i * 2; r1(x - w / 2, 62 + i, w, 1, i % 4 < 2 ? a : b); } r1(x - 13, 74, 26, 2, a); for (let k = 0; k < 6; k++) r1(x - 12 + k * 4, 76, 4, 16, k % 2 ? a : b); r1(x - 2, 82, 4, 10, '#3a2a1a'); r1(x, 55, 1, 7, INK); });
+    r1(184, 66, 40, 26, '#c9c2b2'); for (let x = 184; x < 224; x += 6) r1(x, 62, 4, 4, '#c9c2b2'); r1(197, 50, 14, 42, '#d6cfbf'); for (let x = 197; x < 211; x += 5) r1(x, 46, 4, 4, '#d6cfbf'); r1(200, 76, 8, 16, '#4a3420'); r1(201, 74, 6, 2, '#4a3420'); r1(203, 56, 2, 5, INK);
+    for (let y = 70; y < 90; y += 6) for (let x = 186 + (y % 12 ? 3 : 0); x < 222; x += 9) if (x < 196 || x > 211) r1(x, y, 5, 1, '#a69f90');
+    r1(226, 86, 36, 6, '#8a7a5a'); for (let x = 228; x < 262; x += 8) r1(x, 82, 2, 4, '#5a4a34');      // la banchina del porto
+    r1(264, 60, 28, 32, '#e3c9a0'); for (let x = 264; x < 292; x += 6) r1(x, 56, 4, 4, '#e3c9a0'); for (let x = 267; x < 290; x += 8) { r1(x, 66, 4, 8, '#3a2a1a'); r1(x, 80, 5, 12, '#5a3a1c'); }
+    r1(271, 26, 10, 34, '#d9b98c'); r1(269, 22, 14, 4, '#d9b98c'); for (let x = 269; x < 283; x += 5) r1(x, 18, 4, 4, '#d9b98c'); r1(274, 30, 4, 7, '#3a2a1a'); r1(275, 46, 2, 6, INK);
+    r1(295, 52, 22, 40, '#cfc8b8'); for (let i = 0; i < 9; i++) r1(295 + i, 52 - i, 22 - i * 2, 1, '#cfc8b8'); r1(302, 60, 8, 8, '#2f5f86'); r1(304, 58, 4, 12, '#2f5f86'); r1(305, 62, 2, 4, '#f2c14a'); r1(303, 78, 6, 14, '#4a3420'); r1(305, 38, 2, 6, '#c4932a'); r1(303, 40, 6, 2, '#c4932a');
+    r1(258, 56, 1, 36, INK);
+  });
+  // --- le figure che si muovono: la nave, il bue con l’aratro e il bifolco (due passi), il mulo
+  const nave = figura(30, 30, r => { r(4, 21, 22, 5, '#8a5330'); r(6, 26, 18, 2, '#6b3f22'); r(2, 20, 4, 2, '#8a5330'); r(24, 19, 4, 3, '#8a5330'); r(14, 3, 1, 18, '#3a2a1a'); r(15, 5, 11, 13, '#f2ead2'); r(15, 10, 11, 2, '#a23a22'); r(19, 5, 2, 13, '#a23a22'); r(9, 9, 5, 9, '#e9dcc0'); r(14, 1, 5, 2, '#a23a22'); });
+  const aratro = [0, 1].map(p => figura(40, 22, r => {      // verso sinistra: il bue davanti, poi l’aratro, poi l’uomo
+    r(6, 6, 15, 8, '#c98a58'); r(2, 5, 6, 6, '#c98a58'); r(1, 3, 2, 2, '#f2ead2'); r(6, 3, 2, 2, '#f2ead2'); r(3, 7, 1, 1, INK); r(8, 7, 5, 3, '#e3b98a'); r(21, 7, 1, 5, '#8a5a34');
+    r(7 + p, 14, 2, 5, '#8a5a34'); r(11 - p, 14, 2, 5, '#8a5a34'); r(16 + p, 14, 2, 5, '#8a5a34'); r(19 - p, 14, 2, 5, '#8a5a34');
+    r(20, 9, 8, 1, '#5a3a1c'); r(26, 10, 2, 6, '#5a3a1c'); r(24, 15, 5, 3, '#6e6e6e'); r(28, 6, 1, 6, '#5a3a1c');
+    r(31, 2, 5, 5, '#e9b98f'); r(30, 1, 7, 2, '#e0bf4c'); r(32, 4, 1, 1, INK); r(30, 7, 7, 7, '#4f8a3c'); r(28, 8, 2, 2, '#4f8a3c'); r(31 + p, 14, 2, 5, '#6b4a8a'); r(34 - p, 14, 2, 5, '#d9a441');
+  }));
+  const mulo = [0, 1].map(p => figura(24, 22, r => { r(2, 9, 14, 6, '#8a7a68'); r(15, 6, 4, 5, '#8a7a68'); r(17, 3 - p, 1, 3, '#8a7a68'); r(19, 8, 1, 1, INK); r(3, 15, 2, 4, '#6a5a48'); r(12, 15, 2, 4, '#6a5a48'); r(5, 5, 4, 4, '#d9c18a'); r(9, 6, 4, 3, '#c9b28a'); r(1, 10 + p, 1, 5, '#6a5a48'); }));
+  // --- i personaggi: ognuno è una figurina, con il suo oggetto
+  function omino(o) { return figura(22, 40, r2 => {
+    const x = 6, b = 38, pelle = o.pelle || '#e9b98f', lunga = !!o.lunga;
+    if (lunga) { r2(x + 1, b - 15, 8, 14, o.veste); r2(x + 2, b - 1, 2, 1, o.scarpe || '#3a2a1a'); r2(x + 6, b - 1, 2, 1, o.scarpe || '#3a2a1a'); }
+    else { r2(x + 2, b - 7, 2, 6, o.calze[0]); r2(x + 6, b - 7, 2, 6, o.calze[1]); r2(x + 1, b - 1, 3, 1, o.scarpe || '#3a2a1a'); r2(x + 6, b - 1, 3, 1, o.scarpe || '#3a2a1a'); r2(x + 1, b - 15, 8, 9, o.veste); }
+    if (o.grembiule) r2(x + 3, b - 12, 4, lunga ? 10 : 6, o.grembiule);
+    if (o.cintura) r2(x + 1, b - 9, 8, 1, o.cintura);
+    r2(x, b - 14, 1, 6, o.veste); r2(x + 9, b - 14, 1, 6, o.veste); r2(x, b - 8, 1, 1, pelle); r2(x + 9, b - 8, 1, 1, pelle);
+    r2(x + 2, b - 22, 6, 7, pelle); r2(x + 3, b - 19, 1, 1, INK); r2(x + 6, b - 19, 1, 1, INK);
+    if (o.barba) { r2(x + 2, b - 17, 6, 2, o.barba); r2(x + 4, b - 17, 2, 1, pelle); }
+    const c = o.copri, cc = o.colCopri || o.capelli || '#5a3a1c';
+    if (c === 'cappuccio') { r2(x + 1, b - 23, 8, 3, cc); r2(x + 1, b - 20, 1, 6, cc); r2(x + 8, b - 20, 1, 6, cc); r2(x + 1, b - 15, 8, 1, cc); r2(x + 8, b - 24, 2, 2, cc); }
+    else if (c === 'elmo') { r2(x + 1, b - 23, 8, 3, '#9aa1a8'); r2(x + 4, b - 20, 2, 3, '#9aa1a8'); r2(x + 2, b - 24, 6, 1, '#c4ccd4'); }
+    else if (c === 'berretto') { r2(x + 1, b - 24, 8, 3, cc); r2(x + 2, b - 21, 6, 1, o.capelli || '#5a3a1c'); }
+    else if (c === 'velo') { r2(x + 1, b - 23, 8, 2, '#f4efe2'); r2(x + 1, b - 21, 1, 7, '#f4efe2'); r2(x + 8, b - 21, 1, 7, '#f4efe2'); }
+    else if (c === 'paglia') { r2(x - 1, b - 22, 12, 1, '#e0bf4c'); r2(x + 2, b - 24, 6, 2, '#e0bf4c'); }
+    else if (c === 'tonsura') { r2(x + 2, b - 23, 6, 1, o.capelli || '#5a3a1c'); r2(x + 2, b - 22, 1, 3, o.capelli || '#5a3a1c'); r2(x + 7, b - 22, 1, 3, o.capelli || '#5a3a1c'); r2(x + 4, b - 23, 2, 1, pelle); }
+    else if (c === 'mitra') { r2(x + 2, b - 26, 6, 4, '#f4efe2'); r2(x + 4, b - 27, 2, 1, '#f4efe2'); r2(x + 4, b - 25, 2, 3, '#c4932a'); }
+    else { r2(x + 2, b - 23, 6, 2, o.capelli || '#5a3a1c'); r2(x + 2, b - 21, 1, 2, o.capelli || '#5a3a1c'); r2(x + 7, b - 21, 1, 2, o.capelli || '#5a3a1c'); }
+    const og = o.oggetto;
+    if (og === 'lancia') { r2(x + 10, b - 28, 1, 27, '#6b4a2a'); r2(x + 10, b - 31, 1, 3, '#c4ccd4'); r2(x - 3, b - 13, 4, 6, '#9a2f27'); r2(x - 2, b - 11, 2, 2, '#f2c14a'); }
+    if (og === 'zappa') { r2(x + 10, b - 22, 1, 21, '#6b4a2a'); r2(x + 8, b - 23, 4, 2, '#6e6e6e'); }
+    if (og === 'bastone') r2(x + 10, b - 18, 1, 17, '#6b4a2a');
+    if (og === 'fagotto') { r2(x + 10, b - 20, 1, 12, '#6b4a2a'); r2(x + 9, b - 24, 4, 4, '#b5653a'); }
+    if (og === 'pesce') { r2(x + 10, b - 10, 5, 2, '#9fb8c8'); r2(x + 14, b - 11, 1, 4, '#9fb8c8'); r2(x + 10, b - 10, 1, 1, INK); }
+    if (og === 'penna') { r2(x + 10, b - 13, 1, 5, '#f4efe2'); r2(x - 3, b - 11, 3, 4, '#f4e6bc'); r2(x - 3, b - 12, 3, 1, '#e2cb90'); }
+    if (og === 'borsa') { r2(x + 9, b - 8, 3, 3, '#f2c14a'); r2(x + 10, b - 9, 1, 1, '#8a5a12'); }
+    if (og === 'bimbo') { r2(x + 2, b - 12, 6, 4, '#f4efe2'); r2(x + 6, b - 13, 2, 2, pelle); }
+    if (og === 'martello') { r2(x + 10, b - 14, 1, 7, '#6b4a2a'); r2(x + 9, b - 16, 3, 2, '#6e6e6e'); }
+    if (og === 'catena') { r2(x + 3, b - 14, 4, 1, '#f2c14a'); r2(x + 4, b - 13, 2, 1, '#f2c14a'); }
+    if (og === 'pastorale') { r2(x + 10, b - 26, 1, 25, '#c4932a'); r2(x + 11, b - 27, 2, 1, '#c4932a'); r2(x + 12, b - 26, 1, 2, '#c4932a'); }
+    if (og === 'spada') { r2(x + 10, b - 20, 1, 12, '#c4ccd4'); r2(x + 9, b - 9, 3, 1, '#c4932a'); }
+  }); }
+  const FILA = [
+    [13, { veste: '#8b929a', calze: ['#5a5e66', '#5a5e66'], copri: 'elmo', oggetto: 'lancia', su: 4 }],                                   // la guardia del castello (A)
+    [29, { veste: '#2f5f86', calze: ['#a23a22', '#f0e6c8'], copri: 'cappuccio', colCopri: '#d9a441', oggetto: 'bastone', scarpe: '#5a3a1c' }],   // il viandante (A e B)
+    [44, { veste: '#7a4a2a', calze: ['#3a3a3a', '#3a3a3a'], capelli: '#4a3a2a', grembiule: '#3a2a1a', oggetto: 'martello', barba: '#4a3a2a', su: 3 }],   // il fabbro (A)
+    [62, { veste: '#3a2f28', lunga: true, copri: 'tonsura', capelli: '#6a4a38', cintura: '#d9c18a', su: 5 }],                              // il monaco (B)
+    [80, { veste: '#4f8a3c', calze: ['#d9a441', '#6b4a8a'], copri: 'paglia', oggetto: 'zappa', su: 1 }],                                  // il colono (B)
+    [100, { veste: '#9a5a3a', calze: ['#3d6a3a', '#e3d6a8'], copri: 'berretto', colCopri: '#c9b98a', capelli: '#6a3a28' }],                // il contadino con il mulo (C)
+    [140, { veste: '#5a2f6a', lunga: true, copri: 'berretto', colCopri: '#2a1b10', capelli: '#3a2a1a', oggetto: 'borsa', barba: '#3a2a1a', su: 4 }],   // il lombardo (C)
+    [158, { veste: '#3f7a35', calze: ['#6a5a44', '#6a5a44'], copri: 'cappuccio', colCopri: '#a23a22', oggetto: 'fagotto', capelli: '#c9703a' }],   // Bruno (D)
+    [178, { veste: '#2f5f86', lunga: true, copri: 'velo', grembiule: '#f4efe2', oggetto: 'bimbo', su: 1 }],                                // Agnese con il piccolo Martino (D)
+    [196, { veste: '#b0781c', lunga: true, copri: 'velo', grembiule: '#e3d6a8', oggetto: 'pesce', pelle: '#dba882', su: 4 }],              // Tecla, la pescivendola (D)
+    [216, { veste: '#2f4f7a', calze: ['#3a3a3a', '#3a3a3a'], copri: 'berretto', colCopri: '#2f5f86', capelli: '#8a8a8a', grembiule: '#4a7fb0', barba: '#b0b0b0', su: 2 }],   // mastro Bartolo, tintore (D)
+    [236, { veste: '#2f5a3a', lunga: true, copri: 'berretto', colCopri: '#7a1f3a', capelli: '#5a3a1c', oggetto: 'penna' }],                 // Martino, notaio (E)
+    [256, { veste: '#a23a22', lunga: true, copri: 'berretto', colCopri: '#a23a22', capelli: '#8a8a8a', oggetto: 'catena', barba: '#c8c8c8', su: 4 }],   // il podestà (E)
+    [276, { veste: '#f4efe2', lunga: true, copri: 'mitra', oggetto: 'pastorale', capelli: '#b0b0b0', su: 6 }],                              // il vescovo (E)
+    [293, { veste: '#6a6f78', calze: ['#3a3a3a', '#3a3a3a'], copri: 'elmo', oggetto: 'spada', cintura: '#a23a22', su: 2 }]                 // l’armigero (E)
+  ].map(([x, o]) => ({ x, su: o.su || 0, img: omino(o) }));
+  const scena = tela(LW, LH), g = scena.getContext('2d'), r = R(g);
+  // un fotogramma: t = secondi da quando si apre il sipario
+  function disegna(t) {
+    g.drawImage(fondo, 0, 0);
+    // il sole, le nuvole che passano, i gabbiani
+    r(40, 12, 10, 10, '#fbe59a'); r(38, 14, 14, 6, '#fbe59a'); r(42, 10, 6, 14, '#fbe59a');
+    [[0, 16, 7], [140, 9, 5], [230, 24, 4]].forEach(([x0, y, v]) => { const x = (x0 + t * v) % (LW + 40) - 30; r(x, y, 22, 4, '#fbf3d6'); r(x + 4, y - 3, 12, 3, '#fbf3d6'); r(x + 2, y + 4, 16, 2, '#f3e6bd'); });
+    [[232, 40, 0], [246, 34, 1.3]].forEach(([x, y, f]) => { const a = Math.sin(t * 5 + f) > 0 ? 1 : 0, dx = Math.sin(t * .6 + f) * 6, dy = Math.cos(t * .9 + f) * 2; r(x + dx, y + dy + a, 2, 1, INK); r(x + dx + 2, y + dy + 1 - a, 1, 1, INK); r(x + dx + 3, y + dy + a, 2, 1, INK); });
+    // il mare di Francavilla, dietro la città, e la nave che lo solca
+    r(150, 64, 170, 28, '#4f86a8'); for (let x = 150; x < 320; x += 7) r(x + Math.round(t * 3 + x) % 7, 68 + (x % 3) * 6, 3, 1, '#8fc2d3');
+    const nx = 150 + ((t * 9) % 210) - 20; g.drawImage(nave, Math.round(nx), 44 + Math.round(Math.sin(t * 2.2) * 1.2)); r(nx - 6, 71, 6, 1, '#cfe6ee'); r(nx - 12, 72, 5, 1, '#cfe6ee');
+    // il bue con l’aratro, avanti e indietro sul campo (cammina solo verso sinistra, poi ricompare)
+    g.drawImage(edifici, 0, 0);
+    const ax = 66 - ((t * 5) % 30); g.drawImage(aratro[Math.floor(t * 4) % 2], Math.round(ax), 71);
+    // la ruota del mulino che gira, il fumo del camino
+    { const cx = 33, cy = 80, f = Math.floor(t * 5) % 2; r(cx - 7, cy - 7, 14, 14, '#6b4a2a'); r(cx - 5, cy - 5, 10, 10, '#3a2a1a'); if (f) { r(cx - 6, cy - 1, 12, 2, '#8a6a3e'); r(cx - 1, cy - 6, 2, 12, '#8a6a3e'); } else { for (let i = -5; i <= 5; i++) { r(cx + i, cy + i, 2, 1, '#8a6a3e'); r(cx + i, cy - i, 2, 1, '#8a6a3e'); } } r(cx - 1, cy - 1, 2, 2, '#c4932a'); r(cx - 7, cy + 7, 14, 1, '#5f9ec0'); }
+    for (let i = 0; i < 3; i++) { const ph = (t * .5 + i / 3) % 1; g.globalAlpha = .7 * (1 - ph); r(19 + ph * 5, 52 - ph * 16, 3 + Math.round(ph * 3), 3 + Math.round(ph * 2), '#f1ece0'); g.globalAlpha = 1; }
+    // le bandiere delle tende, il gonfalone, la campana della torre civica
+    [[138, '#f2ead2'], [158, '#e0bf4c']].forEach(([x, c], i) => { const f = Math.floor(t * 4 + i) % 2; r(x + 1, 55 + f, 3, 3, c); r(x + 4, 56 - f, 2, 3, c); });
+    { const f = Math.floor(t * 3) % 2; r(250 + f, 58, 8 - f, 12, '#a23a22'); r(250 + f, 62, 8 - f, 3, '#f2ead2'); r(250 + f, 70, 3, 3, '#a23a22'); r(255, 70, 3, 3 - f, '#a23a22'); }
+    { const s = Math.round(Math.sin(t * 4) * 1.2); r(275 + s, 32, 2, 3, '#f2c14a'); r(274 + s, 35, 4, 1, '#f2c14a'); }
+    // i personaggi: entrano uno dopo l’altro saltando su dal basso, poi ondeggiano; ogni tanto un’onda di saluti corre lungo la fila
+    g.fillStyle = 'rgba(42,27,16,.22)';
+    FILA.forEach((p, i) => {
+      const te = t - 1.4 - i * .16; if (te < 0) return;
+      const e = Math.min(1, te / .5), entra = e < 1 ? (1 - e) * 34 - Math.sin(e * Math.PI) * 6 : 0;
+      const onda = ((t - 5) % 7) - i * .12, salto = onda > 0 && onda < .5 ? Math.sin(onda / .5 * Math.PI) * 5 : 0, dondola = e >= 1 && Math.sin(t * 3 + i * 1.7) > .55 ? 1 : 0;
+      p.y = BASE - p.su - 38 + Math.round(entra - salto) - dondola; if (e >= 1) g.fillRect(p.x - 1, BASE - p.su, 12, 2);
+    });
+    { const te = t - 1.4 - 5.5 * .16; if (te > 0) { const e = Math.min(1, te / .5); g.fillStyle = 'rgba(42,27,16,.22)'; if (e >= 1) g.fillRect(116, BASE - 1, 18, 2); g.drawImage(mulo[Math.floor(t * 1.5) % 2], 115, BASE - 21 + Math.round((1 - e) * 30)); } }
+    FILA.forEach(p => { if (p.y != null && t - 1.4 > 0) g.drawImage(p.img, p.x - 6, p.y); });
+    // il sipario: due teli rossi che si aprono, la mantovana in alto
+    const ap = Math.min(1, Math.max(0, (t - .3) / 1.6)), aperto = ap * ap * (3 - 2 * ap), larg = Math.round(LW / 2 * (1 - aperto) + 6 * aperto);
+    [0, 1].forEach(lato => { for (let k = 0; k < larg; k++) { const x = lato ? LW - 1 - k : k; r(x, 0, 1, LH, (k + (lato ? 2 : 0)) % 6 < 3 ? '#8a1f12' : '#a8281a'); } const b = lato ? LW - larg : larg - 1; r(b, 0, 1, LH, '#f2c14a'); r(lato ? b - 1 : b + 1, 0, 1, LH, '#5a120a'); });
+    r(0, 0, LW, 7, '#8a1f12'); for (let x = 0; x < LW; x += 10) { r(x, 7, 10, 2, '#a8281a'); r(x + 2, 9, 6, 2, '#a8281a'); r(x + 4, 11, 2, 1, '#f2c14a'); } r(0, 6, LW, 1, '#f2c14a');
+  }
+  let t0 = 0, ultimo = 0, vivo = false;
+  function ciclo(ts) { if (!vivo) return; if (!t0) t0 = ts; if (ts - ultimo > 66) { ultimo = ts; disegna((ts - t0) / 1000); } requestAnimationFrame(ciclo); }
+  disegna(0);
+  return { canvas: scena, avvia() { if (vivo) return; vivo = true; t0 = 0; requestAnimationFrame(ciclo); }, ferma() { vivo = false; }, disegna };
+}
+function mostraFase(nome) { TITOLI.fase = nome; TITOLI.pronto = Date.now(); TITOLI.el.dataset.fase = nome; if (nome === 'titolo' && TITOLI.scena) TITOLI.scena.avvia(); }
+function suonaTitoli() { const a = MUSICA.el; if (!a.paused || !MUSICA.attiva) return; a.volume = MUSICA.vol; let p; try { p = a.play(); } catch (e) { p = null; } if (p && p.catch) p.catch(() => {}); }
+function sequenzaTitoli() {
+  mostraFase('buio');      // lo schermo nero; dopo un secondo la musica, dopo qualche nota i titoli
+  const poi = (ms, f) => TITOLI.orologi.push(setTimeout(f, ms));
+  poi(1000, suonaTitoli);
+  poi(4200, () => mostraFase('a')); poi(8200, () => mostraFase('buio2')); poi(9600, () => mostraFase('b')); poi(16600, () => mostraFase('buio3')); poi(18000, () => mostraFase('titolo'));
+}
+function chiudiTitoli() {
+  if (TITOLI.fase === 'spenti') return; TITOLI.orologi.forEach(clearTimeout); TITOLI.fase = 'spenti'; TITOLI.el.classList.add('via');
+  $('#menu').hidden = false; setTimeout(() => { TITOLI.el.hidden = true; if (TITOLI.scena) TITOLI.scena.ferma(); const b = document.querySelector('.area.consigliata .btn') || document.querySelector('.area .btn'); if (b) b.focus(); }, 900);
+}
+function gestoTitoli(e) {
+  if (e && e.type === 'keydown' && ['Shift', 'Control', 'Alt', 'Meta', 'Tab'].includes(e.key)) return;
+  if (e) { e.preventDefault(); e.stopPropagation(); }
+  if (TITOLI.fase === 'attesa') { if (Date.now() - TITOLI.pronto > 300) sequenzaTitoli(); return; }      // il primo gesto avvia tutto
+  if (TITOLI.fase === 'titolo') { if (Date.now() - TITOLI.pronto > 700) { suonaTitoli(); chiudiTitoli(); } return; }
+  // durante i crediti: solo il tasto K (non segnalato) porta subito al menu, senza fermare la musica
+  if (e && e.type === 'keydown' && e.code === 'KeyK') { suonaTitoli(); chiudiTitoli(); }
+}
+function avviaTitoli() {
+  if (location.hash === '#menu') { TITOLI.el.hidden = true; return; }
+  $('#menu').hidden = true; TITOLI.el.hidden = false; TITOLI.scena = fotoDiGruppo(); $('#titoliFoto').append(TITOLI.scena.canvas);
+  mostraFase('attesa');
+}
+window.addEventListener('pointerdown', e => { if (TITOLI.fase !== 'spenti') gestoTitoli(e); }, true);
+window.addEventListener('keydown', e => { if (TITOLI.fase !== 'spenti') gestoTitoli(e); }, true);
+
+/* su PC il foglio del menu entra sempre tutto nella finestra, cornice compresa: se è più alto, si rimpicciolisce (sotto i 980 px si scorre, come prima) */
+function adattaMenu() {
+  const m = $('#menu'), f = m.querySelector('.foglio'); if (!f || m.hidden) return;
+  f.style.zoom = ''; if (innerWidth <= 980) return;
+  const h = f.offsetHeight, spazio = innerHeight - 28 - 24;      // 14 px di margine sopra e sotto, più i due anelli della cornice (6 + 8 px) e un filo d’ombra
+  if (h > spazio) f.style.zoom = (spazio / h).toFixed(4);
+}
+new ResizeObserver(adattaMenu).observe($('#menu'));
+if (document.fonts) document.fonts.ready.then(adattaMenu);
+{ const dm = disegnaMenu; disegnaMenu = function () { dm.apply(this, arguments); adattaMenu(); }; }
+
+/* avvio */
+carica(); disegnaMenu(); avviaTitoli();
+window.MENU = { get PARTITA() { return PARTITA; }, get VIVA() { return VIVA; }, AREE, PREMI, premioPer, apriFinale, apriDocente, disegnaAttestato, chiediArea, apriArea, mostraMenu, icona };
+</script>
+</body>
+</html>

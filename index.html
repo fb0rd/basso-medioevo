@@ -398,11 +398,15 @@ function riceviBrano(m, v) {
     const p = AC.decodeAudioData(u.buffer, fatto, () => {}); if (p && p.catch) p.catch(() => {});
   } catch (e) {}
 }
+function focusMenu() {      // il fuoco va al pulsante dell’area consigliata, ma la pagina resta ferma in cima, sul titolo (sul telefono si scorre col dito)
+  const b = document.querySelector('.area.consigliata .btn') || document.querySelector('.area .btn'); if (b) b.focus({ preventScroll: true });
+  window.scrollTo(0, 0); const m = $('#menu'); if (m) m.scrollTop = 0;
+}
 function mostraMenu() {
   fermaBrano(400);
   if (VIVA) manda('pausa');
   $('#cornice').hidden = true; $('#menu').hidden = false; disegnaMenu(); calaSipario(); setTimeout(avviaMusica, 700);
-  const b = document.querySelector('.area.consigliata .btn') || document.querySelector('.area .btn'); if (b) b.focus();
+  focusMenu();
 }
 function mostraArea() {
   $('#menu').hidden = true; $('#cornice').hidden = false; chiudiVelo();
@@ -686,23 +690,29 @@ function fotoDiGruppo() {
 }
 function mostraFase(nome) { TITOLI.fase = nome; TITOLI.pronto = Date.now(); TITOLI.el.dataset.fase = nome; if (nome === 'titolo' && TITOLI.scena) TITOLI.scena.avvia(); }
 function suonaTitoli() { const a = MUSICA.el; if (!a.paused || !MUSICA.attiva) return; a.volume = MUSICA.vol; let p; try { p = a.play(); } catch (e) { p = null; } if (p && p.catch) p.catch(() => {}); }
+const poiTitoli = (ms, f) => TITOLI.orologi.push(setTimeout(f, ms));
+function azzeraOrologi() { TITOLI.orologi.forEach(clearTimeout); TITOLI.orologi = []; }
+/* i tre tratti della sequenza: ciascuno parte dal buio che precede il credito, così un credito saltato porta al tratto dopo */
+function dopoCreditoA() { mostraFase('buio2'); poiTitoli(1400, () => mostraFase('b')); poiTitoli(8400, dopoCreditoB); }
+function dopoCreditoB() { mostraFase('buio3'); poiTitoli(1400, () => mostraFase('titolo')); }
 function sequenzaTitoli() {
   mostraFase('buio');      // lo schermo nero; dopo un secondo la musica, dopo qualche nota i titoli
-  const poi = (ms, f) => TITOLI.orologi.push(setTimeout(f, ms));
-  poi(1000, suonaTitoli);
-  poi(4200, () => mostraFase('a')); poi(8200, () => mostraFase('buio2')); poi(9600, () => mostraFase('b')); poi(16600, () => mostraFase('buio3')); poi(18000, () => mostraFase('titolo'));
+  poiTitoli(1000, suonaTitoli);
+  poiTitoli(4200, () => mostraFase('a')); poiTitoli(8200, dopoCreditoA);
 }
 function chiudiTitoli() {
-  if (TITOLI.fase === 'spenti') return; TITOLI.orologi.forEach(clearTimeout); TITOLI.fase = 'spenti'; TITOLI.el.classList.add('via');
-  $('#menu').hidden = false; setTimeout(() => { TITOLI.el.hidden = true; if (TITOLI.scena) TITOLI.scena.ferma(); const b = document.querySelector('.area.consigliata .btn') || document.querySelector('.area .btn'); if (b) b.focus(); }, 900);
+  if (TITOLI.fase === 'spenti') return; azzeraOrologi(); TITOLI.fase = 'spenti'; TITOLI.el.classList.add('via');
+  $('#menu').hidden = false; setTimeout(() => { TITOLI.el.hidden = true; if (TITOLI.scena) TITOLI.scena.ferma(); focusMenu(); }, 900);
 }
 function gestoTitoli(e) {
   if (e && e.type === 'keydown' && ['Shift', 'Control', 'Alt', 'Meta', 'Tab'].includes(e.key)) return;
   if (e) { e.preventDefault(); e.stopPropagation(); }
   if (TITOLI.fase === 'attesa') { if (Date.now() - TITOLI.pronto > 300) sequenzaTitoli(); return; }      // il primo gesto avvia tutto
   if (TITOLI.fase === 'titolo') { if (Date.now() - TITOLI.pronto > 700) { suonaTitoli(); chiudiTitoli(); } return; }
-  // durante i crediti: solo il tasto K (non segnalato) porta subito al menu, senza fermare la musica
-  if (e && e.type === 'keydown' && e.code === 'KeyK') { suonaTitoli(); chiudiTitoli(); }
+  // un credito si salta (tasto qualsiasi o tocco) solo quando ha già cominciato a comparire; nel buio prima di esso il gesto non fa nulla
+  if (e && e.repeat) return;
+  if (TITOLI.fase === 'a') { azzeraOrologi(); suonaTitoli(); dopoCreditoA(); return; }
+  if (TITOLI.fase === 'b') { azzeraOrologi(); suonaTitoli(); dopoCreditoB(); }
 }
 function avviaTitoli() {
   if (location.hash === '#menu') { TITOLI.el.hidden = true; return; }

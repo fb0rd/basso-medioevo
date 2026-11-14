@@ -4040,7 +4040,20 @@ window.PONTE_AREA = {"emblema": "Pixel art: le mura con la torre e la porta, e u
     if (e.data.tipo === 'pausa') { inPausa = true; CONTESTI.forEach(c => { try { c.suspend(); } catch (x) {} }); if (typeof tasti !== 'undefined') tasti.clear(); }
     if (e.data.tipo === 'tempo') tempoMenu = { pos: e.data.pos, quando: performance.now() };
     if (e.data.tipo === 'riprendi') { inPausa = false; CONTESTI.forEach(c => { try { c.resume(); } catch (x) {} }); window.focus(); schiarisci(); suonaSubito(); }
+    if (e.data.tipo === 'chiudi') chiudiAudio();
   });
+  /* Sul telefono il browser concede l’audio solo a gesto concluso (fine del tocco, clic), non quando il dito si posa:
+     a ogni gesto si riaccendono i contesti rimasti sospesi o interrotti, e l’area riprova a far partire i suoi suoni. */
+  function sveglia() {
+    if (inPausa || document.hidden) return;
+    CONTESTI.forEach(c => { if (c.state !== 'running' && c.state !== 'closed') try { const p = c.resume(); if (p && p.catch) p.catch(() => {}); } catch (x) {} });
+    if (typeof SUONI !== 'undefined' && SUONI && typeof SUONI.avvia === 'function') try { SUONI.avvia(); } catch (x) {}
+  }
+  ['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => window.addEventListener(ev, sveglia, { capture: true, passive: true }));
+  /* Quando l’area lascia il posto a un’altra, i suoi contesti audio si chiudono: il telefono ne regge pochi alla volta,
+     e quelli dimenticati possono impedire alla nuova area (e allo squillo del menu) di suonare. */
+  function chiudiAudio() { CONTESTI.forEach(c => { try { if (c.state !== 'closed') { const p = c.close(); if (p && p.catch) p.catch(() => {}); } } catch (x) {} }); }
+  window.addEventListener('pagehide', chiudiAudio);
   /* La musica dell’area comincia già sul riquadro iniziale. Dentro il riquadro dell’area, però, il browser non lascia suonare
      nulla prima di un gesto fatto proprio lì: per questo, finché si legge il riquadro, il brano lo suona il menu (che il
      permesso ce l’ha già). Quando il giocatore preme «Entra…», l’area fa partire il suo brano dallo stesso punto, e il menu sfuma. */
@@ -4145,7 +4158,7 @@ window.PONTE_AREA = {"emblema": "Pixel art: le mura con la torre e la porta, e u
     if (uscita) return; uscita = true; comunicaStato();
     const nero = el('div', ''); nero.style.cssText = 'position:fixed;inset:0;z-index:99;background:#120b06;opacity:0;transition:opacity .7s';
     document.body.append(nero); nero.offsetWidth; nero.style.opacity = '1';
-    setTimeout(() => invia({ tipo: 'passaggio', verso: CFG.prossima.id }), 750);
+    setTimeout(() => { chiudiAudio(); invia({ tipo: 'passaggio', verso: CFG.prossima.id }); }, 750);
   }
   const vista = () => ctx.setTransform(dpr * zoom, 0, 0, dpr * zoom, dpr * (W / 2 - zoom * camX), dpr * (H / 2 - zoom * camY));
   /* il cartello del passaggio: un rettangolo rosso con la scritta dorata in grassetto e un bagliore che cresce e si affievolisce */

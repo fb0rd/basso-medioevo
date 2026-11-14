@@ -360,9 +360,12 @@ const SQUILLI = {
   E: { vol: .19, luce: 4200, note: [[SOL4, 0, .11, [.5]], [SOL4, .12, .11, [.5]], [SOL4, .24, .11, [.5]], [DO5, .38, .22, [.8, .5]], [MI5, .62, .12, [.8]], [SOL5, .76, .12, [.8]], [MI5, .90, .12, [.8]], [SOL5, 1.04, .2, [.8, .667]], [DO6, 1.28, 1.25, [.75, .625, .5, .25]]], timpani: [0, .38, 1.04, 1.16, 1.28] }
 };
 let AC = null;
+/* sul telefono l’audio si sblocca solo a gesto concluso (fine del tocco, clic, tasto): a ogni gesto il contesto, se sospeso o interrotto, riparte */
+function svegliaAC() { if (AC && AC.state !== 'running' && AC.state !== 'closed') try { const p = AC.resume(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
+['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => window.addEventListener(ev, svegliaAC, { capture: true, passive: true }));
 function squillo(area) {
   try {
-    const S = SQUILLI[area] || SQUILLI.C, C = window.AudioContext || window.webkitAudioContext; if (!C) return; if (!AC) AC = new C(); if (AC.state === 'suspended') AC.resume();
+    const S = SQUILLI[area] || SQUILLI.C, C = window.AudioContext || window.webkitAudioContext; if (!C) return; if (!AC) AC = new C(); svegliaAC();
     const t0 = AC.currentTime + .03, usc = AC.createGain(); usc.gain.value = S.vol; usc.connect(AC.destination);
     S.note.forEach(([f0, quando, dur, voci]) => [1].concat(voci || []).forEach((rapporto, v) => {
       const f = f0 * rapporto, t = t0 + quando, g = AC.createGain(), filtro = AC.createBiquadFilter(); filtro.type = 'lowpass'; filtro.Q.value = 2.2;
@@ -385,7 +388,7 @@ function fermaBrano(ms) {
 }
 function suonaBrano() {      // parte quando il brano è decodificato e l’area è comparsa
   if (!VIVA || VIVA.branoFatto || !VIVA.mostrata || BRANO.di !== VIVA || !BRANO.buf || !AC) return; VIVA.branoFatto = true;
-  try { if (AC.state === 'suspended') AC.resume();
+  try { svegliaAC();
     const s = AC.createBufferSource(), g = AC.createGain(), t = AC.currentTime; s.buffer = BRANO.buf; s.loop = true; s.loopStart = BRANO.inizio; s.loopEnd = BRANO.inizio + BRANO.durata;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.75, t + 3); s.connect(g); g.connect(AC.destination); s.start(t + .05, BRANO.inizio); BRANO.src = s; BRANO.gain = g; BRANO.t0 = t + .05;
     const v = VIVA; BRANO.orologio = setInterval(() => { if (VIVA !== v || !BRANO.src) { clearInterval(BRANO.orologio); return; } try { v.iframe.contentWindow.postMessage({ origine: 'menu-rinascita', tipo: 'tempo', pos: BRANO.inizio + ((AC.currentTime - BRANO.t0) % BRANO.durata + BRANO.durata) % BRANO.durata }, '*'); } catch (e) {} }, 200);
@@ -427,6 +430,7 @@ function chiediArea(id) {
 }
 function apriArea(id, daPassaggio) {
   const a = AREA(id);
+  if (VIVA && VIVA.id !== id) manda('chiudi');      // l’area che lascia il posto chiude i suoi suoni (il telefono regge pochi contesti audio)
   alzaSipario('Area ' + id, a.titolo, daPassaggio && id === 'E' ? 'Vent’anni dopo…' : '', !!daPassaggio); volumeMusica(0, 900);
   const attesa = daPassaggio ? 2600 : 1500, t0 = Date.now();
   setTimeout(() => {

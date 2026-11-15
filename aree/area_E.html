@@ -6576,7 +6576,7 @@ window.TOCCO_AREA = true;
   const primoBtn = cassetto.querySelector('.btn'); cassetto.insertBefore(apri, primoBtn);
   const chiudiCassetto = () => { cassetto.classList.remove('aperto'); apri.setAttribute('aria-expanded', 'false'); misura(); };
   apri.onclick = () => { const a = cassetto.classList.toggle('aperto'); apri.setAttribute('aria-expanded', a ? 'true' : 'false'); apri.blur(); misura(); };
-  cassetto.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b && b !== apri && !/^(btnMusica|btnEffetti)$/.test(b.id) && b.textContent !== 'Confermi?' && b.id !== 'btnRiparti') setTimeout(chiudiCassetto, 0); });
+  cassetto.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b && b !== apri && !/^(btnMusica|btnEffetti|btnVoce)$/.test(b.id) && b.textContent !== 'Confermi?' && b.id !== 'btnRiparti') setTimeout(chiudiCassetto, 0); });
   const bis = $$('#bisaccia');
   function misura() { if (bis) corpo.style.setProperty('--tc-su', Math.round($$('#hud').getBoundingClientRect().bottom + 6) + 'px'); }
 

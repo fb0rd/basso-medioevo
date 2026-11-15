@@ -2990,6 +2990,253 @@ window.GRIDA_LUOGHI = {
 })();
 </script>
 <script>
+/* Area A · la PROVA della lettura ad alta voce (richiesta della docente, 15/11/2026): dove compaiono gli altoparlanti e chi parla nei fumetti.
+   Lo usa lettura.js, che va subito dopo. Per estendere la lettura ad altri luoghi basta aggiungerne l’id a «luoghi». */
+window.LETTURA_CFG = {
+  intro: true,                                   // la presentazione dell’area
+  cartiglio: '#seqCart',                         // i messaggi del gioco: l’accoglienza e l’annuncio di ogni luogo nuovo
+  luoghi: ['aratro', 'campi', 'massaricia'],     // POI 1, POI 2, il nastro «Pars massaricia» con il suo gioco
+  fumetti: [                                     // i fumetti sulla mappa: in alto a destra la X che li chiude e l’altoparlante, con la voce di chi parla
+    { chi: 'la guardia del castello', voce: 'uomo', attivo: () => typeof AVV !== 'undefined' && AVV.attivo,
+      righe: ['Alt, viandante!', 'Nelle terre del signore', 'non sono ammessi forestieri.'], z: 56,      // come li disegna il gioco (fumetto)
+      dove: () => AVV.g, chiudi: () => { AVV.attivo = false; }, tieni: () => { AVV.t0 = tempo - 1; } }      // tieni: resta aperto mentre la voce legge
+  ]
+};
+</script>
+<script>
+/* =====================================================================
+   LA LETTURA AD ALTA VOCE (prova nell’Area A)
+   Un altoparlante accanto ai testi: la voce del dispositivo (la sintesi vocale del browser) li legge frase per frase
+   e la frase in corso si colora. I testi del gioco li legge una voce femminile; i fumetti, la voce adatta a chi parla.
+   Dove compaiono gli altoparlanti lo decide LETTURA_CFG, scritto subito prima (lettura_A.js).
+   Il pulsante «Voce» nella barra in alto spegne e riaccende tutto. Se il dispositivo non ha voci italiane, non compare nulla.
+   ===================================================================== */
+(function () {
+  'use strict';
+  const CFG = window.LETTURA_CFG, S = window.speechSynthesis;
+  if (!CFG || !S || typeof SpeechSynthesisUtterance === 'undefined') return;
+  const corpo = document.body;
+
+  /* ---------- le voci: maschile o femminile si capisce dal nome; se ne manca una, la stessa voce cambia tono ---------- */
+  const DONNE = /\b(elsa|isabella|alice|federica|paola|carla|chiara|emma|fiamma|imelda|irma|palmira|pierina|fabiola|giulia|silvia|serena|sara|francesca|valentina|elisa|lucia|google)\b/i;
+  const UOMINI = /\b(cosimo|diego|luca|giuseppe|benigno|calimero|cataldo|gianni|lisandro|rinaldo|marcello|alessio|giorgio|paolo|roberto|riccardo|nicola|marco|andrea|mario)\b/i;
+  let VOCI = [];
+  const qualita = v => (/natural|neural|online|enhanced|premium|avanzat|migliorat/i.test(v.name) ? 2 : 0) + (/^it[-_]it/i.test(v.lang) ? 1 : 0);
+  const sesso = v => (UOMINI.test(v.name) ? 'u' : DONNE.test(v.name) ? 'd' : '?');
+  function scegli(chi) {      // chi: 'd' (donna) o 'u' (uomo) → { voce, tono }
+    const per = s => VOCI.filter(v => sesso(v) === s).sort((a, b) => qualita(b) - qualita(a))[0];
+    if (chi === 'u') { const u = per('u'); if (u) return { voce: u, tono: 1 }; const a = per('?') || per('d'); return { voce: a, tono: .7 }; }
+    const d = per('d') || per('?'); if (d) return { voce: d, tono: 1 }; return { voce: per('u'), tono: 1.3 };
+  }
+  function caricaVoci() {
+    const tutte = S.getVoices() || []; VOCI = tutte.filter(v => /^it([-_]|$)/i.test(v.lang));
+    corpo.classList.toggle('lt-ok', !tutte.length || VOCI.length > 0);      // se il browser non elenca voci, si prova lo stesso con l’italiano predefinito
+  }
+  caricaVoci(); try { S.addEventListener('voiceschanged', caricaVoci); } catch (e) { S.onvoiceschanged = caricaVoci; }
+
+  /* ---------- come si dicono certe scritture: secoli in numeri romani, abbreviazioni, segni ---------- */
+  const ROMANI = { I: 'primo', II: 'secondo', III: 'terzo', IV: 'quarto', V: 'quinto', VI: 'sesto', VII: 'settimo', VIII: 'ottavo', IX: 'nono', X: 'decimo', XI: 'undicesimo', XII: 'dodicesimo', XIII: 'tredicesimo', XIV: 'quattordicesimo', XV: 'quindicesimo', XVI: 'sedicesimo' };
+  function perVoce(t) {
+    return t.replace(/\s+/g, ' ')
+      .replace(/\b([IVX]{1,5})(?=(?:\s+(?:e|o)\s+[IVX]{1,5})?\s+sec(?:\.|ol))/g, (m, r) => ROMANI[r] || m)
+      .replace(/\bsec\./g, 'secolo')
+      .replace(/\bpp\.\s*(\d+)\s*[-–]\s*(\d+)/g, (m, a, b) => (+b === +a + 1 ? `pagine ${a} e ${b}` : `pagine da ${a} a ${b}`)).replace(/\bpp\.\s*/g, 'pagine ').replace(/\bp\.\s*(?=\d)/g, 'pagina ')
+      .replace(/\bc\.\s*(\d{3,4})\s*[-–]\s*(\d{3,4})/g, 'tra il $1 e il $2 circa').replace(/\bc\.\s*(?=\d)/g, 'circa ')
+      .replace(/\bcfr\./gi, 'confronta').replace(/(\d)\s*−\s*(\d)/g, '$1 meno $2')
+      .replace(/[«»"“”]/g, '').replace(/\s+,/g, ',').replace(/,(\s*,)+/g, ',').replace(/,\s*([.;:])/g, '$1').replace(/\s*·\s*/g, '. ').replace(/[▸◂▲▼▶]/g, '').trim();
+  }
+
+  /* ---------- dal testo sullo schermo ai «pezzi» da leggere: una frase alla volta, ciascuna con il suo tratto da colorare ---------- */
+  const SALTA = '.lt-btn, .lt-ang, select, option, kbd, input, script, style, .badge, .sopra, .credito, .tasti, .mg-testa, .sz-nav';
+  function frasiDi(el, prefisso, salta) {
+    const seg = []; let T = '';
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, { acceptNode(n) {
+      if (n.nodeType === 1) { if (n.tagName === 'SELECT') return NodeFilter.FILTER_ACCEPT; return n.matches(SALTA) || (salta && n.matches(salta)) || n.hidden ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP; }
+      return NodeFilter.FILTER_ACCEPT; } });
+    let n, spazi = 0;
+    while ((n = w.nextNode())) {
+      if (n.nodeType === 1) {      // un completamento: si dice la parola scelta, o «spazio» con il suo numero
+        const o = n.selectedIndex > 0 ? n.options[n.selectedIndex].text : 'spazio ' + (++spazi);
+        const t = ', ' + o + ', ';      // le virgole fanno una pausa prima e dopo la parola mancante
+        seg.push({ inizio: T.length, fine: T.length + t.length }); T += t; continue; }
+      seg.push({ nodo: n, inizio: T.length, fine: T.length + n.nodeValue.length }); T += n.nodeValue;
+    }
+    // si taglia dopo . ! ? … seguiti da una maiuscola; le frasi troppo lunghe (oltre i 200 caratteri) si spezzano a una virgola
+    const tagli = [0]; T.replace(/[.!?…]+[»"”)]?\s+(?=[A-ZÀ-ÝÈÉ«"(])/g, (m, i) => { tagli.push(i + m.length); return m; }); tagli.push(T.length);
+    let pezzi = []; for (let k = 0; k < tagli.length - 1; k++) pezzi.push([tagli[k], tagli[k + 1]]);
+    pezzi = pezzi.reduce((acc, p) => { const u = acc[acc.length - 1]; if (u && T.slice(u[0], u[1]).trim().length < 22) u[1] = p[1]; else acc.push(p); return acc; }, []);
+    const corti = []; pezzi.forEach(([a, b]) => { while (b - a > 200) { const pz = T.slice(a, a + 200), c = Math.max(pz.lastIndexOf(', '), pz.lastIndexOf('; '), pz.lastIndexOf(': ')); if (c < 60) break; corti.push([a, a + c + 2]); a = a + c + 2; } corti.push([a, b]); });
+    const punto = (pos, avanti) => {      // il nodo di testo e la posizione in cui cade un taglio (saltando le parole dei completamenti)
+      const lista = avanti ? seg : seg.slice().reverse();
+      for (const s of lista) { if (!s.nodo) continue; if (avanti ? s.fine > pos : s.inizio < pos) return [s.nodo, Math.max(0, Math.min(s.nodo.nodeValue.length, pos - s.inizio))]; }
+      return null;
+    };
+    return corti.map(([a, b], i) => {
+      const testo = T.slice(a, b).trim(); if (!testo) return null;
+      let r = null; const x = punto(a, true), y = punto(b, false);
+      if (x && y) { try { r = document.createRange(); r.setStart(x[0], x[1]); r.setEnd(y[0], y[1]); } catch (e) { r = null; } }
+      return { testo: (i === 0 && prefisso ? prefisso + ' ' : '') + testo, range: r };
+    }).filter(Boolean);
+  }
+  const voci = (lista, prefisso) => lista.flatMap((el, i) => frasiDi(el, typeof prefisso === 'function' ? prefisso(i, el) : prefisso));
+  const LETTERE = 'ABCDEFGH';
+
+  /* ---------- che cosa si legge in ciascun tipo di riquadro ---------- */
+  function pezziDi(blocco) {
+    const q = s => [...blocco.querySelectorAll(s)];
+    if (blocco.matches('#intro')) return voci(q(':scope > h2, :scope > p:not(.sopra):not(.credito)'));
+    if (blocco.matches('.breve')) return [{ testo: 'In breve.' }, ...voci(q('p'))];
+    if (blocco.matches('.fonte')) return [{ testo: 'Fonte.' }, ...voci(q('blockquote, .cita, .contesto'))];
+    if (blocco.matches(CFG.cartiglio || '#_')) return frasiDi(blocco, '', 'b');
+    if (blocco.matches('.mg')) {      // un gioco: la consegna o la domanda, le risposte possibili, il commento
+      const p = voci(q(':scope > p:not(.mg-testa)'));
+      return p.concat(voci(q('.mg-opz .btn:not(:disabled)'), i => `Risposta ${LETTERE[i]}:`), voci(q('.mg-voci .btn'), i => (i ? '' : 'Le voci:')), voci(q(':scope > .fb, .mg-guida')));
+    }
+    if (blocco.matches('section.es')) {      // un esercizio: il titolo, la consegna, poi le parti secondo il tipo
+      let p = voci(q('h4, p.dom'));
+      if (blocco.querySelector('.cloze')) { p = p.concat(voci(q('.cloze')));
+        q('.cloze select').forEach((s, i) => { const o = [...s.options].slice(1).map(x => x.text); p.push({ testo: `Spazio ${i + 1}: ${o.slice(0, -1).join(', ')} oppure ${o[o.length - 1]}.`, el: s }); }); }
+      if (blocco.querySelector('ol.ord')) p = p.concat([{ testo: 'Le frasi da mettere in ordine.' }], voci(q('ol.ord li'), i => `${i + 1}:`));
+      if (blocco.querySelector('.abb')) { const col = q('.abb .col'); p = p.concat(voci([...col[0].querySelectorAll('button')], i => (i ? '' : 'A sinistra:')), voci([...col[1].querySelectorAll('button')], i => (i ? '' : 'A destra:')), voci(q('.abb > p'))); }
+      if (blocco.querySelector('.opz')) p = p.concat(voci(q('.opz label'), i => `Risposta ${LETTERE[i]}:`));
+      if (blocco.querySelector('.sim')) p = p.concat(voci(q('.sim > div > div:first-child')));
+      return p.concat(voci(q(':scope > .fb')));
+    }
+    return voci([blocco]);
+  }
+
+  /* ---------- la lettura: un pezzo dopo l’altro; la frase in corso si colora, la musica si abbassa ---------- */
+  const HL = !!(window.CSS && CSS.highlights && typeof Highlight !== 'undefined');
+  let attivo = null, acceso = true;
+  const LT = window.LETTURA = { get parla() { return !!attivo; }, scegli, perVoce, pezziDi, get voci() { return VOCI.map(v => v.name + ' · ' + sesso(v)); } };
+  function colora(p) {
+    if (HL) CSS.highlights.delete('lt-frase'); document.querySelectorAll('.lt-ora').forEach(x => x.classList.remove('lt-ora'));
+    if (!p) return;
+    if (p.range && HL) CSS.highlights.set('lt-frase', new Highlight(p.range));
+    else { const e = p.el || (p.range && (p.range.commonAncestorContainer.nodeType === 1 ? p.range.commonAncestorContainer : p.range.commonAncestorContainer.parentElement)); if (e) e.classList.add('lt-ora'); }
+  }
+  function statoPulsante(b, su) { if (!b) return; b.setAttribute('aria-pressed', su ? 'true' : 'false'); b.setAttribute('aria-label', su ? 'Ferma la lettura' : 'Ascolta il testo'); const t = b.querySelector('.lt-t'); if (t) t.textContent = su ? 'Ferma' : 'Ascolta'; }
+  function ferma() { const a = attivo; attivo = null; try { S.cancel(); } catch (e) {} colora(null); if (a) statoPulsante(a.btn, false); }
+  function parla(pezzi, btn, blocco, chi) {
+    ferma(); pezzi = pezzi.filter(p => p.testo && perVoce(p.testo)); if (!pezzi.length) return;
+    const a = attivo = { pezzi, btn, blocco, chi: chi || 'd', i: 0 }; statoPulsante(btn, true);
+    setTimeout(() => prossimo(a), 60);      // dopo un «cancel», alcuni browser perdono la frase detta subito
+  }
+  function prossimo(a) {
+    if (attivo !== a) return; if (a.i >= a.pezzi.length) { ferma(); return; }
+    const p = a.pezzi[a.i++], u = new SpeechSynthesisUtterance(perVoce(p.testo)), v = scegli(p.chi || a.chi);
+    u.lang = v.voce ? v.voce.lang : 'it-IT'; if (v.voce) u.voice = v.voce; u.pitch = v.tono; u.rate = 1;
+    u.onstart = () => { if (attivo === a) colora(p); };
+    u.onend = () => prossimo(a); u.onerror = e => { if (attivo === a && e.error !== 'interrupted' && e.error !== 'canceled') ferma(); };
+    a.u = u; S.speak(u);      // il riferimento a.u evita che il browser la butti via prima della fine
+  }
+  // la musica dell’area si abbassa mentre la voce legge
+  if (typeof window.volMusica === 'function') { const v0 = window.volMusica; window.volMusica = function () { const v = v0.apply(this, arguments); return attivo ? Math.min(v, .1) : v; }; }
+
+  /* ---------- l’altoparlante ---------- */
+  const st = document.createElement('style');
+  st.textContent = '.lt-btn{display:none;align-items:center;gap:5px;font:inherit;font-family:var(--font-corpo,inherit);font-size:.82rem;font-weight:700;letter-spacing:0;text-transform:none;line-height:1;color:var(--inchiostro);background:var(--perg-chiara);border:1.5px solid var(--inchiostro);border-radius:999px;padding:5px 11px 5px 8px;min-height:32px;cursor:pointer;box-shadow:1px 1px 0 var(--inchiostro);vertical-align:middle}'
+    + 'body.lt-ok.lt-acceso .lt-btn{display:inline-flex}'
+    + '.lt-btn svg{width:20px;height:20px;flex:none}.lt-btn:hover{background:var(--oro)}.lt-btn:focus-visible{outline:3px solid var(--oro);outline-offset:2px}'
+    + '.lt-btn[aria-pressed="true"]{background:var(--inchiostro);color:var(--perg-chiara)}'
+    + '.lt-btn.lt-solo{padding:5px;width:32px;justify-content:center}.lt-btn.lt-solo .lt-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}'
+    + '.lt-fl{float:right;margin:0 0 6px 12px;position:relative;z-index:1}'
+    + 'h4 .lt-btn{margin:-8px 0 -8px 10px;min-height:26px;padding:3px 9px 3px 6px}h4 .lt-btn svg{width:17px;height:17px}'      // nella riga del titolo dell’esercizio non deve alzare la riga
+    + '.lt-ang{position:absolute;top:-13px;right:-13px;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:auto;z-index:3}'
+    + '.lt-x,.lt-au{width:28px;height:28px;border-radius:50%;border:2px solid var(--inchiostro);padding:0;display:grid;place-items:center;cursor:pointer;box-shadow:1px 1px 0 var(--inchiostro);font:inherit}'
+    + '.lt-x{background:#c0392b;color:#fff}.lt-x svg{width:13px;height:13px}.lt-x:hover{background:#9c2f1c}'
+    + '.lt-au{display:none;background:var(--perg-chiara);color:var(--inchiostro)}.lt-au svg{width:17px;height:17px}.lt-au:hover{background:var(--oro)}'
+    + 'body.lt-ok.lt-acceso .lt-au{display:grid}.lt-au[aria-pressed="true"]{background:var(--inchiostro);color:var(--perg-chiara)}'
+    + '.lt-x:focus-visible,.lt-au:focus-visible{outline:3px solid var(--oro);outline-offset:2px}'
+    + '#seqCart.lt-con{padding-left:26px;padding-right:26px}'
+    + '.lt-fum{position:fixed;width:0;height:0;z-index:25}.lt-fum .lt-ang{right:-24px}'      // sui fumetti, un po’ più fuori: la mappa rimpicciolita lascia poco margine al testo
+    + '::highlight(lt-frase){background-color:rgba(242,193,74,.6);color:inherit}'
+    + '.lt-ora{outline:3px solid var(--oro);outline-offset:2px;background:rgba(242,193,74,.3)}';
+  document.head.append(st);
+  const ICONA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  function altoparlante(blocco, dove, come) {      // come: 'fl' (a destra, in alto nel riquadro), 'solo' (solo l’icona)
+    if (blocco.querySelector(':scope .lt-btn[data-lt]') && [...blocco.querySelectorAll('.lt-btn[data-lt]')].some(b => b.ltBlocco === blocco)) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'lt-btn' + (come === 'fl' ? ' lt-fl' : '') + (come === 'solo' ? ' lt-solo' : ''); b.dataset.lt = '1'; b.ltBlocco = blocco;
+    b.innerHTML = ICONA + '<span class="lt-t">Ascolta</span>'; statoPulsante(b, false);
+    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } parla(pezziDi(blocco), b, blocco, 'd'); });
+    b.addEventListener('keydown', e => e.stopPropagation());
+    dove(b);
+  }
+
+  /* ---------- dove si mettono gli altoparlanti ---------- */
+  let luogo = null;      // l’id del luogo o del nastro aperto (gli altoparlanti compaiono solo nei luoghi della prova)
+  ['apriPoi', 'apriInfo'].forEach(nome => { const f0 = window[nome]; if (typeof f0 !== 'function') return; window[nome] = function (p) { ferma(); luogo = p && p.id; return f0.apply(this, arguments); }; });
+  if (typeof window.chiudiModale === 'function') { const c0 = window.chiudiModale; window.chiudiModale = function () { ferma(); luogo = null; return c0.apply(this, arguments); }; }
+  function decora() {
+    const body = document.getElementById('popBody');
+    if (body && luogo && CFG.luoghi.includes(luogo) && STATO.modale) {
+      body.querySelectorAll('.breve').forEach(x => altoparlante(x, b => x.prepend(b), 'fl'));
+      body.querySelectorAll('.fonte').forEach(x => altoparlante(x, b => { const t = x.querySelector('.tipo'); t ? t.after(b) : x.prepend(b); }, 'fl'));
+      body.querySelectorAll('section.es:not(.mg)').forEach(x => { const h = x.querySelector('h4'); if (h) altoparlante(x, b => h.append(b), ''); });
+      body.querySelectorAll('.mg').forEach(x => { if (x.children.length) altoparlante(x, b => x.prepend(b), 'fl'); });
+    }
+    if (CFG.intro) { const i = document.getElementById('intro'); if (i) altoparlante(i, b => { const h = i.querySelector('h2'); h ? h.before(b) : i.prepend(b); }, 'fl'); }
+    if (CFG.cartiglio) { const c = document.querySelector(CFG.cartiglio); if (c && c.textContent.trim() && !c.querySelector('.lt-ang')) {
+      c.classList.add('lt-con'); const a = angolo(c, () => parla(pezziDi(c), a.au, c, 'd'), () => { cartTiene = 0; c.classList.remove('su'); }); } }
+  }
+  let inAttesa = false; const presto = () => { if (inAttesa) return; inAttesa = true; requestAnimationFrame(() => { inAttesa = false; decora(); }); };
+  new MutationObserver(presto).observe(corpo, { childList: true, subtree: true });
+
+  /* ---------- i due pulsanti d’angolo dei messaggi e dei fumetti: la X li chiude, l’altoparlante li legge ---------- */
+  const X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>';
+  function angolo(dentro, leggi, chiudi) {
+    const a = document.createElement('div'); a.className = 'lt-ang';
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'lt-x'; x.innerHTML = X; x.setAttribute('aria-label', 'Chiudi il messaggio');
+    const au = document.createElement('button'); au.type = 'button'; au.className = 'lt-au'; au.innerHTML = ICONA; statoPulsante(au, false);
+    const ferma0 = e => { e.stopPropagation(); }; ['pointerdown', 'touchstart', 'mousedown'].forEach(ev => a.addEventListener(ev, ferma0, { passive: true }));
+    x.addEventListener('click', e => { e.stopPropagation(); if (attivo && attivo.btn === au) ferma(); chiudi(); x.blur(); });
+    au.addEventListener('click', e => { e.stopPropagation(); au.blur(); if (attivo && attivo.btn === au) { ferma(); return; } leggi(); });
+    a.append(x, au); dentro.append(a); a.au = au; return a;
+  }
+
+  /* ---------- i fumetti sulla mappa sono disegnati: i pulsanti vi si posano sopra, all’angolo in alto a destra, e li seguono ---------- */
+  const misura = document.createElement('canvas').getContext('2d');
+  function angoloFumetto(f) {      // dove cade, sullo schermo, l’angolo in alto a destra del fumetto (stessa geometria della funzione fumetto del gioco)
+    const cv = document.getElementById('scena'), g = f.dove && f.dove(); if (!cv || !g || typeof P !== 'function') return null;
+    const [sx, sy] = P(g[0], g[1], f.z || 56); misura.font = '700 14px "IM Fell English",Georgia,serif';
+    const w = Math.max.apply(null, f.righe.map(r => misura.measureText(r).width)) + 26, h = f.righe.length * 18 + 14, r = cv.getBoundingClientRect();
+    return [r.left + zoom * (sx + w / 2 - camX) + W / 2, r.top + zoom * (sy - h - 14 - camY) + H / 2];
+  }
+  (CFG.fumetti || []).forEach(f => {
+    const box = document.createElement('div'); box.className = 'lt-fum'; box.hidden = true; document.body.append(box);
+    const a = angolo(box, () => { parla([{ testo: f.righe.join(' ') }], a.au, null, f.voce === 'uomo' ? 'u' : 'd'); if (attivo) attivo.fumetto = f; }, () => { try { f.chiudi(); } catch (e) {} box.hidden = true; });
+    const giro = () => {
+      let su = false; try { su = !!f.attivo() && !STATO.modale && !STATO.intro; } catch (e) {}
+      const p = su && angoloFumetto(f); box.hidden = !p;
+      if (p) { box.style.left = p[0] + 'px'; box.style.top = p[1] + 'px'; } else if (attivo && attivo.fumetto === f) ferma();
+      requestAnimationFrame(giro);
+    };
+    requestAnimationFrame(giro);
+  });
+  decora();
+
+  /* ---------- la sorveglianza: la voce tace se il suo riquadro sparisce; il cartiglio e i fumetti restano aperti finché li si ascolta ---------- */
+  const visibile = el => el && el.isConnected && el.getClientRects().length > 0 && !el.closest('[hidden]');
+  let cartTiene = 0;
+  setInterval(() => {
+    if (attivo && attivo.blocco && !visibile(attivo.blocco)) ferma();
+    if (attivo && attivo.fumetto && attivo.fumetto.tieni) try { attivo.fumetto.tieni(); } catch (e) {}
+    const c = CFG.cartiglio && document.querySelector(CFG.cartiglio);
+    if (c) { if (attivo && attivo.blocco === c) { c.classList.add('su'); cartTiene = Date.now(); } else if (cartTiene && Date.now() - cartTiene > 2500) { cartTiene = 0; c.classList.remove('su'); } }
+  }, 150);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) ferma(); });
+  window.addEventListener('message', e => { if (e.data && e.data.origine === 'menu-rinascita' && e.data.tipo === 'pausa') ferma(); });
+  window.addEventListener('pagehide', ferma);
+
+  /* ---------- «Voce: sì / no» nella barra in alto, accanto a «Musica» ---------- */
+  corpo.classList.add('lt-acceso');
+  const bm = document.getElementById('btnMusica');
+  if (bm) { const bv = document.createElement('button'); bv.type = 'button'; bv.className = 'btn piccolo'; bv.id = 'btnVoce'; bv.textContent = 'Voce: sì'; bv.setAttribute('aria-pressed', 'true');
+    bv.onclick = () => { acceso = !acceso; corpo.classList.toggle('lt-acceso', acceso); bv.textContent = acceso ? 'Voce: sì' : 'Voce: no'; bv.setAttribute('aria-pressed', acceso ? 'true' : 'false'); if (!acceso) ferma(); bv.blur(); };
+    bm.after(bv); const agg = () => { bv.hidden = !corpo.classList.contains('lt-ok'); }; agg(); new MutationObserver(agg).observe(corpo, { attributes: true, attributeFilter: ['class'] }); }
+})();
+</script>
+<script>
 window.TOCCO_AREA = true;
 /* =====================================================================
    I COMANDI DA TELEFONO · identici nelle cinque aree
@@ -3065,7 +3312,7 @@ window.TOCCO_AREA = true;
   const primoBtn = cassetto.querySelector('.btn'); cassetto.insertBefore(apri, primoBtn);
   const chiudiCassetto = () => { cassetto.classList.remove('aperto'); apri.setAttribute('aria-expanded', 'false'); misura(); };
   apri.onclick = () => { const a = cassetto.classList.toggle('aperto'); apri.setAttribute('aria-expanded', a ? 'true' : 'false'); apri.blur(); misura(); };
-  cassetto.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b && b !== apri && !/^(btnMusica|btnEffetti)$/.test(b.id) && b.textContent !== 'Confermi?' && b.id !== 'btnRiparti') setTimeout(chiudiCassetto, 0); });
+  cassetto.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b && b !== apri && !/^(btnMusica|btnEffetti|btnVoce)$/.test(b.id) && b.textContent !== 'Confermi?' && b.id !== 'btnRiparti') setTimeout(chiudiCassetto, 0); });
   const bis = $$('#bisaccia');
   function misura() { if (bis) corpo.style.setProperty('--tc-su', Math.round($$('#hud').getBoundingClientRect().bottom + 6) + 'px'); }
 

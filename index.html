@@ -758,7 +758,8 @@ window.MENU = { get PARTITA() { return PARTITA; }, get VIVA() { return VIVA; }, 
 <script>
 window.LETTURA_CFG = {      // nel menu: si ascolta la descrizione del gioco (titolo e presentazione); la musica del menu si abbassa mentre la voce legge
   blocchi: [{ sel: '#menu .presenta', anche: ['#menu h1'] }], barra: false,
-  abbassa: su => { if (typeof MUSICA === 'undefined') return; clearInterval(MUSICA.sfuma); MUSICA.el.volume = su ? Math.min(MUSICA.vol, .1) : MUSICA.vol; }
+  abbassa: su => { if (typeof MUSICA === 'undefined') return;      // finita la lettura, la musica torna su solo se si è ancora nel menu: se intanto si è scelta un’area, si spegne
+    if (su) { clearInterval(MUSICA.sfuma); MUSICA.el.volume = Math.min(MUSICA.vol, .1); } else if (MUSICA.attiva && nelMenu()) volumeMusica(MUSICA.vol, 400); else volumeMusica(0, 300); }
 };
 /* =====================================================================
    LA LETTURA AD ALTA VOCE (prova nell’Area A)

@@ -393,7 +393,7 @@ table.offerte small{white-space:nowrap}
         <span><kbd>ESC</kbd></span><span>chiudi la scheda</span>
         <span><kbd>M</kbd></span><span>mostra o nascondi la mappa</span>
       </div>
-      <p>Questa è l’<b>Area C</b>: mercato, fiera, commenda e cambiavalute. Musica ed effetti sonori partono quando entri; puoi spegnerli separatamente con i pulsanti «Musica» ed «Effetti».</p>
+      <p>Questa è l’<b>Area C</b>: mercato, fiera, commenda e cambiavalute. Musica ed effetti sonori partono quando entri; puoi spegnerli separatamente con i pulsanti «Musica» ed «Effetti», che trovi <span class="tc-tastiera">nel menu «☰ Opzioni», in alto a destra.</span><span class="tc-dito">nel cassetto «☰ Comandi», in alto.</span></p>
       <p class="crediti">Musica: «Winds of Valor» di AlkaKrab, dal pacchetto <i>Free 10 Medieval Fantasy Ambient Tracks</i> (senza copyright).</p>
       <div class="fine"><span></span><button class="btn primario" id="btnVia" type="button">Entra nel borgo</button></div>
     </div>
@@ -3606,6 +3606,448 @@ window.IMG_C = {
 })();
 </script>
 <script>
+/* Area C · la lettura ad alta voce (richieste della docente, 15/11/2026): dove compaiono gli altoparlanti e chi parla nei fumetti.
+   Lo usa lettura.js, che va subito dopo (vedi lettura_A.js per le voci della configurazione).
+   Fumetti con X e altoparlante: solo quelli dei personaggi fissi (AVVISI: la scorta al margine del bosco, il gabelliere alla porta,
+   la guardia della porta nord), tutti con voce maschile; le grida dei venditori al mercato restano solo da guardare. */
+window.LETTURA_CFG = {
+  intro: true,
+  luoghi: '*',
+  fumetti: (typeof AVVISI !== 'undefined' ? AVVISI : []).map(a => ({
+    chi: a.volto, voce: 'uomo', attivo: () => a.attivo, righe: a.righe, z: a.z,
+    dove: () => a.chi, chiudi: () => { a.attivo = false; }, tieni: () => { a.t0 = tempo - 1; } })),
+  dialoghi: [{ nome: 'Neri', voce: 'uomo' }, { nome: 'Guccio', voce: 'uomo' }, { nome: 'gabelliere', voce: 'uomo' }]      // le battute tra «» dei mercanti nei giochi
+};
+</script>
+<script>
+/* =====================================================================
+   LA LETTURA AD ALTA VOCE (prova nell’Area A)
+   Un altoparlante accanto ai testi: la voce del dispositivo (la sintesi vocale del browser) li legge frase per frase
+   e la frase in corso si colora. I testi del gioco li legge una voce femminile; i fumetti, la voce adatta a chi parla.
+   Dove compaiono gli altoparlanti lo decide LETTURA_CFG, scritto subito prima (lettura_A.js).
+   Il pulsante «Voce» nella barra in alto spegne e riaccende tutto. Se il dispositivo non ha voci italiane, non compare nulla.
+   ===================================================================== */
+(function () {
+  'use strict';
+  const CFG = window.LETTURA_CFG, S = window.speechSynthesis;
+  if (!CFG || !S || typeof SpeechSynthesisUtterance === 'undefined') return;
+  const corpo = document.body;
+
+  /* ---------- le voci: maschile o femminile si capisce dal nome; se ne manca una, la stessa voce cambia tono ---------- */
+  const DONNE = /\b(elsa|isabella|alice|federica|paola|carla|chiara|emma|fiamma|imelda|irma|palmira|pierina|fabiola|giulia|silvia|serena|sara|francesca|valentina|elisa|lucia|google)\b/i;
+  const UOMINI = /\b(cosimo|diego|luca|giuseppe|benigno|calimero|cataldo|gianni|lisandro|rinaldo|marcello|alessio|giorgio|paolo|roberto|riccardo|nicola|marco|andrea|mario)\b/i;
+  let VOCI = [];
+  const qualita = v => (/natural|neural|online|enhanced|premium|avanzat|migliorat/i.test(v.name) ? 2 : 0) + (/^it[-_]it/i.test(v.lang) ? 1 : 0);
+  const sesso = v => (UOMINI.test(v.name) ? 'u' : DONNE.test(v.name) ? 'd' : '?');
+  function scegli(chi) {      // chi: 'd' (donna) o 'u' (uomo) → { voce, tono }
+    const per = s => VOCI.filter(v => sesso(v) === s).sort((a, b) => qualita(b) - qualita(a))[0];
+    if (chi === 'u') { const u = per('u'); if (u) return { voce: u, tono: 1 }; const a = per('?') || per('d'); return { voce: a, tono: .7 }; }
+    const d = per('d') || per('?'); if (d) return { voce: d, tono: 1 }; return { voce: per('u'), tono: 1.3 };
+  }
+  function caricaVoci() {
+    const tutte = S.getVoices() || []; VOCI = tutte.filter(v => /^it([-_]|$)/i.test(v.lang));
+    corpo.classList.toggle('lt-ok', !tutte.length || VOCI.length > 0);      // se il browser non elenca voci, si prova lo stesso con l’italiano predefinito
+  }
+  caricaVoci(); try { S.addEventListener('voiceschanged', caricaVoci); } catch (e) { S.onvoiceschanged = caricaVoci; }
+
+  /* ---------- come si dicono certe scritture: secoli in numeri romani, abbreviazioni, segni ---------- */
+  const ROMANI = { I: 'primo', II: 'secondo', III: 'terzo', IV: 'quarto', V: 'quinto', VI: 'sesto', VII: 'settimo', VIII: 'ottavo', IX: 'nono', X: 'decimo', XI: 'undicesimo', XII: 'dodicesimo', XIII: 'tredicesimo', XIV: 'quattordicesimo', XV: 'quindicesimo', XVI: 'sedicesimo' };
+  function perVoce(t) {
+    return t.replace(/\s+/g, ' ')
+      .replace(/\b([IVX]{1,5})(?=(?:\s+(?:e|o)\s+[IVX]{1,5})?\s+sec(?:\.|ol))/g, (m, r) => ROMANI[r] || m)
+      .replace(/\bsec\./g, 'secolo')
+      .replace(/\bpp\.\s*(\d+)\s*[-–]\s*(\d+)/g, (m, a, b) => (+b === +a + 1 ? `pagine ${a} e ${b}` : `pagine da ${a} a ${b}`)).replace(/\bpp\.\s*/g, 'pagine ').replace(/\bp\.\s*(?=\d)/g, 'pagina ')
+      .replace(/\bc\.\s*(\d{3,4})\s*[-–]\s*(\d{3,4})/g, 'tra il $1 e il $2 circa').replace(/\bc\.\s*(?=\d)/g, 'circa ')
+      .replace(/\bcfr\./gi, 'confronta').replace(/(\d)\s*−\s*(\d)/g, '$1 meno $2')
+      .replace(/[«»"“”]/g, '').replace(/\s+,/g, ',').replace(/,(\s*,)+/g, ',').replace(/,\s*([.;:])/g, '$1').replace(/\s*·\s*/g, '. ').replace(/[▸◂▲▼▶]/g, '').trim();
+  }
+
+  /* ---------- dal testo sullo schermo ai «pezzi» da leggere: una frase alla volta, ciascuna con il suo tratto da colorare ---------- */
+  const SALTA = 'body:not(.tocco) .tc-dito, body.tocco .tc-tastiera, .lt-btn, .lt-ang, .fz-guida, sup, .note, select, option, kbd, input, script, style, .badge, .sopra, .credito, .tasti, .mg-testa, .sz-nav';
+  function frasiDi(el, prefisso, salta) {
+    const seg = []; let T = '';
+    const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, { acceptNode(n) {
+      if (n.nodeType === 1) { if (n.tagName === 'SELECT' || n.tagName === 'BR') return NodeFilter.FILTER_ACCEPT; return n.matches(SALTA) || (salta && n.matches(salta)) || n.hidden ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP; }
+      return NodeFilter.FILTER_ACCEPT; } });
+    let n, spazi = 0;
+    while ((n = w.nextNode())) {
+      if (n.tagName === 'BR') { if (/\S$/.test(T)) T += ' '; continue; }      // a capo (i versi di una poesia): uno spazio
+      if (n.nodeType === 1) {      // un completamento: si dice la parola scelta, o «spazio» con il suo numero
+        const o = n.selectedIndex > 0 ? n.options[n.selectedIndex].text : 'spazio ' + (++spazi);
+        const t = ', ' + o + ', ';      // le virgole fanno una pausa prima e dopo la parola mancante
+        seg.push({ inizio: T.length, fine: T.length + t.length }); T += t; continue; }
+      const pe = n.parentElement, prec = seg.length && seg[seg.length - 1].nodo, pp = prec && prec.parentElement;      // tra due riquadri affiancati in un contenitore flex o grid ci vuole uno spazio
+      if (pp && pe !== pp && pe.parentElement && pp.parentElement === pe.parentElement && /\S$/.test(T) && /^\S/.test(n.nodeValue) && /flex|grid/.test(getComputedStyle(pe.parentElement).display)) T += ' ';
+      seg.push({ nodo: n, inizio: T.length, fine: T.length + n.nodeValue.length }); T += n.nodeValue;
+    }
+    // si taglia dopo . ! ? … seguiti da una maiuscola; le frasi troppo lunghe (oltre i 200 caratteri) si spezzano a una virgola
+    const tagli = [0]; T.replace(/[.!?…]+[»"”)]?\s+(?=[A-ZÀ-ÝÈÉ«"(])/g, (m, i) => { tagli.push(i + m.length); return m; }); tagli.push(T.length);
+    let pezzi = []; for (let k = 0; k < tagli.length - 1; k++) pezzi.push([tagli[k], tagli[k + 1]]);
+    pezzi = pezzi.reduce((acc, p) => { const u = acc[acc.length - 1]; if (u && T.slice(u[0], u[1]).trim().length < 22) u[1] = p[1]; else acc.push(p); return acc; }, []);
+    const corti = []; pezzi.forEach(([a, b]) => { while (b - a > 200) { const pz = T.slice(a, a + 200), c = Math.max(pz.lastIndexOf(', '), pz.lastIndexOf('; '), pz.lastIndexOf(': ')); if (c < 60) break; corti.push([a, a + c + 2]); a = a + c + 2; } corti.push([a, b]); });
+    const punto = (pos, avanti) => {      // il nodo di testo e la posizione in cui cade un taglio (saltando le parole dei completamenti)
+      const lista = avanti ? seg : seg.slice().reverse();
+      for (const s of lista) { if (!s.nodo) continue; if (avanti ? s.fine > pos : s.inizio < pos) return [s.nodo, Math.max(0, Math.min(s.nodo.nodeValue.length, pos - s.inizio))]; }
+      return null;
+    };
+    return corti.map(([a, b], i) => {
+      const testo = T.slice(a, b).trim(); if (!testo) return null;
+      let r = null; const x = punto(a, true), y = punto(b, false);
+      if (x && y) { try { r = document.createRange(); r.setStart(x[0], x[1]); r.setEnd(y[0], y[1]); } catch (e) { r = null; } }
+      return { testo: (i === 0 && prefisso ? prefisso + ' ' : '') + testo, range: r };
+    }).filter(Boolean);
+  }
+  const voci = (lista, prefisso) => lista.flatMap((el, i) => frasiDi(el, typeof prefisso === 'function' ? prefisso(i, el) : prefisso));
+  const con = (chi, pezzi) => pezzi.map(p => Object.assign(p, { chi }));
+  /* le battute di dialogo dentro un testo: le legge la voce di chi parla. CFG.dialoghi = [{ inizio: 'le prime parole della battuta', voce: 'uomo' | 'donna' }] */
+  // CFG.dialoghi = [{ nome: 'Tecla', voce: 'donna' }, …]: chi parla è il nome più vicino nei 70 caratteri prima della «, dopo l’ultima battuta chiusa
+  // (es. «Tecla ride: «…»»); una battuta può durare più frasi. Le citazioni senza un nome davanti restano alla voce di chi legge il testo.
+  function dialoghi(pezzi) {
+    const D = CFG.dialoghi || []; if (!D.length) return pezzi;
+    const out = []; let dentro = null, prima = '';      // dentro: la voce della battuta aperta ('n' = citazione senza nome: resta nel testo)
+    pezzi.forEach(p => {
+      let t = p.testo, norm = '';
+      const spingi = () => { if (norm) out.push({ ...p, testo: norm }); norm = ''; };
+      while (t) {
+        if (dentro) { const j = t.indexOf('»'), parte = j < 0 ? t : t.slice(0, j + 1);
+          if (dentro === 'n') norm += parte; else out.push({ ...p, testo: parte, chi: dentro });
+          if (j < 0) break; t = t.slice(j + 1); dentro = null; prima = ''; continue; }
+        const i = t.indexOf('«'); if (i < 0) { norm += t; prima = (prima + t).slice(-70); break; }
+        const ctx = (prima + t.slice(0, i)).slice(-70); let d = null, dove = -1;
+        D.forEach(x => { const k = ctx.lastIndexOf(x.nome); if (k > dove) { dove = k; d = x; } });
+        norm += t.slice(0, i); t = t.slice(i);
+        if (d) { spingi(); dentro = d.voce === 'donna' ? 'd' : 'u'; } else dentro = 'n';
+      }
+      spingi();
+    });
+    return out.filter(x => x.testo.trim()).reduce((acc, x) => { const u = acc[acc.length - 1]; if (u && u.chi === x.chi && u.range === x.range) u.testo += x.testo; else acc.push(x); return acc; }, []);
+  }
+  // la voce di chi pronuncia una battuta del gioco (riquadro .battuta, con il nome in grassetto): donna se il nome è tra CFG.donne
+  const voceDi = nome => ((CFG.donne || []).some(d => nome.includes(d)) ? 'd' : 'u');
+  function battuta(b) {
+    const p = b.querySelector('p'), n = p && p.querySelector(':scope > b:first-child'); if (!p) return [];
+    if (!n) return voci([p]);
+    const nome = n.textContent.replace(/[:\s]+$/, ''); n.classList.add('lt-nome');
+    return [{ testo: nome + '.', chi: 'd' }, ...con(voceDi(nome), frasiDi(p, '', '.lt-nome'))];
+  }
+  const LETTERE = 'ABCDEFGH';
+  const visibile0 = e => e.getClientRects().length > 0 && !e.closest('[hidden], .sz-nascosto');
+  const RESTO = 'h2, h3, h4, p:not(.sopra), li, figcaption, blockquote, .battuta, .scelte-c .btn, .opz label';
+  function restoDi(body, solo) {      // solo: senza il titolo (per decidere se serve l’altoparlante)
+    const altri = [...body.querySelectorAll('.lt-btn')].map(b => b.ltBlocco).filter(x => x && x !== body && !x.matches('.lt-resto'));
+    if ([...body.querySelectorAll('.breve')].some(visibile0)) altri.push(...body.querySelectorAll('figure.schema > figcaption'));      // le didascalie le legge già l’In breve
+    const el = [...body.querySelectorAll(RESTO)].filter(e => visibile0(e) && !(solo && e.matches('h2, h3, h4')) && !altri.some(a => a.contains(e))
+      && !e.closest('.fine, .sz-nav, .lt-btn, .testata, .azioni, button:not(.btn)') && e.textContent.trim().length > 1);
+    return el.filter(e => !el.some(x => x !== e && x.contains(e)));      // senza ripetere ciò che sta dentro un elemento già preso
+  }
+  function restoPezzi(body, solo) {
+    const out = []; let k = 0, prima = null;
+    restoDi(body, solo).forEach(e => {
+      if (e.matches('.battuta')) { out.push(...battuta(e)); return; }
+      if (e.matches('.scelte-c .btn, .opz label')) { const g = e.parentElement; if (g !== prima) { k = 0; prima = g; } out.push(...frasiDi(e, `Risposta ${LETTERE[k++]}:`)); return; }
+      out.push(...frasiDi(e));
+    });
+    return out;
+  }
+
+  /* ---------- che cosa si legge in ciascun tipo di riquadro ---------- */
+  function pezziDi(blocco) {
+    const q = s => [...blocco.querySelectorAll(s)];
+    if (blocco.matches('#intro')) return voci(q(':scope > h2, :scope > p:not(.sopra):not(.credito):not(.crediti)'));
+    if (blocco.matches('.breve')) {      // con le didascalie delle immagini che si vedono nella stessa schermata
+      const fig = [...document.querySelectorAll('#popBody figure.schema > figcaption')].filter(f => f.getClientRects().length && !f.closest('[hidden], .sz-nascosto'));
+      return [...(blocco.matches('.senza') ? [] : [{ testo: 'In breve.' }]), ...voci(q('p')), ...voci(fig, 'Immagine:')]; }
+    // la fonte: il testo con la voce maschile (o femminile, se l’autrice è una donna: CFG.fontiDonna), poi didascalia, note, traduzione e commento con la voce del gioco
+    if (blocco.matches('.fonte')) { const bq = q('blockquote'), donna = (CFG.fontiDonna || []).some(t => blocco.textContent.includes(t)), note = q('.note li');
+      return [{ testo: 'Fonte.' }, ...con(donna ? 'd' : 'u', voci(bq)), ...con('d', voci(q('.cita'))), ...con('d', voci(note, i => `Nota ${i + 1}:`)), ...con('d', voci(q('.contesto, :scope > p:not(.contesto)')))]; }
+    if (blocco.matches('details')) {      // le domande sulla fonte (Lessico, Analisi, Riflessione): la domanda; la risposta solo se è già aperta
+      const p = voci(q('summary')); return blocco.open ? p.concat(voci(q(':scope > p'))) : p; }
+    if (blocco.matches('.lt-resto')) return restoPezzi(document.getElementById('popBody'));
+    if (blocco.matches('#popBody')) return voci(q(':scope > h2, :scope > p:not(.sopra)'));      // i messaggi del gioco in un riquadro (easter egg, fine dell’area)
+    if (blocco.matches(CFG.cartiglio || '#_')) return frasiDi(blocco, '', 'b');
+    if (blocco.matches('.mg')) {      // un gioco: la consegna o la domanda, le risposte possibili, il commento
+      const p = voci(q(':scope > p:not(.mg-testa):not(.mg-guida)'));
+      return p.concat(voci(q('.mg-opz .btn:not(:disabled)'), i => `Risposta ${LETTERE[i]}:`), voci(q('.mg-voci .btn'), i => (i ? '' : 'Le voci:')), voci(q(':scope > .fb, .mg-guida')));
+    }
+    if (blocco.matches('section.es.att') && !blocco.querySelector('.cloze, ol.ord, .abb, .sim, .riga .vf')) {      // un’attività del gioco (alla porta, al cantiere, in bottega…)
+      const out = [], vis = e => !e.hidden && e.getClientRects().length > 0;
+      const giro = el => [...el.children].filter(vis).forEach(c => {
+        if (c.matches('.lt-btn, .griglia-ped, .mucchio, .azioni, img, canvas, svg, figure')) return;
+        if (c.matches('.battuta')) out.push(...battuta(c));
+        else if (c.matches('.opz')) out.push(...voci([...c.querySelectorAll('label')].filter(vis), i => `Risposta ${LETTERE[i]}:`));
+        else if (c.matches('.scelte-c')) out.push(...voci([...c.querySelectorAll('.btn')].filter(vis), i => `Risposta ${LETTERE[i]}:`));
+        else if (c.matches('aside')) out.push(...voci([c], 'Nota:'));
+        else if (c.matches('h3, h4, p, .fb, blockquote, ul, ol')) out.push(...voci([c]));
+        else giro(c);
+      });
+      giro(blocco); return out;
+    }
+    if (blocco.matches('section.es')) {      // un esercizio: il titolo, la consegna, poi le parti secondo il tipo
+      let p = voci(q('h4, p.dom'));
+      if (blocco.querySelector('.cloze')) { p = p.concat(voci(q('.cloze')));
+        q('.cloze select').forEach((s, i) => { const o = [...s.options].slice(1).map(x => x.text); p.push({ testo: `Spazio ${i + 1}: ${o.slice(0, -1).join(', ')} oppure ${o[o.length - 1]}.`, el: s }); }); }
+      if (blocco.querySelector('ol.ord')) p = p.concat([{ testo: 'Le frasi da mettere in ordine.' }], voci(q('ol.ord li'), i => `${i + 1}:`));
+      if (blocco.querySelector('.abb')) { const col = q('.abb .col'); p = p.concat(voci([...col[0].querySelectorAll('button')], i => (i ? '' : 'A sinistra:')), voci([...col[1].querySelectorAll('button')], i => (i ? '' : 'A destra:')), voci(q('.abb > p'))); }
+      if (blocco.querySelector('.opz')) p = p.concat(voci(q('.opz label'), i => `Risposta ${LETTERE[i]}:`));
+      if (blocco.querySelector('.sim')) {      // una simulazione: le istruzioni in grassetto, le caselle da completare, le scelte, il diario
+        const istr = [...new Set(q('.sim div > b:first-child').map(b => b.parentElement))].filter(d => !d.matches('.casella') && !d.closest('[hidden]'));
+        p = p.concat(voci(istr));
+        q('.sim .casella').forEach((c, i) => { const s = c.querySelector('select'), t = c.querySelector('span');
+          if (t) p.push(...frasiDi(t, `Casella ${i + 1}:`));
+          else if (s) { const o = [...s.options].filter(x => x.value !== '').map(x => x.text); p.push({ testo: `Casella ${i + 1}: ` + (s.selectedIndex > 0 ? s.options[s.selectedIndex].text : o.length ? `da scegliere tra ${o.slice(0, -1).join(', ')} oppure ${o[o.length - 1]}.` : 'da scegliere.'), el: s }); } });
+        p = p.concat(voci(q('.sim .azioni .btn:not(.piccolo)'), i => (i ? '' : 'Le scelte:')), voci(q('.sim .diario')));
+      }
+      if (blocco.querySelector('.riga .vf')) p = p.concat(voci(q('.riga > span'), i => `Affermazione ${i + 1}:`));
+      // un gioco su misura (Area E: mappe, vicende…): se non c’è altro da dire che il titolo, si legge ciò che si vede, nell’ordine
+      if (p.length <= 1 && CFG.resto) return p.concat(restoPezzi(blocco, true));
+      return p.concat(voci(q(':scope > .fb')));
+    }
+    const k = (CFG.blocchi || []).find(x => blocco.matches(x.sel));
+    if (k) return voci([...(k.anche || []).map(s => document.querySelector(s)).filter(Boolean), blocco]);
+    return voci([blocco]);
+  }
+
+  /* ---------- la lettura: un pezzo dopo l’altro; la frase in corso si colora, la musica si abbassa ---------- */
+  const HL = !!(window.CSS && CSS.highlights && typeof Highlight !== 'undefined');
+  let attivo = null, acceso = true;
+  // la velocità: «normale» è un poco più svelta della voce di base; dal menu si sceglie anche «più rapida» o «più lenta»
+  const VEL = { normale: 1.1, rapida: 1.3, lenta: .9 }; let VELOCITA = VEL.normale;
+  window.addEventListener('message', e => { if (e.data && e.data.origine === 'menu-rinascita' && e.data.tipo === 'velocita' && VEL[e.data.v]) VELOCITA = VEL[e.data.v]; });
+  const LT = window.LETTURA = { get parla() { return !!attivo; }, get velocita() { return VELOCITA; }, scegli, perVoce, pezziDi, dialoghi, get voci() { return VOCI.map(v => v.name + ' · ' + sesso(v)); } };
+  function colora(p) {
+    if (HL) CSS.highlights.delete('lt-frase'); document.querySelectorAll('.lt-ora').forEach(x => x.classList.remove('lt-ora'));
+    if (!p) return;
+    if (p.range && HL) CSS.highlights.set('lt-frase', new Highlight(p.range));
+    else { const e = p.el || (p.range && (p.range.commonAncestorContainer.nodeType === 1 ? p.range.commonAncestorContainer : p.range.commonAncestorContainer.parentElement)); if (e) e.classList.add('lt-ora'); }
+  }
+  function statoPulsante(b, su) { if (!b) return; b.setAttribute('aria-pressed', su ? 'true' : 'false'); b.setAttribute('aria-label', su ? 'Ferma la lettura' : 'Ascolta il testo'); const t = b.querySelector('.lt-t'); if (t) t.textContent = su ? 'Ferma' : 'Ascolta'; }
+  const abbassa = su => { if (typeof CFG.abbassa === 'function') try { CFG.abbassa(su); } catch (e) {} };      // nel menu: la musica scende mentre la voce legge
+  function ferma() { const a = attivo; attivo = null; try { S.cancel(); } catch (e) {} colora(null); if (a) { statoPulsante(a.btn, false); abbassa(false); } }
+  function parla(pezzi, btn, blocco, chi) {
+    ferma(); pezzi = dialoghi(pezzi).filter(p => p.testo && perVoce(p.testo)); if (!pezzi.length) return;
+    try { const v = localStorage.getItem('rinascita-voce-velocita'); if (VEL[v] && window.parent === window) VELOCITA = VEL[v]; } catch (e) {}      // nel menu, la velocità scelta lì
+    abbassa(true);
+    const a = attivo = { pezzi, btn, blocco, chi: chi || 'd', i: 0 }; statoPulsante(btn, true);
+    setTimeout(() => prossimo(a), 60);      // dopo un «cancel», alcuni browser perdono la frase detta subito
+  }
+  function prossimo(a) {
+    if (attivo !== a) return; if (a.i >= a.pezzi.length) { ferma(); return; }
+    const p = a.pezzi[a.i++], u = new SpeechSynthesisUtterance(perVoce(p.testo)), v = scegli(p.chi || a.chi);
+    u.lang = v.voce ? v.voce.lang : 'it-IT'; if (v.voce) u.voice = v.voce; u.pitch = v.tono; u.rate = VELOCITA;
+    u.onstart = () => { if (attivo === a) colora(p); };
+    u.onend = () => prossimo(a); u.onerror = e => { if (attivo === a && e.error !== 'interrupted' && e.error !== 'canceled') ferma(); };
+    a.u = u; S.speak(u);      // il riferimento a.u evita che il browser la butti via prima della fine
+  }
+  // la musica dell’area si abbassa mentre la voce legge
+  if (typeof window.volMusica === 'function') { const v0 = window.volMusica; window.volMusica = function () { const v = v0.apply(this, arguments); return attivo ? Math.min(v, .1) : v; }; }
+
+  /* ---------- l’altoparlante ---------- */
+  const st = document.createElement('style');
+  st.textContent = '.lt-btn{display:none;align-items:center;gap:5px;font:inherit;font-family:var(--font-corpo,inherit);font-size:.82rem;font-weight:700;letter-spacing:0;text-transform:none;line-height:1;color:var(--inchiostro);background:var(--perg-chiara);border:1.5px solid var(--inchiostro);border-radius:999px;padding:5px 11px 5px 8px;min-height:32px;cursor:pointer;box-shadow:1px 1px 0 var(--inchiostro);vertical-align:middle}'
+    + 'body.lt-ok.lt-acceso .lt-btn{display:inline-flex}'
+    + '.lt-btn svg{width:20px;height:20px;flex:none}.lt-btn:hover{background:var(--oro)}.lt-btn:focus-visible{outline:3px solid var(--oro);outline-offset:2px}'
+    + '.lt-btn[aria-pressed="true"]{background:var(--inchiostro);color:var(--perg-chiara)}'
+    + '.lt-btn.lt-solo{padding:5px;width:32px;justify-content:center}.lt-btn.lt-solo .lt-t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}'
+    + '.lt-fl{float:right;margin:0 0 6px 12px;position:relative;z-index:1}.breve{position:relative}.breve > .lt-btn{position:absolute;top:5px;right:10px;margin:0;float:none;min-height:26px;padding:3px 9px 3px 6px}.breve > .lt-btn svg{width:17px;height:17px}'      // In breve: sulla riga dell’etichetta, per non allungare il testo
+    + '.battuta b + .lt-btn{margin:-6px 4px -6px 4px;min-height:24px;width:28px;padding:2px}.battuta b + .lt-btn svg{width:16px;height:16px}.lt-btn.lt-r{float:right;margin:-7px 0 -7px 12px;min-height:26px;padding:3px 9px 3px 6px;letter-spacing:0;text-transform:none}.lt-btn.lt-r svg{width:17px;height:17px}h4 .lt-btn,summary .lt-btn{margin:-8px 0 -8px 10px;min-height:26px;padding:3px 9px 3px 6px}h4 .lt-btn svg,summary .lt-btn svg{width:17px;height:17px}'      // nella riga del titolo dell’esercizio non deve alzare la riga
+    + '.lt-ang{position:absolute;top:-13px;right:-13px;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:auto;z-index:3}'
+    + '.lt-x,.lt-au{width:28px;height:28px;border-radius:50%;border:2px solid var(--inchiostro);padding:0;display:grid;place-items:center;cursor:pointer;box-shadow:1px 1px 0 var(--inchiostro);font:inherit}'
+    + '.lt-x{background:#c0392b;color:#fff}.lt-x svg{width:13px;height:13px}.lt-x:hover{background:#9c2f1c}'
+    + '.lt-au{display:none;background:var(--perg-chiara);color:var(--inchiostro)}.lt-au svg{width:17px;height:17px}.lt-au:hover{background:var(--oro)}'
+    + 'body.lt-ok.lt-acceso .lt-au{display:grid}.lt-au[aria-pressed="true"]{background:var(--inchiostro);color:var(--perg-chiara)}'
+    + '.lt-x:focus-visible,.lt-au:focus-visible{outline:3px solid var(--oro);outline-offset:2px}'
+    + '#seqCart.lt-con{padding-left:26px;padding-right:26px}'
+    + '.lt-fum{position:fixed;width:0;height:0;z-index:25}.lt-fum .lt-ang{right:-24px}'      // sui fumetti, un po’ più fuori: la mappa rimpicciolita lascia poco margine al testo
+    + '::highlight(lt-frase){background-color:rgba(242,193,74,.6);color:inherit}'
+    + '.lt-ora{outline:3px solid var(--oro);outline-offset:2px;background:rgba(242,193,74,.3)}';
+  document.head.append(st);
+  const ICONA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+  function altoparlante(blocco, dove, come) {      // come: 'fl' (a destra, in alto nel riquadro), 'solo' (solo l’icona)
+    if (blocco.querySelector(':scope .lt-btn[data-lt]') && [...blocco.querySelectorAll('.lt-btn[data-lt]')].some(b => b.ltBlocco === blocco)) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'lt-btn' + (come === 'fl' ? ' lt-fl' : '') + (come === 'solo' ? ' lt-solo' : '') + (come === 'resto' ? ' lt-r' : ''); b.dataset.lt = '1'; b.ltBlocco = blocco;
+    b.innerHTML = ICONA + '<span class="lt-t">Ascolta</span>'; statoPulsante(b, false);
+    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } parla(pezziDi(blocco), b, blocco, 'd'); });
+    b.addEventListener('keydown', e => e.stopPropagation());
+    dove(b);
+  }
+
+  /* ---------- dove si mettono gli altoparlanti ---------- */
+  let luogo = null;      // l’id del luogo o del nastro aperto (gli altoparlanti compaiono solo nei luoghi della prova)
+  ['apriPoi', 'apriInfo'].forEach(nome => { const f0 = window[nome]; if (typeof f0 !== 'function') return; window[nome] = function (p) { ferma(); luogo = p && p.id; return f0.apply(this, arguments); }; });
+  if (typeof window.chiudiModale === 'function') { const c0 = window.chiudiModale; window.chiudiModale = function () { ferma(); luogo = null; return c0.apply(this, arguments); }; }
+  function decora() {
+    const body = document.getElementById('popBody');
+    // altri testi indicati per nome (nel menu: la descrizione del gioco): CFG.blocchi = [{ sel, anche: [selettori letti prima] }]
+    (CFG.blocchi || []).forEach(k => { const x = document.querySelector(k.sel); if (x) altoparlante(x, b => x.prepend(b), 'fl'); });
+    if (typeof STATO === 'undefined' || !CFG.luoghi) return;      // fuori da un’area (il menu) non ci sono luoghi né popup
+    const tutti = CFG.luoghi === '*', vale = STATO.modale && STATO.modale !== 'riep' && !(CFG.salta || []).includes(luogo) && (tutti || (luogo && CFG.luoghi.includes(luogo)));
+    if (body && vale) {
+      body.querySelectorAll('.breve').forEach(x => altoparlante(x, b => x.prepend(b), 'fl'));
+      body.querySelectorAll('.fonte').forEach(x => altoparlante(x, b => { const t = x.querySelector('.tipo'); t ? t.after(b) : x.prepend(b); }, 'fl'));
+      body.querySelectorAll('details.guida').forEach(x => { const s = x.querySelector('summary'); if (s) altoparlante(x, b => s.append(b), 'solo'); });
+      // i messaggi del gioco in un riquadro (easter egg, fine dell’area): se c’è da leggere, l’altoparlante in alto
+      if (tutti && STATO.modale === 'ponte' && [...body.querySelectorAll(':scope > p:not(.sopra)')].reduce((n, p) => n + p.textContent.length, 0) > 120) altoparlante(body, b => { const h = body.querySelector(':scope > h2'); h ? h.before(b) : body.prepend(b); }, 'fl');
+      body.querySelectorAll('section.es:not(.mg)').forEach(x => { const h = x.querySelector('h4'), n = x.querySelector('.battuta p > b:first-child');
+        if (h && !(n && n.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)) altoparlante(x, b => h.append(b), '');
+        else if (n) altoparlante(x, b => n.after(b), 'solo');      // la battuta viene prima del titolo: l’icona accanto al nome di chi parla
+        else if (h) altoparlante(x, b => h.append(b), ''); });
+      if (CFG.resto) {      // Area E: i testi rimasti senza altoparlante (percorsi su misura, schemi, giochi) li legge un altoparlante sulla riga in alto
+        const s = [...body.querySelectorAll('p.sopra')].find(visibile0);
+        if (s && !s.querySelector('.lt-btn') && restoDi(body, true).reduce((n, e) => n + e.textContent.trim().length, 0) > 60) { s.classList.add('lt-resto'); altoparlante(s, b => s.prepend(b), 'resto'); }
+      }
+      body.querySelectorAll('.mg').forEach(x => { if (x.children.length) altoparlante(x, b => x.prepend(b), 'fl'); });
+    }
+    if (CFG.intro) { const i = document.getElementById('intro'); if (i) altoparlante(i, b => { const h = i.querySelector('h2'); h ? h.before(b) : i.prepend(b); }, 'fl'); }
+    if (CFG.cartiglio) { const c = document.querySelector(CFG.cartiglio); if (c && c.textContent.trim() && !c.querySelector('.lt-ang')) {
+      c.classList.add('lt-con'); const a = angolo(c, () => parla(pezziDi(c), a.au, c, 'd'), () => { cartTiene = 0; c.classList.remove('su'); }); } }
+  }
+  let inAttesa = false; const presto = () => { if (inAttesa) return; inAttesa = true; requestAnimationFrame(() => { inAttesa = false; decora(); }); };
+  new MutationObserver(presto).observe(corpo, { childList: true, subtree: true });
+
+  /* ---------- i due pulsanti d’angolo dei messaggi e dei fumetti: la X li chiude, l’altoparlante li legge ---------- */
+  const X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>';
+  function angolo(dentro, leggi, chiudi) {
+    const a = document.createElement('div'); a.className = 'lt-ang';
+    const x = document.createElement('button'); x.type = 'button'; x.className = 'lt-x'; x.innerHTML = X; x.setAttribute('aria-label', 'Chiudi il messaggio');
+    const au = document.createElement('button'); au.type = 'button'; au.className = 'lt-au'; au.innerHTML = ICONA; statoPulsante(au, false);
+    const ferma0 = e => { e.stopPropagation(); }; ['pointerdown', 'touchstart', 'mousedown'].forEach(ev => a.addEventListener(ev, ferma0, { passive: true }));
+    x.addEventListener('click', e => { e.stopPropagation(); if (attivo && attivo.btn === au) ferma(); chiudi(); x.blur(); });
+    au.addEventListener('click', e => { e.stopPropagation(); au.blur(); if (attivo && attivo.btn === au) { ferma(); return; } leggi(); });
+    a.append(x, au); dentro.append(a); a.au = au; return a;
+  }
+
+  /* ---------- i fumetti sulla mappa sono disegnati: i pulsanti vi si posano sopra, all’angolo in alto a destra, e li seguono ---------- */
+  const misura = document.createElement('canvas').getContext('2d');
+  function angoloFumetto(f) {      // dove cade, sullo schermo, l’angolo in alto a destra del fumetto (stessa geometria della funzione fumetto del gioco)
+    const cv = document.getElementById('scena'), g = f.dove && f.dove(); if (!cv || !g || typeof P !== 'function') return null;
+    const [sx, sy] = P(g[0], g[1], f.z || 56); misura.font = '700 14px "IM Fell English",Georgia,serif';
+    const w = Math.max.apply(null, f.righe.map(r => misura.measureText(r).width)) + 26, h = f.righe.length * 18 + 14, r = cv.getBoundingClientRect();
+    return [r.left + zoom * (sx + w / 2 + (f.destra ? w / 2 - 24 : 0) - camX) + W / 2, r.top + zoom * (sy - h - 14 - camY) + H / 2];
+  }
+  (CFG.fumetti || []).forEach(f => {
+    const box = document.createElement('div'); box.className = 'lt-fum'; box.hidden = true; document.body.append(box);
+    const a = angolo(box, () => { parla([{ testo: f.righe.join(' ') }], a.au, null, f.voce === 'uomo' ? 'u' : 'd'); if (attivo) attivo.fumetto = f; }, () => { try { f.chiudi(); } catch (e) {} box.hidden = true; });
+    const giro = () => {
+      let su = false; try { su = !!f.attivo() && !STATO.modale && !STATO.intro; } catch (e) {}
+      const p = su && angoloFumetto(f); box.hidden = !p;
+      if (p) { box.style.left = p[0] + 'px'; box.style.top = p[1] + 'px'; } else if (attivo && attivo.fumetto === f) ferma();
+      requestAnimationFrame(giro);
+    };
+    requestAnimationFrame(giro);
+  });
+  decora();
+
+  /* ---------- la sorveglianza: la voce tace se il suo riquadro sparisce; il cartiglio e i fumetti restano aperti finché li si ascolta ---------- */
+  const visibile = el => el && el.isConnected && el.getClientRects().length > 0 && !el.closest('[hidden]');
+  let cartTiene = 0;
+  setInterval(() => {
+    if (attivo && attivo.blocco && !visibile(attivo.blocco)) ferma();
+    if (attivo && attivo.fumetto && attivo.fumetto.tieni) try { attivo.fumetto.tieni(); } catch (e) {}
+    const c = CFG.cartiglio && document.querySelector(CFG.cartiglio);
+    if (c) { if (attivo && attivo.blocco === c) { c.classList.add('su'); cartTiene = Date.now(); } else if (cartTiene && Date.now() - cartTiene > 2500) { cartTiene = 0; c.classList.remove('su'); } }
+  }, 150);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) ferma(); });
+  window.addEventListener('message', e => { if (e.data && e.data.origine === 'menu-rinascita' && e.data.tipo === 'pausa') ferma(); });
+  window.addEventListener('pagehide', ferma);
+
+  /* ---------- «Voce: sì / no» nella barra in alto, accanto a «Musica» ---------- */
+  corpo.classList.add('lt-acceso');
+  const bm = CFG.barra === false ? null : document.getElementById('btnMusica');      // nel menu niente «Voce: sì / no»
+  if (bm) { const bv = document.createElement('button'); bv.type = 'button'; bv.className = 'btn piccolo'; bv.id = 'btnVoce'; bv.textContent = 'Voce: sì'; bv.setAttribute('aria-pressed', 'true');
+    bv.onclick = () => { acceso = !acceso; corpo.classList.toggle('lt-acceso', acceso); bv.textContent = acceso ? 'Voce: sì' : 'Voce: no'; bv.setAttribute('aria-pressed', acceso ? 'true' : 'false'); if (!acceso) ferma(); bv.blur(); };
+    bm.after(bv); const agg = () => { bv.hidden = !corpo.classList.contains('lt-ok'); }; agg(); new MutationObserver(agg).observe(corpo, { attributes: true, attributeFilter: ['class'] }); }
+})();
+</script>
+<script>
+/* =====================================================================
+   LE OPZIONI · identiche nelle cinque aree (richiesta della docente, 15/11/2026)
+   - «Testo grande»: caratteri più grandi e più spazio tra righe, lettere e parole, per chi ne ha bisogno. Si sceglie
+     all’inizio dell’area (pulsante nella presentazione, accanto a quello per entrare) o in qualsiasi momento dalle opzioni.
+     La scelta resta da un’area all’altra: il menu la ricorda e la manda a ogni area che si apre (come la velocità della voce).
+   - Su PC le opzioni (Musica, Voce, Effetti, Testo grande) stanno nel menu a scomparsa «☰ Opzioni»: finché è aperto
+     il gioco è fermo (il viandante non si muove, la scena è velata). Sul telefono restano nel cassetto «☰ Comandi» (tocco.js).
+   Il blocco non tocca il codice dell’area.
+   ===================================================================== */
+(function () {
+  'use strict';
+  const corpo = document.body, radice = document.documentElement, $$ = s => document.querySelector(s);
+  const CHIAVE = 'rinascita-testo-grande';
+  const stile = document.createElement('style');
+  stile.textContent = ''
+    // il testo grande: tutto un po’ più grande (rem ed em), più interlinea e più spazio tra lettere e parole nei testi da leggere
+    + 'html.op-grande{font-size:118%}html.op-grande body{font-size:20px}'
+    + 'html.op-grande :is(#popBody,#intro,#bisaccia,#seqCart) :is(p,li,label,blockquote,summary,figcaption,td,dd,dt,.btn,.cita,.contesto){line-height:1.75;letter-spacing:.03em;word-spacing:.12em}'
+    + 'html.op-grande .hud{font-size:16px}'
+    // il pulsante nella presentazione
+    + '#intro .fine .op-testo{font-size:.95rem}'
+    // il menu a scomparsa su PC
+    + '.op-apri{display:none}.op-pannello{display:contents}body.tocco .hud .op-apri{display:none!important}'
+    + 'body:not(.tocco) .op-apri{display:inline-block}'
+    + 'body:not(.tocco) .op-pannello{display:none;position:absolute;top:calc(100% + 8px);right:0;z-index:40;flex-direction:column;align-items:stretch;gap:8px;padding:12px;min-width:220px;background:var(--perg-chiara,#f7edcf);border:2px solid var(--inchiostro);box-shadow:0 0 0 3px var(--perg,#efe0b4),0 0 0 4px var(--oro,#c4932a),0 6px 14px rgba(42,27,16,.3)}'
+    + 'body:not(.tocco) .op-pannello.aperto{display:flex}body:not(.tocco) .op-pannello .btn{text-align:left}'
+    + '.op-pannello .op-tit{display:none}body:not(.tocco) .op-pannello .op-tit{display:block;margin:0 0 2px;font-family:var(--font-titoli);font-size:1.05rem}'
+    + '.op-velo{position:fixed;inset:0;z-index:40;background:rgba(42,27,16,.28)}.op-velo[hidden]{display:none}'
+    + '.hud .tavola.op-ha{position:relative}.op-sopra{z-index:41!important}';
+  document.head.append(stile);
+
+  /* --- il testo grande --- */
+  let grande = false;
+  try { grande = localStorage.getItem(CHIAVE) === 'si'; } catch (e) {}
+  const pulsanti = [];
+  function applica(v, daMenu) {
+    grande = !!v; radice.classList.toggle('op-grande', grande);
+    pulsanti.forEach(b => { b.textContent = b.dataset.corto ? (grande ? 'Aa Testo grande: sì' : 'Aa Testo grande: no') : 'Testo grande: ' + (grande ? 'sì' : 'no'); b.setAttribute('aria-pressed', grande ? 'true' : 'false'); });
+    try { localStorage.setItem(CHIAVE, grande ? 'si' : 'no'); } catch (e) {}
+    if (!daMenu) try { window.parent.postMessage({ origine: 'area-rinascita', area: window.PONTE_AREA && PONTE_AREA.id, tipo: 'testo', v: grande }, '*'); } catch (e) {}
+    window.dispatchEvent(new Event('resize'));      // le aree ridisegnano ciò che dipende dalle misure
+  }
+  window.addEventListener('message', e => { const m = e.data; if (m && m.origine === 'menu-rinascita' && m.tipo === 'testo') applica(m.v, true); });
+  const nuovo = (corto) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (corto ? ' piccolo op-testo' : ''); if (corto) b.dataset.corto = '1'; else b.id = 'btnTesto';
+    b.addEventListener('click', e => { e.stopPropagation(); applica(!grande); b.blur(); }); pulsanti.push(b); return b; };
+
+  // nella presentazione: accanto al pulsante per entrare (dove c’è già uno spazio vuoto), così si sceglie prima di cominciare
+  const via = $$('#btnVia'); if (via && via.parentElement) { const vuoto = via.parentElement.querySelector(':scope > span:empty'), b = nuovo(true); vuoto ? vuoto.append(b) : via.before(b); }
+
+  /* --- le opzioni nella barra: su PC dentro «☰ Opzioni» --- */
+  const musica = $$('#btnMusica'), tavola = musica && musica.closest('.tavola');
+  if (tavola) {
+    const bt = nuovo(false), ancora = $$('#btnEffetti') || musica; ancora.after(bt);
+    const OPZ = ['btnMusica', 'btnVoce', 'btnEffetti', 'btnTesto'];
+    const apri = document.createElement('button'); apri.type = 'button'; apri.className = 'btn op-apri'; apri.textContent = '☰ Opzioni'; apri.setAttribute('aria-expanded', 'false'); apri.setAttribute('aria-haspopup', 'true');
+    const pan = document.createElement('div'); pan.className = 'op-pannello'; pan.setAttribute('role', 'group'); pan.setAttribute('aria-label', 'Opzioni');
+    const tit = document.createElement('p'); tit.className = 'op-tit'; tit.textContent = 'Opzioni · il gioco è in pausa'; pan.append(tit);
+    const velo = document.createElement('div'); velo.className = 'op-velo'; velo.hidden = true;
+    tavola.classList.add('op-ha'); musica.before(apri); apri.after(pan);
+    // su PC i pulsanti delle opzioni vanno nel pannello; sul telefono tornano nel cassetto, al loro posto
+    const sistema = () => { const tel = corpo.classList.contains('tocco');
+      OPZ.forEach(id => { const b = document.getElementById(id); if (!b) return; if (tel) { if (b.parentElement === pan) pan.before(b); } else if (b.parentElement !== pan) pan.append(b); });
+      if (tel) chiudi(); };
+    let aperto = false;
+    const hud = tavola.closest('#hud') || tavola.parentElement; hud.before(velo);      // il velo accanto alla barra, nello stesso contesto: la barra resta sopra
+    function chiudi() { if (!aperto) return; aperto = false; hud.classList.remove('op-sopra'); pan.classList.remove('aperto'); velo.hidden = true; apri.setAttribute('aria-expanded', 'false'); }
+    function spalanca() { aperto = true; if (getComputedStyle(hud).position === 'static') hud.style.position = 'relative'; hud.classList.add('op-sopra');      // la barra sopra il velo
+      pan.classList.add('aperto'); velo.hidden = false; apri.setAttribute('aria-expanded', 'true'); if (typeof tasti !== 'undefined' && tasti.clear) tasti.clear(); const p = pan.querySelector('.btn'); if (p) setTimeout(() => p.focus(), 20); }
+    apri.addEventListener('click', e => { e.stopPropagation(); aperto ? chiudi() : spalanca(); apri.blur(); });
+    velo.addEventListener('click', chiudi);
+    document.addEventListener('click', e => { if (aperto && !pan.contains(e.target) && e.target !== apri) chiudi(); });
+    // il gioco fermo: finché il pannello è aperto, i tasti del gioco non arrivano all’area (Esc chiude il pannello)
+    window.addEventListener('keydown', e => {
+      if (!aperto) return;
+      if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); chiudi(); apri.focus(); return; }
+      if (e.key === 'Tab' || ((e.key === 'Enter' || e.key === ' ') && pan.contains(document.activeElement))) return;      // muoversi tra le opzioni e sceglierle con la tastiera
+      e.preventDefault(); e.stopImmediatePropagation();
+    }, true);
+    window.addEventListener('keyup', e => { if (aperto) e.stopImmediatePropagation(); }, true);
+    sistema(); new MutationObserver(sistema).observe(corpo, { attributes: true, attributeFilter: ['class'] });
+    // il pulsante «Voce» della lettura arriva dopo (lettura.js): quando compare, entra anch’esso nel pannello
+    new MutationObserver(() => { const v = $$('#btnVoce'); if (v && v.parentElement !== pan && !corpo.classList.contains('tocco')) sistema(); }).observe(tavola, { childList: true });
+    window.OPZIONI = { apri: spalanca, chiudi, get aperto() { return aperto; } };
+  }
+  applica(grande, true);
+  window.OPZIONI = Object.assign(window.OPZIONI || {}, { testoGrande: v => applica(v), get grande() { return grande; } });
+})();
+</script>
+<script>
 window.TOCCO_AREA = true;
 /* =====================================================================
    I COMANDI DA TELEFONO · identici nelle cinque aree
@@ -3640,6 +4082,7 @@ window.TOCCO_AREA = true;
     + 'body.tocco .hud .tavola.tc-cassetto>.btn:not(.tc-apri){display:none}'
     + 'body.tocco .hud .tavola.tc-cassetto.aperto>.btn:not(.tc-apri){display:inline-block}'
     + 'body.tocco .mini{transform:scale(.8);transform-origin:left bottom}'
+    + 'body.tocco #seqCart{top:max(74px,calc(var(--tc-su,60px) + 16px))}'      // il cartiglio dei messaggi sotto la barra, anche a cassetto aperto
     + 'body.tocco .bisaccia:not([open]){width:auto;min-width:0}'
     + 'body.tocco .bisaccia{max-width:min(78vw,340px);max-height:calc(100% - var(--tc-su,90px) - 160px);overflow:auto;top:var(--tc-su,90px)}'
     + '}'
@@ -3681,9 +4124,9 @@ window.TOCCO_AREA = true;
   const primoBtn = cassetto.querySelector('.btn'); cassetto.insertBefore(apri, primoBtn);
   const chiudiCassetto = () => { cassetto.classList.remove('aperto'); apri.setAttribute('aria-expanded', 'false'); misura(); };
   apri.onclick = () => { const a = cassetto.classList.toggle('aperto'); apri.setAttribute('aria-expanded', a ? 'true' : 'false'); apri.blur(); misura(); };
-  cassetto.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b && b !== apri && !/^(btnMusica|btnEffetti|btnVoce)$/.test(b.id) && b.textContent !== 'Confermi?' && b.id !== 'btnRiparti') setTimeout(chiudiCassetto, 0); });
+  cassetto.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b && b !== apri && !/^(btnMusica|btnEffetti|btnVoce|btnTesto)$/.test(b.id) && b.textContent !== 'Confermi?' && b.id !== 'btnRiparti') setTimeout(chiudiCassetto, 0); });
   const bis = $$('#bisaccia');
-  function misura() { if (bis) corpo.style.setProperty('--tc-su', Math.round($$('#hud').getBoundingClientRect().bottom + 6) + 'px'); }
+  function misura() { corpo.style.setProperty('--tc-su', Math.round($$('#hud').getBoundingClientRect().bottom + 6) + 'px'); }
 
   /* --- quando si attiva: subito sugli schermi a tocco, altrimenti al primo tocco di un dito --- */
   let attivo = false;

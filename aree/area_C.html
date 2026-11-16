@@ -2811,7 +2811,7 @@ function apriPedaggio() {
   };
   if (STATO.tariffaOk) pagamento();
   else {
-    box.append(el('h4', '', 'Quale tariffa paghi?'), el('p', 'dom', 'Il gabelliere ti guarda: viaggi a piedi, con il tuo mulo carico di merci. Quale riga della tavola vale per te?'));
+    box.append(el('h4', '', 'Quale tariffa paghi?'), el('p', 'dom', 'Il gabelliere ti guarda: viaggi a piedi, con il tuo mulo carico di merci. Quale tariffa vale per te?'));
     const nome = 'tf' + (++uid), opz = el('div', 'opz');
     pd.tavola.forEach(([a, b], i) => { const l = el('label'), inp = el('input'); inp.type = 'radio'; inp.name = nome; inp.value = i; l.append(inp, el('span', '', `${a}: ${b} denari`)); opz.append(l); });
     const az = el('div', 'azioni'), bt = el('button', 'btn primario', 'Conferma'); bt.type = 'button'; az.append(bt); box.append(opz, az, fb);

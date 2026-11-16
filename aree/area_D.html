@@ -4017,7 +4017,7 @@ window.PONTE_AREA = {"emblema": "Pixel art: le mura con la torre e la porta, e u
    Questo blocco è identico in tutte e cinque le aree: cambia solo PONTE_AREA, scritto subito sopra.
    Non modifica il codice dell’area: si aggancia da fuori al riepilogo, alla chiusura dei popup e al disegno.
    Se l’area è aperta da sola (non dentro il menu) il ponte non fa nulla e l’area resta com’era.
-   Messaggi al menu (postMessage): pronta, stato {iniziata, completata, punti, max}, menu, passaggio, uovo.
+   Messaggi al menu (postMessage): pronta, stato {iniziata, completata, punti, max, secondi}, menu, passaggio, uovo.
    Messaggi dal menu: pausa, riprendi.
    ===================================================================== */
 (function () {
@@ -4082,8 +4082,19 @@ window.PONTE_AREA = {"emblema": "Pixel art: le mura con la torre e la porta, e u
   /* --- lo stato dell’area, comunicato al menu ogni volta che cambia --- */
   const completata = () => !!STATO.riepilogoMostrato;
   let ultimoStato = '';
+  /* --- il cronometro (richiesta della docente, 16/11/2026): il tempo di gioco effettivo dell'area, cioè solo mentre l'area è aperta, visibile
+     e non in pausa, dall'ingresso fino al riepilogo finale. «Ricomincia» lo azzera. Il menu lo conserva con il punteggio (vedi gioco/index.html). --- */
+  let secondi = 0, tPrec = performance.now(), rifRip = STATO.completati;
+  setInterval(() => {
+    const ora = performance.now(), d = ora - tPrec; tPrec = ora;
+    if (STATO.completati !== rifRip) { rifRip = STATO.completati; if (!STATO.riepilogoMostrato) secondi = 0; }      // l'area ricominciata da capo
+    if (!inPausa && !document.hidden && !STATO.intro && !completata() && d < 5000) secondi += d / 1000;
+  }, 250);
+  const tempoDi = n => { n = Math.max(0, Math.round(n)); const h = Math.floor(n / 3600), m = Math.floor(n % 3600 / 60), sec = n % 60;
+    return (h ? `${h} h ${String(m).padStart(2, '0')} min` : `${m} min`) + ` ${String(sec).padStart(2, '0')} s`; };
+  window.CRONO = { get secondi() { return Math.round(secondi); }, testo: () => tempoDi(secondi) };
   function comunicaStato() {
-    const s = { iniziata: !STATO.intro, completata: completata(), punti: STATO.punti, max: MAX_PUNTI };
+    const s = { iniziata: !STATO.intro, completata: completata(), punti: STATO.punti, max: MAX_PUNTI, secondi: Math.round(secondi) };
     const k = JSON.stringify(s); if (k === ultimoStato) return; ultimoStato = k; invia(Object.assign({ tipo: 'stato' }, s));
   }
   setInterval(comunicaStato, 400);
@@ -4124,19 +4135,25 @@ window.PONTE_AREA = {"emblema": "Pixel art: le mura con la torre e la porta, e u
     setTimeout(() => { const b = fine.querySelector('.btn.primario') || fine.querySelector('.btn'); if (b) b.focus(); }, 30);
   }
 
+  /* --- il tempo di gioco nel riepilogo, sotto il punteggio (16/11/2026) --- */
+  if (typeof window.apriRiepilogo === 'function') { const r0 = window.apriRiepilogo; window.apriRiepilogo = function () { const r = r0.apply(this, arguments);
+    try { const b = document.getElementById('popBody'), t = b && b.querySelector('.tot'); if (t && !b.querySelector('.crono')) { const q = document.createElement('p'); q.className = 'crono';
+      q.style.cssText = 'margin:2px 0 6px;font-variant-numeric:tabular-nums'; q.innerHTML = `Tempo di gioco: <b>${tempoDi(secondi)}</b>${completata() ? '' : ' (finora)'}`; t.after(q); } } catch (e) {}
+    return r; }; }
+
   /* --- area completata: chiuso il riepilogo finale, le due strade --- */
   let sceltaMostrata = false;
   function apriScelta() {
     const pr = CFG.prossima;
     if (pr && CFG.passaggio) {      // aree A-D: niente «Torna al menu» qui; si invita a cercare il cartello rosso sulla mappa (testi approvati dalla docente)
-      const righe = [`Hai completato l’<b>Area ${CFG.id}</b> con <b>${STATO.punti} punti su ${MAX_PUNTI}</b>.`,
+      const righe = [`Hai completato l’<b>Area ${CFG.id}</b> con <b>${STATO.punti} punti su ${MAX_PUNTI}</b>, in <b>${tempoDi(secondi)}</b> di gioco.`,
         `Ma il viaggio non finisce qui: sulla mappa è comparso un cartello rosso che brilla, «<b>${CFG.passaggio.nastro}</b>». Raggiungilo (${CFG.passaggio.dove}) e prosegui verso «${pr.titolo}».`,
         uovoTrovato ? 'Complimenti: hai trovato anche l’easter egg nascosto in quest’area!' : 'Prima di partire, guardati intorno: in quest’area si nasconde un easter egg. L’hai già trovato?',
         'Se preferisci tornare al menu generale, puoi farlo quando vuoi con il pulsante «Menu» in alto a destra.'];
       popup(`Area ${CFG.id} completata`, 'La strada continua', righe, [[CFG.passaggio.nastro, true, chiudiModale]]);
       return;
     }
-    const righe = [`Hai completato l’<b>Area ${CFG.id}</b> con <b>${STATO.punti} punti su ${MAX_PUNTI}</b>. Ora hai due strade.`];
+    const righe = [`Hai completato l’<b>Area ${CFG.id}</b> con <b>${STATO.punti} punti su ${MAX_PUNTI}</b>, in <b>${tempoDi(secondi)}</b> di gioco. Ora hai due strade.`];
     if (pr) righe.push(`Puoi <b>continuare a esplorare</b>. Quando vorrai passare all’<b>Area ${pr.id}</b>, «${pr.titolo}», raggiungi ${CFG.passaggio.dove}: sulla mappa lo trovi segnato da un cartello rosso che brilla, con la scritta «${CFG.passaggio.nastro}».`);
     else righe.push('Puoi <b>continuare a esplorare</b> la città: questa è l’ultima area del percorso.');
     righe.push(pr ? 'Oppure puoi <b>tornare al menu generale</b>: il punteggio di quest’area si somma al punteggio generale.'

@@ -123,6 +123,7 @@ h1{font-family:var(--font-titoli);font-weight:400;font-size:2.5rem;line-height:1
 .esito{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:18px 26px;align-items:start}
 .esito ul{list-style:none;margin:6px 0 0;padding:0}
 .esito li{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dotted var(--terra);padding:2px 0;font-variant-numeric:tabular-nums}
+.esito li .pt{text-align:right;white-space:nowrap}.esito li .pt small{display:block;font-size:.8rem;color:var(--terra);line-height:1.1}.esito .crono{margin:10px 0 0;font-size:1.15rem;font-variant-numeric:tabular-nums}
 .tot{font-family:var(--font-titoli);font-size:2rem;font-variant-numeric:tabular-nums}
 .tot small{font-family:var(--font-testo);font-size:1rem;color:var(--terra)}
 .premio{background:var(--perg-chiara);border:2px solid var(--inchiostro);padding:12px 14px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:center}
@@ -273,7 +274,7 @@ const uovaTrovate = () => PARTITA.uova.length;
 let PARTITA = statoNuovo();
 function carica() {
   try { const t = window.localStorage.getItem(CHIAVE); if (!t) return; const p = JSON.parse(t); if (!p || p.v !== 1 || !p.aree) return;
-    const n = statoNuovo(); AREE.forEach(a => { const s = p.aree[a.id]; if (s && ['nuova', 'corso', 'completata'].includes(s.stato)) n.aree[a.id] = { stato: s.stato === 'corso' ? 'nuova' : s.stato, punti: Math.min(+s.punti || 0, a.max), max: a.max }; });   // un’area lasciata a metà riparte da capo: le aree non salvano i loro progressi
+    const n = statoNuovo(); AREE.forEach(a => { const s = p.aree[a.id]; if (s && ['nuova', 'corso', 'completata'].includes(s.stato)) n.aree[a.id] = { stato: s.stato === 'corso' ? 'nuova' : s.stato, punti: Math.min(+s.punti || 0, a.max), max: a.max }; if (s.stato === 'completata' && +s.tempo > 0) n.aree[a.id].tempo = Math.round(+s.tempo); });   // un’area lasciata a metà riparte da capo: le aree non salvano i loro progressi
     n.uova = Array.isArray(p.uova) ? AREE.map(a => a.id).filter(id => p.uova.includes(id)) : [];
     n.finaleVisto = !!p.finaleVisto; PARTITA = n;
   } catch (e) { /* localStorage non disponibile o dati illeggibili: si parte da capo */ }
@@ -461,7 +462,10 @@ window.addEventListener('message', e => {
   if (m.tipo === 'pronta') { mandaVelocita(); mandaTesto(); VIVA.pronta = true; if (m.max > 0) { s.max = m.max; salva(); } VIVA.mostra(); }
   if (m.tipo === 'stato') {
     VIVA.iniziata = !!m.iniziata; VIVA.completata = !!m.completata; if (m.max > 0) s.max = m.max;
-    if (m.completata) { s.punti = s.stato === 'completata' ? Math.max(s.punti, m.punti) : m.punti; s.stato = 'completata'; }      // se l’area viene rifatta, vale il punteggio migliore
+    if (m.completata) {      // se l’area viene rifatta, vale il punteggio migliore; il tempo è quello della partita che l’ha ottenuto (a parità di punti, il più basso)
+      const gia = s.stato === 'completata', sec = m.secondi > 0 ? m.secondi : null;
+      if (!gia || m.punti > s.punti) s.tempo = sec; else if (m.punti === s.punti && sec != null) s.tempo = s.tempo ? Math.min(s.tempo, sec) : sec;
+      s.punti = gia ? Math.max(s.punti, m.punti) : m.punti; s.stato = 'completata'; }
     else if (m.iniziata && s.stato === 'nuova') s.stato = 'corso';
     salva();
   }
@@ -476,6 +480,10 @@ window.addEventListener('message', e => {
    LA SCHERMATA FINALE: punteggi, premio, immagine da salvare, ricominciare da capo
    ===================================================================== */
 const oggi = () => new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+/* il tempo di gioco (16/11/2026): per ogni area quello della partita che ha dato il punteggio finale; il totale è la somma dei cinque */
+function tempoDi(n) { if (!(n > 0)) return '—'; n = Math.round(n); const h = Math.floor(n / 3600), m = Math.floor(n % 3600 / 60), s = n % 60;
+  return (h ? `${h} h ${String(m).padStart(2, '0')} min` : `${m} min`) + ` ${String(s).padStart(2, '0')} s`; }
+const tempoTotale = () => AREE.reduce((t, a) => t + (PARTITA.aree[a.id].tempo || 0), 0);
 function apriFinale() {
   PARTITA.finaleVisto = true; salva();
   const tot = puntiTotali(), max = maxTotale(), pr = premioPer(tot, max), perc = Math.floor(tot * 100 / max);
@@ -483,7 +491,8 @@ function apriFinale() {
     testata(pag, 'Il percorso è concluso · ' + oggi(), 'La rinascita dell’Occidente dopo l’anno Mille');
     const g = el('div', 'esito'), sx = el('div', ''), dx = el('div', 'premio');
     sx.append(el('div', 'tot', `${tot} / ${max} punti <small>· ${perc}%</small>`));
-    const ul = el('ul'); AREE.forEach(a => { const s = PARTITA.aree[a.id]; ul.append(el('li', '', `<span><b>Area ${a.id}</b> · ${a.titolo}</span><span>${s.punti} / ${s.max}</span>`)); }); sx.append(ul);
+    const ul = el('ul'); AREE.forEach(a => { const s = PARTITA.aree[a.id]; ul.append(el('li', '', `<span><b>Area ${a.id}</b> · ${a.titolo}</span><span class="pt">${s.punti} / ${s.max}<small>${tempoDi(s.tempo)}</small></span>`)); }); sx.append(ul);
+    sx.append(el('p', 'crono', `Tempo di gioco: <b>${tempoDi(tempoTotale())}</b>`));
     dx.append(imgIcona(pr.icona, 'Pixel art: ' + pr.nome), el('div', 'fascia', pr.fascia), el('h3', '', pr.nome), el('p', 'motivo', pr.motivo));
     const u = uovaTrovate(), pu = premioUova(u), col = el('div', ''); col.append(dx);
     sx.append(el('p', '', `Easter egg trovati: <b>${u}</b> su ${AREE.length}${pu ? '' : u < AREE.length ? ' · con almeno tre c’è un premio in più' : ''}`)); sx.lastChild.style.margin = '10px 0 0';
@@ -507,13 +516,14 @@ function disegnaAttestato() {
   // a sinistra: totale e aree
   g.fillStyle = INK; g.font = `400 50px ${TIT}`; g.fillText(`${tot} / ${max} punti`, 60, 236);
   g.fillStyle = '#8a5330'; g.font = `400 26px ${TES}`; g.fillText(`${perc}% del punteggio massimo`, 62, 272);
-  AREE.forEach((a, i) => { const s = PARTITA.aree[a.id], y = 330 + i * 46;
+  AREE.forEach((a, i) => { const s = PARTITA.aree[a.id], y = 324 + i * 52;
     g.fillStyle = INK; g.font = `700 25px ${TES}`; g.textAlign = 'left'; g.fillText('Area ' + a.id, 60, y); g.font = `400 25px ${TES}`; g.fillText('· ' + a.titolo, 138, y);
-    g.textAlign = 'right'; g.fillText(`${s.punti} / ${s.max}`, 560, y); g.textAlign = 'left';
-    g.strokeStyle = '#8a5330'; g.setLineDash([2, 4]); g.lineWidth = 1; g.beginPath(); g.moveTo(60, y + 11); g.lineTo(560, y + 11); g.stroke(); g.setLineDash([]); });
+    g.textAlign = 'right'; g.fillText(`${s.punti} / ${s.max}`, 560, y); g.fillStyle = '#8a5330'; g.font = `italic 400 18px ${TES}`; g.fillText(tempoDi(s.tempo), 560, y + 20); g.textAlign = 'left';
+    g.strokeStyle = '#8a5330'; g.setLineDash([2, 4]); g.lineWidth = 1; g.beginPath(); g.moveTo(60, y + 27); g.lineTo(560, y + 27); g.stroke(); g.setLineDash([]); });
   // a destra: il premio
   const nUova = uovaTrovate(), pu = premioUova(nUova);
-  g.fillStyle = INK; g.font = `400 25px ${TES}`; g.fillText(`Easter egg trovati: ${nUova} su ${AREE.length}`, 60, 330 + AREE.length * 46 + 14);
+  g.fillStyle = INK; g.font = `400 25px ${TES}`; g.fillText(`Easter egg trovati: ${nUova} su ${AREE.length}`, 60, 324 + AREE.length * 52 + 14);
+  g.font = `400 30px ${TIT}`; g.fillText(`Tempo di gioco: ${tempoDi(tempoTotale())}`, 60, 324 + AREE.length * 52 + 58);
   if (pu) {      // il premio dell’esploratore, sotto il premio principale
     const ex = 610, ey = 596, ew = 530, eh = 128;
     g.fillStyle = '#f7edcf'; g.fillRect(ex, ey, ew, eh); g.strokeStyle = INK; g.lineWidth = 2.5; g.strokeRect(ex, ey, ew, eh);

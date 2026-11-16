@@ -3257,6 +3257,8 @@ window.LETTURA_CFG = {
       .replace(/\bpp\.\s*(\d+)\s*[-–]\s*(\d+)/g, (m, a, b) => (+b === +a + 1 ? `pagine ${a} e ${b}` : `pagine da ${a} a ${b}`)).replace(/\bpp\.\s*/g, 'pagine ').replace(/\bp\.\s*(?=\d)/g, 'pagina ')
       .replace(/\bc\.\s*(\d{3,4})\s*[-–]\s*(\d{3,4})/g, 'tra il $1 e il $2 circa').replace(/\bc\.\s*(?=\d)/g, 'circa ')
       .replace(/\bcfr\./gi, 'confronta').replace(/(\d)\s*−\s*(\d)/g, '$1 meno $2')
+      // i punteggi: «+10 punti» la voce di Android lo legge «più uno zero»; «3/4» «tre barra quattro» (segnalato dalla docente, 16/11/2026)
+      .replace(/(^|[^\w\d])\+\s*(\d+)/g, '$1più $2').replace(/(^|[\s(])[−–-]\s*(\d+)(?=\s*punt)/g, '$1meno $2').replace(/(\d)\s*\/\s*(\d)/g, '$1 su $2')
       .replace(/[«»"“”]/g, '').replace(/\s+,/g, ',').replace(/,(\s*,)+/g, ',').replace(/,\s*([.;:])/g, '$1').replace(/\s*·\s*/g, '. ').replace(/[▸◂▲▼▶]/g, '').trim();
   }
 

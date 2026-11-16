@@ -926,6 +926,10 @@ function disegnaCastello(g) {
   merli(g, -1, -11, 1.4, -8.6, zb + 70, 9);
   pietra(g, -1, -8.6, -0.5, -3.5, zb, zb + 24); merli(g, -1, -8.6, -0.5, -3.5, zb + 24, 6);
   pietra(g, X1 - .3, -11, X1, -8.6, zb, zb + 24); merli(g, X1 - .3, -11, X1, -8.6, zb + 24, 6);
+  // la corte del castello: covone, botti e garzone di stalla (spostati qui dalla docente, 16/11/2026)
+  { const sv = P(0.75, -7.75, zb); g.save(); g.translate(sv[0], sv[1]); g.fillStyle = '#e0c66a'; g.strokeStyle = INK; g.lineWidth = 1.4; g.beginPath(); g.moveTo(-21, 0); g.quadraticCurveTo(-18, -28, 0, -30); g.quadraticCurveTo(18, -28, 21, 0); g.quadraticCurveTo(0, 7, -21, 0); g.fill(); g.stroke(); g.restore(); }
+  [[0.2, -7.0], [0.55, -6.75]].forEach(([x, y]) => { const sb = P(x, y, zb); g.save(); g.translate(sb[0], sb[1]); g.fillStyle = '#8a5a30'; g.strokeStyle = INK; g.lineWidth = 1.2; g.beginPath(); g.moveTo(-6, 0); g.quadraticCurveTo(-8, -8, -6, -16); g.lineTo(6, -16); g.quadraticCurveTo(8, -8, 6, 0); g.closePath(); g.fill(); g.stroke(); g.restore(); });
+  persona(g, 1.15, -6.75, { z: zb, c: '#3d5f9a', calze: ['#c63a2f', '#c63a2f'], h: '#e0b838', stivali: '#e2b53a', dir: -1 });
   // palas (sala del signore) con tetto di tegole e scala esterna in pietra
   pietra(g, 1.8, -9.8, 5.8, -6.3, zb, zb + 26);
   { const f = (u, z) => P(1.8 + 4 * u, -6.3, z), fr = (u, z) => P(5.8, -6.3 - 3.5 * u, z);
@@ -949,9 +953,6 @@ function disegnaCastello(g) {
   box(g, X1, -8.5, 9.4, -7.0, zb + 16, zb + 20, '#a1703c', '#8c5f30', '#6e4a24');
   poly(g, [P(X1, -7.0, zb + 38), P(9.55, -7.0, zb + 32), P(9.55, -8.5, zb + 32), P(X1, -8.5, zb + 38)], '#9a6a38'); poly(g, [P(9.55, -7.0, zb + 32), P(9.55, -8.5, zb + 32), P(9.55, -8.5, zb + 29), P(9.55, -7.0, zb + 29)], '#7a5028');
   // corte: covone, botti, garzone di stalla e, al centro sotto il mastio, forno e botteghe a pagamento
-  { const sv = P(0.8, -7.2, zb); g.save(); g.translate(sv[0], sv[1]); g.fillStyle = '#e0c66a'; g.strokeStyle = INK; g.lineWidth = 1.4; g.beginPath(); g.moveTo(-21, 0); g.quadraticCurveTo(-18, -28, 0, -30); g.quadraticCurveTo(18, -28, 21, 0); g.quadraticCurveTo(0, 7, -21, 0); g.fill(); g.stroke(); g.restore(); }
-  [[1.4, -6.2], [1.75, -5.95]].forEach(([x, y]) => { const sb = P(x, y, zb); g.save(); g.translate(sb[0], sb[1]); g.fillStyle = '#8a5a30'; g.strokeStyle = INK; g.lineWidth = 1.2; g.beginPath(); g.moveTo(-6, 0); g.quadraticCurveTo(-8, -8, -6, -16); g.lineTo(6, -16); g.quadraticCurveTo(8, -8, 6, 0); g.closePath(); g.fill(); g.stroke(); g.restore(); });
-  persona(g, 2.6, -5.5, { z: zb, c: '#3d5f9a', calze: ['#c63a2f', '#c63a2f'], h: '#e0b838', stivali: '#e2b53a', dir: -1 });
   bottegheCorte(g, zb);
   // mura anteriori basse e portale con rampa
   pietra(g, X1 - .3, -6.8, X1, -4.0, zb, zb + 16); merli(g, X1 - .3, -6.8, X1, -4.0, zb + 16, 5);

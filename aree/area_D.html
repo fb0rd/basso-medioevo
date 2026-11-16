@@ -990,6 +990,10 @@ function tetto(g, x0, y0, x1, y1, h, rh, tipo, ov = 0.14, gabbio = '#e9dcbc') {
   poly(g, [P(x1, y1, h), P(x1, y0, h), P(x1, ym, h + rh)], gabbio);
   ln(g, P(x1, y1, h), P(x1, ym, h + rh), '#3a281a', 1.8); ln(g, P(x1, y0, h), P(x1, ym, h + rh), '#3a281a', 1.8);
   ln(g, P(x1, ym, h), P(x1, ym, h + rh * .9), '#3a281a', 1.6);
+  { const ry = y0 - ov, Qb = (u, v) => P(ax + (bx - ax) * u, ry + (ym - ry) * v, (h - 2) + (rh + 2) * v), nu = Math.max(6, Math.round((bx - ax) / 0.22)), nv = Math.max(3, Math.round(rh / 6));
+    poly(g, [Qb(0, 0), Qb(1, 0), Qb(1, 1), Qb(0, 1)], pal[0], null);
+    for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) { const o = (j % 2) * 0.5 / nu, u0 = Math.min(1, i / nu + o), u1 = Math.min(1, (i + 1) / nu + o); if (u1 - u0 < 0.001) continue; poly(g, [Qb(u0, j / nv), Qb(u1, j / nv), Qb(u1, (j + 1) / nv), Qb(u0, (j + 1) / nv)], pal[Math.floor(hash(i * 5 + j * 3, j * 11 + i * 2) * pal.length)], 'rgba(30,20,10,.45)', .7); }
+    poly(g, [Qb(0, 0), Qb(1, 0), Qb(1, 1), Qb(0, 1)], 'rgba(40,25,10,.2)', INK, 1.5); }
   const nu = Math.max(6, Math.round((bx - ax) / 0.22)), nv = Math.max(4, Math.round(rh / 5));
   poly(g, [Q(0, 0), Q(1, 0), Q(1, 1), Q(0, 1)], pal[0], null);
   for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) {
@@ -4553,7 +4557,7 @@ window.LETTURA_CFG = {
   }
 
   /* ---------- dal testo sullo schermo ai «pezzi» da leggere: una frase alla volta, ciascuna con il suo tratto da colorare ---------- */
-  const SALTA = 'body:not(.tocco) .tc-dito, body.tocco .tc-tastiera, .lt-btn, .lt-ang, .fz-guida, sup, .note, select, option, kbd, input, script, style, .badge, .sopra, .credito, .tasti, .mg-testa, .sz-nav';
+  const SALTA = '[aria-hidden="true"], body:not(.tocco) .tc-dito, body.tocco .tc-tastiera, .lt-btn, .lt-ang, .fz-guida, sup, .note, select, option, kbd, input, script, style, .badge, .sopra, .credito, .tasti, .mg-testa, .sz-nav';
   function frasiDi(el, prefisso, salta) {
     const seg = []; let T = '';
     const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, { acceptNode(n) {
@@ -4618,8 +4622,20 @@ window.LETTURA_CFG = {
     const p = b.querySelector('p'), n = p && p.querySelector(':scope > b:first-child'); if (!p) return [];
     if (!n) return voci([p]);
     const nome = n.textContent.replace(/[:\s]+$/, ''); n.classList.add('lt-nome');
-    return [{ testo: nome + '.', chi: 'd' }, ...con(voceDi(nome), frasiDi(p, '', '.lt-nome'))];
+    return con(voceDi(nome), frasiDi(p, '', '.lt-nome'));      // solo la battuta: il nome di chi parla non si legge (16/11/2026)
   }
+  // un paragrafo che comincia con il nome di chi parla in grassetto («La guardia: «…»»): come una battuta
+  const etichetta = e => { const b = e.matches('p') && e.querySelector(':scope > b:first-child, :scope > strong:first-child'); if (!b || b.previousSibling && b.previousSibling.textContent.trim()) return null;
+    const t = b.textContent.trim(), dopo = (b.nextSibling && b.nextSibling.textContent || '').trim();
+    return t.length < 40 && (/:$/.test(t) || /^:/.test(dopo)) && /«|^:?\s*«/.test(dopo + (b.nextElementSibling ? b.nextElementSibling.textContent : '')) ? b : null; };
+  function parlante(e) {      // i pezzi di un elemento qualsiasi: le battute senza il nome, il resto com’è
+    if (typeof e.ltPezzi === 'function') return e.ltPezzi().map(t => ({ testo: t }));      // un riquadro che dice da sé che cosa leggere (Area A: il cavallo contro il bue)
+    if (e.matches('.battuta')) return battuta(e);
+    const b = etichetta(e); if (b) { b.classList.add('lt-nome'); return con(voceDi(b.textContent), frasiDi(e, '', '.lt-nome')); }
+    const bat = [...e.querySelectorAll('.battuta')]; if (!bat.length) return frasiDi(e);
+    return frasiDi(e, '', '.battuta').concat(...bat.map(battuta));
+  }
+  const narrativa = el => !!el.querySelector('.battuta, .lt-nome') || [...el.querySelectorAll('p')].some(etichetta);
   const LETTERE = 'ABCDEFGH';
   const visibile0 = e => e.getClientRects().length > 0 && !e.closest('[hidden], .sz-nascosto');
   const RESTO = 'h2, h3, h4, p:not(.sopra), li, figcaption, blockquote, .battuta, .scelte-c .btn, .opz label';
@@ -4633,9 +4649,9 @@ window.LETTURA_CFG = {
   function restoPezzi(body, solo) {
     const out = []; let k = 0, prima = null;
     restoDi(body, solo).forEach(e => {
-      if (e.matches('.battuta')) { out.push(...battuta(e)); return; }
+      if (e.matches('h2, h3, h4')) return;      // i titoli delle sezioni narrative non si leggono (16/11/2026)
       if (e.matches('.scelte-c .btn, .opz label')) { const g = e.parentElement; if (g !== prima) { k = 0; prima = g; } out.push(...frasiDi(e, `Risposta ${LETTERE[k++]}:`)); return; }
-      out.push(...frasiDi(e));
+      out.push(...parlante(e));
     });
     return out;
   }
@@ -4643,17 +4659,20 @@ window.LETTURA_CFG = {
   /* ---------- che cosa si legge in ciascun tipo di riquadro ---------- */
   function pezziDi(blocco) {
     const q = s => [...blocco.querySelectorAll(s)];
+    if (typeof blocco.ltPezzi === 'function') return blocco.ltPezzi().map(t => ({ testo: t }));
     if (blocco.matches('#intro')) return voci(q(':scope > h2, :scope > p:not(.sopra):not(.credito):not(.crediti)'));
     if (blocco.matches('.breve')) {      // con le didascalie delle immagini che si vedono nella stessa schermata
       const fig = [...document.querySelectorAll('#popBody figure.schema > figcaption')].filter(f => f.getClientRects().length && !f.closest('[hidden], .sz-nascosto'));
-      return [...(blocco.matches('.senza') ? [] : [{ testo: 'In breve.' }]), ...voci(q('p')), ...voci(fig, 'Immagine:')]; }
+      return [...voci(q('p')), ...voci(fig, 'Immagine:')]; }      // «In breve» non si legge: si parte dal paragrafo (16/11/2026)
     // la fonte: il testo con la voce maschile (o femminile, se l’autrice è una donna: CFG.fontiDonna), poi didascalia, note, traduzione e commento con la voce del gioco
     if (blocco.matches('.fonte')) { const bq = q('blockquote'), donna = (CFG.fontiDonna || []).some(t => blocco.textContent.includes(t)), note = q('.note li');
-      return [{ testo: 'Fonte.' }, ...con(donna ? 'd' : 'u', voci(bq)), ...con('d', voci(q('.cita'))), ...con('d', voci(note, i => `Nota ${i + 1}:`)), ...con('d', voci(q('.contesto, :scope > p:not(.contesto)')))]; }
-    if (blocco.matches('details')) {      // le domande sulla fonte (Lessico, Analisi, Riflessione): la domanda; la risposta solo se è già aperta
-      const p = voci(q('summary')); return blocco.open ? p.concat(voci(q(':scope > p'))) : p; }
+      return [{ testo: 'Fonte.' }, ...con(donna ? 'd' : 'u', voci(bq)), ...con('d', voci(q('.cita'))), ...con('d', voci(note, i => `Nota ${i + 1}:`)), ...con('d', voci(q('.contesto, :scope > p:not(.contesto):not(.traduzione)')))]; }      // che il testo sia tradotto non si legge (16/11/2026)
+    if (blocco.matches('details')) {      // le tendine (Lessico, Analisi, Riflessione…): la domanda, poi la tendina si apre da sé e si legge la risposta (16/11/2026)
+      const p = voci(q('summary')), r = voci([...blocco.children].filter(c => !c.matches('summary')));
+      if (r.length) r[0].prima = () => { blocco.open = true; };
+      return p.concat(r); }
     if (blocco.matches('.lt-resto')) return restoPezzi(document.getElementById('popBody'));
-    if (blocco.matches('#popBody')) return voci(q(':scope > h2, :scope > p:not(.sopra)'));      // i messaggi del gioco in un riquadro (easter egg, fine dell’area)
+    if (blocco.matches('#popBody')) return voci(q(':scope > p:not(.sopra)'));      // senza il titolo (16/11/2026)      // i messaggi del gioco in un riquadro (easter egg, fine dell’area)
     if (blocco.matches(CFG.cartiglio || '#_')) return frasiDi(blocco, '', 'b');
     if (blocco.matches('.mg')) {      // un gioco: la consegna o la domanda, le risposte possibili, il commento
       const p = voci(q(':scope > p:not(.mg-testa):not(.mg-guida)'));
@@ -4667,13 +4686,15 @@ window.LETTURA_CFG = {
         else if (c.matches('.opz')) out.push(...voci([...c.querySelectorAll('label')].filter(vis), i => `Risposta ${LETTERE[i]}:`));
         else if (c.matches('.scelte-c')) out.push(...voci([...c.querySelectorAll('.btn')].filter(vis), i => `Risposta ${LETTERE[i]}:`));
         else if (c.matches('aside')) out.push(...voci([c], 'Nota:'));
-        else if (c.matches('h3, h4, p, .fb, blockquote, ul, ol')) out.push(...voci([c]));
+        else if (c.matches('h3, h4')) return;      // il titolo di una sezione narrativa non si legge (16/11/2026)
+        else if (c.matches('p, .fb, blockquote, ul, ol')) out.push(...parlante(c));
         else giro(c);
       });
       giro(blocco); return out;
     }
     if (blocco.matches('section.es')) {      // un esercizio: il titolo, la consegna, poi le parti secondo il tipo
-      let p = voci(q('h4, p.dom'));
+      const narr = narrativa(blocco); let p = narr ? [] : voci(q('h4'));      // con la battuta di un personaggio, il titolo non si legge (16/11/2026)
+      q('p.dom').forEach(e => p.push(...parlante(e)));
       if (blocco.querySelector('.cloze')) { p = p.concat(voci(q('.cloze')));
         q('.cloze select').forEach((s, i) => { const o = [...s.options].slice(1).map(x => x.text); p.push({ testo: `Spazio ${i + 1}: ${o.slice(0, -1).join(', ')} oppure ${o[o.length - 1]}.`, el: s }); }); }
       if (blocco.querySelector('ol.ord')) p = p.concat([{ testo: 'Le frasi da mettere in ordine.' }], voci(q('ol.ord li'), i => `${i + 1}:`));
@@ -4689,8 +4710,8 @@ window.LETTURA_CFG = {
       }
       if (blocco.querySelector('.riga .vf')) p = p.concat(voci(q('.riga > span'), i => `Affermazione ${i + 1}:`));
       // un gioco su misura (Area E: mappe, vicende…): se non c’è altro da dire che il titolo, si legge ciò che si vede, nell’ordine
-      if (p.length <= 1 && CFG.resto) return p.concat(restoPezzi(blocco, true));
-      return p.concat(voci(q(':scope > .fb')));
+      if ((narr ? p.length === 0 : p.length <= 1) && CFG.resto) return (narr ? [] : p).concat(restoPezzi(blocco, true));
+      return p.concat(...q(':scope > .fb').map(parlante));
     }
     const k = (CFG.blocchi || []).find(x => blocco.matches(x.sel));
     if (k) return voci([...(k.anche || []).map(s => document.querySelector(s)).filter(Boolean), blocco]);
@@ -4723,6 +4744,7 @@ window.LETTURA_CFG = {
   function prossimo(a) {
     if (attivo !== a) return; if (a.i >= a.pezzi.length) { ferma(); return; }
     const p = a.pezzi[a.i++], u = new SpeechSynthesisUtterance(perVoce(p.testo)), v = scegli(p.chi || a.chi);
+    if (p.prima) try { p.prima(); } catch (e) {}
     u.lang = v.voce ? v.voce.lang : 'it-IT'; if (v.voce) u.voice = v.voce; u.pitch = v.tono; u.rate = VELOCITA;
     u.onstart = () => { if (attivo === a) colora(p); };
     u.onend = () => prossimo(a); u.onerror = e => { if (attivo === a && e.error !== 'interrupted' && e.error !== 'canceled') ferma(); };
@@ -4756,7 +4778,7 @@ window.LETTURA_CFG = {
     if (blocco.querySelector(':scope .lt-btn[data-lt]') && [...blocco.querySelectorAll('.lt-btn[data-lt]')].some(b => b.ltBlocco === blocco)) return;
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lt-btn' + (come === 'fl' ? ' lt-fl' : '') + (come === 'solo' ? ' lt-solo' : '') + (come === 'resto' ? ' lt-r' : ''); b.dataset.lt = '1'; b.ltBlocco = blocco;
     b.innerHTML = ICONA + '<span class="lt-t">Ascolta</span>'; statoPulsante(b, false);
-    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } parla(pezziDi(blocco), b, blocco, 'd'); });
+    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } attiva(blocco); parla(pezziDi(blocco), b, blocco, 'd'); });
     b.addEventListener('keydown', e => e.stopPropagation());
     dove(b);
   }
@@ -4786,6 +4808,7 @@ window.LETTURA_CFG = {
         if (s && !s.querySelector('.lt-btn') && restoDi(body, true).reduce((n, e) => n + e.textContent.trim().length, 0) > 60) { s.classList.add('lt-resto'); altoparlante(s, b => s.prepend(b), 'resto'); }
       }
       body.querySelectorAll('.mg').forEach(x => { if (x.children.length) altoparlante(x, b => x.prepend(b), 'fl'); });
+      body.querySelectorAll('.lt-leggi').forEach(x => altoparlante(x, b => x.prepend(b), 'fl'));      // riquadri da leggere per intero (Area A: il cavallo contro il bue)
     }
     if (CFG.intro) { const i = document.getElementById('intro'); if (i) altoparlante(i, b => { const h = i.querySelector('h2'); h ? h.before(b) : i.prepend(b); }, 'fl'); }
     if (CFG.cartiglio) { const c = document.querySelector(CFG.cartiglio); if (c && c.textContent.trim() && !c.querySelector('.lt-ang')) {
@@ -4793,6 +4816,40 @@ window.LETTURA_CFG = {
   }
   let inAttesa = false; const presto = () => { if (inAttesa) return; inAttesa = true; requestAnimationFrame(() => { inAttesa = false; decora(); }); };
   new MutationObserver(presto).observe(corpo, { childList: true, subtree: true });
+
+  /* ---------- il commento alla risposta (richiesta della docente, 16/11/2026) ----------
+     Se in un esercizio o in un gioco si è premuto «Ascolta», dopo ogni risposta la voce smette di leggere e legge da sé il commento
+     («Giusto!…», «Non proprio…», la battuta di un personaggio, la conseguenza nel racconto). Il commento è il testo che compare nei riquadri
+     «aria-live» o «status» dell’esercizio, quelli che il gioco aggiorna a ogni risposta. Passando alla domanda dopo, il commento vecchio si zittisce. */
+  const ASCOLTATI = new WeakSet(); let ultimo = null, gesto = 0;
+  const ambito = el => (el.matches('.lt-resto') ? document.getElementById('popBody') : el.closest('section.es, .mg') || el);
+  function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); ultimo = { el: a, padre: a.parentElement }; }
+  function attivato(el) {
+    for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) return true;
+    // l’esercizio è stato ridisegnato (una nuova pagina della stessa attività): vale ancora, se sta dove stava il vecchio
+    if (ultimo && !ultimo.el.isConnected && ultimo.padre && ultimo.padre.isConnected && ultimo.padre.contains(el)) { attiva(el.closest('section.es, .mg') || ultimo.padre); return true; }
+    return false;
+  }
+  ['pointerdown', 'keydown', 'change'].forEach(ev => window.addEventListener(ev, e => { if (!(e.target && e.target.closest && e.target.closest('.lt-btn, .lt-ang'))) gesto = Date.now(); }, true));
+  const VIVO = '[aria-live], [role="status"]', DETTO = new WeakMap();
+  let daLeggere = new Set(), conta = 0;
+  function commento() {
+    conta = 0; const lista = [...daLeggere].filter(l => l.isConnected); daLeggere = new Set();
+    if (!acceso || !corpo.classList.contains('lt-ok') || Date.now() - gesto > 8000) return;
+    const nuovi = lista.filter(l => { const t = l.textContent.replace(/\s+/g, ' ').trim(), v = DETTO.get(l); DETTO.set(l, t); return t && t !== v && visibile(l) && attivato(l); })
+      .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+    const fuori = nuovi.filter(l => !nuovi.some(m => m !== l && m.contains(l)));
+    if (!fuori.length) return;
+    const pezzi = fuori.flatMap(parlante); if (!pezzi.length) return;
+    parla(pezzi, null, fuori[0], 'd'); if (attivo) attivo.commento = fuori;
+  }
+  new MutationObserver(ms => {
+    ms.forEach(m => {
+      const t = m.target.nodeType === 1 ? m.target : m.target.parentElement, l = t && t.closest && t.closest(VIVO); if (l) daLeggere.add(l);
+      m.addedNodes.forEach(n => { if (n.nodeType === 1) { if (n.matches(VIVO)) daLeggere.add(n); n.querySelectorAll(VIVO).forEach(x => daLeggere.add(x)); } });
+    });
+    if (daLeggere.size && !conta) conta = setTimeout(commento, 150);
+  }).observe(corpo, { childList: true, subtree: true, characterData: true });
 
   /* ---------- i due pulsanti d’angolo dei messaggi e dei fumetti: la X li chiude, l’altoparlante li legge ---------- */
   const X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/></svg>';
@@ -4832,6 +4889,7 @@ window.LETTURA_CFG = {
   let cartTiene = 0;
   setInterval(() => {
     if (attivo && attivo.blocco && !visibile(attivo.blocco)) ferma();
+    else if (attivo && attivo.commento && !attivo.commento.some(l => l.isConnected && l.textContent.trim())) ferma();      // si è passati alla domanda dopo
     if (attivo && attivo.fumetto && attivo.fumetto.tieni) try { attivo.fumetto.tieni(); } catch (e) {}
     const c = CFG.cartiglio && document.querySelector(CFG.cartiglio);
     if (c) { if (attivo && attivo.blocco === c) { c.classList.add('su'); cartTiene = Date.now(); } else if (cartTiene && Date.now() - cartTiene > 2500) { cartTiene = 0; c.classList.remove('su'); } }
@@ -4854,7 +4912,7 @@ window.LETTURA_CFG = {
    - «Testo grande»: caratteri più grandi e più spazio tra righe, lettere e parole, per chi ne ha bisogno. Si sceglie
      all’inizio dell’area (pulsante nella presentazione, accanto a quello per entrare) o in qualsiasi momento dalle opzioni.
      La scelta resta da un’area all’altra: il menu la ricorda e la manda a ogni area che si apre (come la velocità della voce).
-   - Su PC le opzioni (Musica, Voce, Effetti, Testo grande) stanno nel menu a scomparsa «☰ Opzioni»: finché è aperto
+   - Su PC le opzioni (Musica, Voce, Effetti, Testo grande, Mappa) stanno nel menu a scomparsa «☰ Opzioni»: finché è aperto
      il gioco è fermo (il viandante non si muove, la scena è velata). Sul telefono restano nel cassetto «☰ Comandi» (tocco.js).
    Il blocco non tocca il codice dell’area.
    ===================================================================== */
@@ -4869,7 +4927,7 @@ window.LETTURA_CFG = {
     + 'html.op-grande :is(#popBody,#intro,#bisaccia,#seqCart) :is(p,li,label,blockquote,summary,figcaption,td,dd,dt,.btn,.cita,.contesto){line-height:1.75;letter-spacing:.03em;word-spacing:.12em}'
     + 'html.op-grande .hud{font-size:16px}'
     // il pulsante nella presentazione
-    + '#intro .fine .op-testo{font-size:.95rem}'
+    + '#intro .fine .op-testo{font-size:.95rem}.op-aa{font-weight:900}'
     // il menu a scomparsa su PC
     + '.op-apri{display:none}.op-pannello{display:contents}body.tocco .hud .op-apri{display:none!important}'
     + 'body:not(.tocco) .op-apri{display:inline-block}'
@@ -4886,7 +4944,8 @@ window.LETTURA_CFG = {
   const pulsanti = [];
   function applica(v, daMenu) {
     grande = !!v; radice.classList.toggle('op-grande', grande);
-    pulsanti.forEach(b => { b.textContent = b.dataset.corto ? (grande ? 'Aa Testo grande: sì' : 'Aa Testo grande: no') : 'Testo grande: ' + (grande ? 'sì' : 'no'); b.setAttribute('aria-pressed', grande ? 'true' : 'false'); });
+    pulsanti.forEach(b => { b.innerHTML = '<b class="op-aa">A</b>a Testo grande: ' + (grande ? 'sì' : 'no');      // la prima A in grassetto (richiesta della docente, 16/11/2026)
+      b.setAttribute('aria-pressed', grande ? 'true' : 'false'); });
     try { localStorage.setItem(CHIAVE, grande ? 'si' : 'no'); } catch (e) {}
     if (!daMenu) try { window.parent.postMessage({ origine: 'area-rinascita', area: window.PONTE_AREA && PONTE_AREA.id, tipo: 'testo', v: grande }, '*'); } catch (e) {}
     window.dispatchEvent(new Event('resize'));      // le aree ridisegnano ciò che dipende dalle misure
@@ -4902,7 +4961,7 @@ window.LETTURA_CFG = {
   const musica = $$('#btnMusica'), tavola = musica && musica.closest('.tavola');
   if (tavola) {
     const bt = nuovo(false), ancora = $$('#btnEffetti') || musica; ancora.after(bt);
-    const OPZ = ['btnMusica', 'btnVoce', 'btnEffetti', 'btnTesto'];
+    const OPZ = ['btnMusica', 'btnVoce', 'btnEffetti', 'btnTesto', 'btnMini'];      // anche «Mappa (M)» (16/11/2026)
     const apri = document.createElement('button'); apri.type = 'button'; apri.className = 'btn op-apri'; apri.textContent = '☰ Opzioni'; apri.setAttribute('aria-expanded', 'false'); apri.setAttribute('aria-haspopup', 'true');
     const pan = document.createElement('div'); pan.className = 'op-pannello'; pan.setAttribute('role', 'group'); pan.setAttribute('aria-label', 'Opzioni');
     const tit = document.createElement('p'); tit.className = 'op-tit'; tit.textContent = 'Opzioni · il gioco è in pausa'; pan.append(tit);
@@ -5014,7 +5073,7 @@ window.TOCCO_AREA = true;
   const primoBtn = cassetto.querySelector('.btn'); cassetto.insertBefore(apri, primoBtn);
   const chiudiCassetto = () => { cassetto.classList.remove('aperto'); apri.setAttribute('aria-expanded', 'false'); misura(); };
   apri.onclick = () => { const a = cassetto.classList.toggle('aperto'); apri.setAttribute('aria-expanded', a ? 'true' : 'false'); apri.blur(); misura(); };
-  cassetto.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b && b !== apri && !/^(btnMusica|btnEffetti|btnVoce|btnTesto)$/.test(b.id) && b.textContent !== 'Confermi?' && b.id !== 'btnRiparti') setTimeout(chiudiCassetto, 0); });
+  cassetto.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b && b !== apri && !/^(btnMusica|btnEffetti|btnVoce|btnTesto|btnMini)$/.test(b.id) && b.textContent !== 'Confermi?' && b.id !== 'btnRiparti') setTimeout(chiudiCassetto, 0); });
   const bis = $$('#bisaccia');
   function misura() { corpo.style.setProperty('--tc-su', Math.round($$('#hud').getBoundingClientRect().bottom + 6) + 'px'); }
 

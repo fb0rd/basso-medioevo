@@ -2766,7 +2766,8 @@ const MUSICA_CUPA_B64 = 'SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjYwLjE2LjEwMAAAAAAAAAA
    ===================================================================== */
 const SUONI = (() => {
   let musicaOn = true, effettiOn = true, ac = null, eff = null, mus = null, rumore = null, acqua = null, vento = null, brusio = null, brano = null, caricamento = false;
-  const VOL_MUSICA = 0.75, VOL_LETTURA = 0.32, VOL_EFFETTI = 0.55;
+  window.USCITA_AUDIO = window.USCITA_AUDIO || (ac => { if (ac._uscita) return ac._uscita; const c = ac.createDynamicsCompressor(); c.threshold.value = -8; c.knee.value = 6; c.ratio.value = 6; c.attack.value = .004; c.release.value = .25; c.connect(ac.destination); return (ac._uscita = c); });
+  const VOL_MUSICA = 1.35, VOL_LETTURA = 0.6, VOL_EFFETTI = 1.0;
   let prossimo = { uccello: 2 };
   const dist = (x, y) => Math.hypot(x - G.x, y - G.y);
   function avvia() {
@@ -2774,8 +2775,8 @@ const SUONI = (() => {
     if (!ac) {
       const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
       try { ac = new C(); } catch (e) { ac = null; return; }
-      eff = ac.createGain(); eff.gain.value = effettiOn ? VOL_EFFETTI : 0; eff.connect(ac.destination);
-      mus = ac.createGain(); mus.gain.value = 0; mus.connect(ac.destination);
+      eff = ac.createGain(); eff.gain.value = effettiOn ? VOL_EFFETTI : 0; eff.connect(USCITA_AUDIO(ac));
+      mus = ac.createGain(); mus.gain.value = 0; mus.connect(USCITA_AUDIO(ac));
       // rumore bianco di due secondi, riusato per vento, acqua e colpi
       rumore = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); const d = rumore.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       const letto = (tipo, f, q, g0) => { const s = ac.createBufferSource(); s.buffer = rumore; s.loop = true; const fl = ac.createBiquadFilter(); fl.type = tipo; fl.frequency.value = f; fl.Q.value = q; const g = ac.createGain(); g.gain.value = g0; s.connect(fl); fl.connect(g); g.connect(eff); s.start(); return { g, fl }; };
@@ -3323,12 +3324,12 @@ COSTR.tf = ex => {
 
 COSTR.match = ex => {
   const box = el('div', 'abb'), colS = el('div', 'col'), colD = el('div', 'col');
-  const ass = {}; let sel = null; const ordineD = shuffle(ex.coppie.map((c, i) => i));
+  const ass = {}; let sel = null, selD = null; const ordineD = shuffle(ex.coppie.map((c, i) => i));
   const bS = [], bD = {};
   function clearStato() { bS.concat(Object.values(bD)).forEach(b => b.classList.remove('giusto', 'errato')); }
   function aggiorna() {
     bS.forEach((b, i) => {
-      b.setAttribute('aria-pressed', sel === i ? 'true' : 'false');
+      b.setAttribute('aria-pressed', sel === i ? 'true' : 'false'); if (bD[i]) bD[i].setAttribute('aria-pressed', selD === i ? 'true' : 'false');
       b.innerHTML = `<span class="badge ${ass[i] != null ? 'c' + i : ''}" style="${ass[i] == null ? 'background:#fff;color:#2a1b10' : ''}">${i + 1}</span>${ex.coppie[i][0]}`;
     });
     Object.keys(bD).forEach(j => {
@@ -3338,20 +3339,23 @@ COSTR.match = ex => {
   }
   ex.coppie.forEach((c, i) => {
     const b = el('button'); b.type = 'button';
-    b.onclick = () => { if (b.disabled) return; if (ass[i] != null) { delete ass[i]; sel = i; } else sel = (sel === i ? null : i); clearStato(); aggiorna(); };
+    b.onclick = () => { if (b.disabled) return;
+      if (selD != null) { Object.keys(ass).forEach(k => { if (ass[k] === selD) delete ass[k]; }); ass[i] = selD; selD = null; sel = null; clearStato(); aggiorna(); return; }      // prima la destra, poi la sinistra
+      if (ass[i] != null) { delete ass[i]; sel = i; } else sel = (sel === i ? null : i); clearStato(); aggiorna(); };
     bS.push(b); colS.append(b);
   });
   ordineD.forEach(j => {
     const b = el('button'); b.type = 'button';
     b.onclick = () => {
-      if (b.disabled || sel == null) return;
+      if (b.disabled) return;
+      if (sel == null) { const k = Object.keys(ass).find(x => ass[x] === j); if (k != null) delete ass[k]; selD = (selD === j && k == null ? null : j); clearStato(); aggiorna(); return; }      // si comincia dalla destra
       Object.keys(ass).forEach(k => { if (ass[k] === j) delete ass[k]; });
-      ass[sel] = j; sel = null; clearStato(); aggiorna();
+      ass[sel] = j; sel = null; selD = null; clearStato(); aggiorna();
     };
     bD[j] = b; colD.append(b);
   });
   box.append(colS, colD); aggiorna();
-  const guida = el('p', '', 'Seleziona un elemento a sinistra, poi la sua spiegazione a destra. Per sciogliere un abbinamento, selezionalo di nuovo.');
+  const guida = el('p', '', 'Seleziona un elemento in una colonna, poi quello che gli corrisponde nell’altra. Per sciogliere un abbinamento, selezionalo di nuovo.');
   guida.style.cssText = 'grid-column:1/-1;margin:0;font-size:.92rem;color:var(--terra)';
   box.append(guida);
   return {
@@ -6687,6 +6691,9 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
       if (r.length) r[0].prima = () => { blocco.open = true; };
       return p.concat(r); }
     if (blocco.matches('.lt-resto')) return restoPezzi(document.getElementById('popBody'));
+    if (blocco.matches('#popBody') && typeof STATO !== 'undefined' && STATO.modale === 'riep') {
+      const el = [...blocco.querySelectorAll('h2, h3, h4, .tot, p:not(.sopra), li, .banner, th, td')].filter(e => visibile0(e) && !e.closest('.fine, .lt-btn') && e.textContent.trim());
+      return voci(el.filter(e => !el.some(x => x !== e && x.contains(e)))); }
     if (blocco.matches('#popBody')) return voci(q(':scope > p:not(.sopra)'));      // senza il titolo (16/11/2026)      // i messaggi del gioco in un riquadro (easter egg, fine dell’area)
     if (blocco.matches(CFG.cartiglio || '#_')) return frasiDi(blocco, '', 'b');
     if (blocco.matches('.mg')) {      // un gioco: la consegna o la domanda, le risposte possibili, il commento
@@ -6708,24 +6715,21 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
       giro(blocco); return out;
     }
     if (blocco.matches('section.es')) {      // un esercizio: il titolo, la consegna, poi le parti secondo il tipo
-      const narr = narrativa(blocco); let p = narr ? [] : voci(q('h4'));      // con la battuta di un personaggio, il titolo non si legge (16/11/2026)
+      const narr = narrativa(blocco), sim = !!blocco.querySelector('.sim'); let p = narr || sim ? [] : voci(q('h4'));      // con la battuta di un personaggio, il titolo non si legge (16/11/2026)
       q('p.dom').forEach(e => p.push(...parlante(e)));
       if (blocco.querySelector('.cloze')) { p = p.concat(voci(q('.cloze')));
         q('.cloze select').forEach((s, i) => { const o = [...s.options].slice(1).map(x => x.text); p.push({ testo: `Spazio ${i + 1}: ${o.slice(0, -1).join(', ')} oppure ${o[o.length - 1]}.`, el: s }); }); }
       if (blocco.querySelector('ol.ord')) p = p.concat([{ testo: 'Le frasi da mettere in ordine.' }], voci(q('ol.ord li'), i => `${i + 1}:`));
       if (blocco.querySelector('.abb')) { const col = q('.abb .col'); p = p.concat(voci([...col[0].querySelectorAll('button')], i => (i ? '' : 'A sinistra:')), voci([...col[1].querySelectorAll('button')], i => (i ? '' : 'A destra:')), voci(q('.abb > p'))); }
       if (blocco.querySelector('.opz')) p = p.concat(voci(q('.opz label'), i => `Risposta ${LETTERE[i]}:`));
-      if (blocco.querySelector('.sim')) {      // una simulazione: le istruzioni in grassetto, le caselle da completare, le scelte, il diario
-        const istr = [...new Set(q('.sim div > b:first-child').map(b => b.parentElement))].filter(d => !d.matches('.casella') && !d.closest('[hidden]'));
-        p = p.concat(voci(istr));
-        q('.sim .casella').forEach((c, i) => { const s = c.querySelector('select'), t = c.querySelector('span');
-          if (t) p.push(...frasiDi(t, `Casella ${i + 1}:`));
-          else if (s) { const o = [...s.options].filter(x => x.value !== '').map(x => x.text); p.push({ testo: `Casella ${i + 1}: ` + (s.selectedIndex > 0 ? s.options[s.selectedIndex].text : o.length ? `da scegliere tra ${o.slice(0, -1).join(', ')} oppure ${o[o.length - 1]}.` : 'da scegliere.'), el: s }); } });
-        p = p.concat(voci(q('.sim .azioni .btn:not(.piccolo)'), i => (i ? '' : 'Le scelte:')), voci(q('.sim .diario')));
+      if (sim) {      // una simulazione: soltanto le consegne (la frase in grassetto e ciò che la segue sulla stessa riga), non i campi, le caselle, i contatori (16/11/2026)
+        const istr = [...new Set(q('.sim div > b:first-child').filter(b => /[.:]$/.test(b.textContent.trim())).map(b => b.parentElement))]      /* «Osserva.», «Costruisci.»: non le schede dei campi */.filter(d => !d.matches('.casella') && !d.closest('[hidden]') && visibile0(d)
+          && !(d.firstChild !== d.firstElementChild && d.firstChild.textContent.trim()));
+        istr.forEach(d => { [...d.children].forEach(c => { if (!c.matches('b, i, em, strong, span, a, sup, sub, br')) c.classList.add('lt-via'); }); p.push(...frasiDi(d, '', '.lt-via')); });
       }
       if (blocco.querySelector('.riga .vf')) p = p.concat(voci(q('.riga > span'), i => `Affermazione ${i + 1}:`));
       // un gioco su misura (Area E: mappe, vicende…): se non c’è altro da dire che il titolo, si legge ciò che si vede, nell’ordine
-      if ((narr ? p.length === 0 : p.length <= 1) && CFG.resto) return (narr ? [] : p).concat(restoPezzi(blocco, true));
+      if ((narr || sim ? p.length <= (sim ? 1 : 0) : p.length <= 1) && CFG.resto) return (narr ? [] : p).concat(restoPezzi(blocco, true));
       return p.concat(...q(':scope > .fb').map(parlante));
     }
     const k = (CFG.blocchi || []).find(x => blocco.matches(x.sel));
@@ -6738,7 +6742,10 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
   let attivo = null, acceso = true;
   // la velocità: «normale» è un poco più svelta della voce di base; dal menu si sceglie anche «più rapida» o «più lenta»
   const VEL = { normale: 1.1, rapida: 1.3, lenta: .9 }; let VELOCITA = VEL.normale;
-  window.addEventListener('message', e => { if (e.data && e.data.origine === 'menu-rinascita' && e.data.tipo === 'velocita' && VEL[e.data.v]) VELOCITA = VEL[e.data.v]; });
+  const NOMI_VEL = { normale: 'Velocità: normale', rapida: 'Velocità: più rapida', lenta: 'Velocità: più lenta' }; let nomeVel = 'normale';
+  try { const v = localStorage.getItem('rinascita-voce-velocita'); if (VEL[v]) { nomeVel = v; VELOCITA = VEL[v]; } } catch (e) {}
+  const segnaVel = () => { const b = document.getElementById('btnVelVoce'); if (b) b.textContent = NOMI_VEL[nomeVel]; };
+  window.addEventListener('message', e => { if (e.data && e.data.origine === 'menu-rinascita' && e.data.tipo === 'velocita' && VEL[e.data.v]) { nomeVel = e.data.v; VELOCITA = VEL[e.data.v]; segnaVel(); } });
   const LT = window.LETTURA = { get parla() { return !!attivo; }, get velocita() { return VELOCITA; }, scegli, perVoce, pezziDi, dialoghi, get voci() { return VOCI.map(v => v.name + ' · ' + sesso(v)); } };
   function colora(p) {
     if (HL) CSS.highlights.delete('lt-frase'); document.querySelectorAll('.lt-ora').forEach(x => x.classList.remove('lt-ora'));
@@ -6758,6 +6765,7 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
   }
   function prossimo(a) {
     if (attivo !== a) return; if (a.i >= a.pezzi.length) { ferma(); return; }
+    { const q0 = a.pezzi[a.i]; if (q0.prima) try { q0.prima(); } catch (e) {} if (!sulloSchermo(q0)) { ferma(); return; } }      // il testo da leggere non c’è più (si è andati avanti): la voce tace
     const p = a.pezzi[a.i++], u = new SpeechSynthesisUtterance(perVoce(p.testo)), v = scegli(p.chi || a.chi);
     if (p.prima) try { p.prima(); } catch (e) {}
     u.lang = v.voce ? v.voce.lang : 'it-IT'; if (v.voce) u.voice = v.voce; u.pitch = v.tono; u.rate = VELOCITA;
@@ -6793,21 +6801,22 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
     if (blocco.querySelector(':scope .lt-btn[data-lt]') && [...blocco.querySelectorAll('.lt-btn[data-lt]')].some(b => b.ltBlocco === blocco)) return;
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lt-btn' + (come === 'fl' ? ' lt-fl' : '') + (come === 'solo' ? ' lt-solo' : '') + (come === 'resto' ? ' lt-r' : ''); b.dataset.lt = '1'; b.ltBlocco = blocco;
     b.innerHTML = ICONA + '<span class="lt-t">Ascolta</span>'; statoPulsante(b, false);
-    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } attiva(blocco); parla(pezziDi(blocco), b, blocco, 'd'); });
+    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } attiva(blocco); parla(finito(blocco) || pezziDi(blocco), b, blocco, 'd'); });
     b.addEventListener('keydown', e => e.stopPropagation());
     dove(b);
   }
 
   /* ---------- dove si mettono gli altoparlanti ---------- */
   let luogo = null;      // l’id del luogo o del nastro aperto (gli altoparlanti compaiono solo nei luoghi della prova)
-  ['apriPoi', 'apriInfo'].forEach(nome => { const f0 = window[nome]; if (typeof f0 !== 'function') return; window[nome] = function (p) { ferma(); luogo = p && p.id; return f0.apply(this, arguments); }; });
-  if (typeof window.chiudiModale === 'function') { const c0 = window.chiudiModale; window.chiudiModale = function () { ferma(); luogo = null; return c0.apply(this, arguments); }; }
+  ['apriPoi', 'apriInfo'].forEach(nome => { const f0 = window[nome]; if (typeof f0 !== 'function') return; window[nome] = function (p) { ferma(); ultimo = null; luogo = p && p.id; return f0.apply(this, arguments); }; });
+  if (typeof window.chiudiModale === 'function') { const c0 = window.chiudiModale; window.chiudiModale = function () { ferma(); ultimo = null; luogo = null; return c0.apply(this, arguments); }; }
   function decora() {
     const body = document.getElementById('popBody');
     // altri testi indicati per nome (nel menu: la descrizione del gioco): CFG.blocchi = [{ sel, anche: [selettori letti prima] }]
     (CFG.blocchi || []).forEach(k => { const x = document.querySelector(k.sel); if (x) altoparlante(x, b => x.prepend(b), 'fl'); });
     if (typeof STATO === 'undefined' || !CFG.luoghi) return;      // fuori da un’area (il menu) non ci sono luoghi né popup
     const tutti = CFG.luoghi === '*', vale = STATO.modale && STATO.modale !== 'riep' && !(CFG.salta || []).includes(luogo) && (tutti || (luogo && CFG.luoghi.includes(luogo)));
+    if (body && STATO.modale === 'riep' && !body.querySelector('.lt-btn')) altoparlante(body, b => { const h = body.querySelector(':scope > h2'); h ? h.before(b) : body.prepend(b); }, 'fl');      // il riepilogo
     if (body && vale) {
       body.querySelectorAll('.breve').forEach(x => altoparlante(x, b => x.prepend(b), 'fl'));
       body.querySelectorAll('.fonte').forEach(x => altoparlante(x, b => { const t = x.querySelector('.tipo'); t ? t.after(b) : x.prepend(b); }, 'fl'));
@@ -6838,6 +6847,16 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
      «aria-live» o «status» dell’esercizio, quelli che il gioco aggiorna a ogni risposta. Passando alla domanda dopo, il commento vecchio si zittisce. */
   const ASCOLTATI = new WeakSet(); let ultimo = null, gesto = 0;
   const ambito = el => (el.matches('.lt-resto') ? document.getElementById('popBody') : el.closest('section.es, .mg') || el);
+  // un esercizio (o una sua parte) è finito se è «risolto», oppure se c’è un commento e non resta nulla da scegliere: allora «Ascolta» legge soltanto il commento
+  const SCELTE = 'input:not(:disabled):not([type="hidden"]), select:not(:disabled), .opz label, .mg-opz .btn:not(:disabled), .scelte-c .btn:not(:disabled), .mg-voci .btn:not(:disabled)';
+  function finito(blocco) {
+    const a = ambito(blocco); if (!a || a === blocco && !a.matches('section.es, .mg')) return null;
+    const com = [...a.querySelectorAll(VIVO)].filter(l => RISPOSTA.has(l) && visibile(l) && l.textContent.trim() && !l.closest('.lt-btn')), fuori = com.filter(l => !com.some(m => m !== l && m.contains(l)));
+    if (!fuori.length) return null;
+    const ancora = [...a.querySelectorAll(SCELTE)].some(visibile);
+    if (!a.matches('.risolto') && ancora) return null;
+    const pezzi = fuori.flatMap(parlante); return pezzi.length ? pezzi : null;
+  }
   function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); ultimo = { el: a, padre: a.parentElement }; }
   function attivato(el) {
     for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) return true;
@@ -6846,12 +6865,15 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
     return false;
   }
   ['pointerdown', 'keydown', 'change'].forEach(ev => window.addEventListener(ev, e => { if (!(e.target && e.target.closest && e.target.closest('.lt-btn, .lt-ang'))) gesto = Date.now(); }, true));
-  const VIVO = '[aria-live], [role="status"]', DETTO = new WeakMap();
+  const VIVO = '[aria-live], [role="status"]', DETTO = new WeakMap(), RISPOSTA = new WeakSet();
   let daLeggere = new Set(), conta = 0;
   function commento() {
     conta = 0; const lista = [...daLeggere].filter(l => l.isConnected); daLeggere = new Set();
-    if (!acceso || !corpo.classList.contains('lt-ok') || Date.now() - gesto > 8000) return;
-    const nuovi = lista.filter(l => { const t = l.textContent.replace(/\s+/g, ' ').trim(), v = DETTO.get(l); DETTO.set(l, t); return t && t !== v && visibile(l) && attivato(l); })
+    const recente = Date.now() - gesto < 8000, cambiati = [];
+    lista.forEach(l => { const t = l.textContent.replace(/\s+/g, ' ').trim(), c = DETTO.has(l), v = DETTO.get(l); DETTO.set(l, t);
+      if (!t) RISPOSTA.delete(l); else if (t !== v) { if (c && recente) RISPOSTA.add(l); if (recente) cambiati.push(l); } });      // RISPOSTA: un riquadro già presente, riempito dopo un gesto
+    if (!acceso || !corpo.classList.contains('lt-ok') || !recente) return;
+    const nuovi = cambiati.filter(l => visibile(l) && attivato(l))
       .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
     const fuori = nuovi.filter(l => !nuovi.some(m => m !== l && m.contains(l)));
     if (!fuori.length) return;
@@ -6901,15 +6923,23 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
 
   /* ---------- la sorveglianza: la voce tace se il suo riquadro sparisce; il cartiglio e i fumetti restano aperti finché li si ascolta ---------- */
   const visibile = el => el && el.isConnected && el.getClientRects().length > 0 && !el.closest('[hidden]');
+  function sulloSchermo(p) {      // una frase è sullo schermo se il suo testo (o il suo elemento) è ancora nella pagina e si vede
+    if (!p) return true; const n = p.el || (p.range && p.range.startContainer); if (!n) return true;
+    const e = n.nodeType === 1 ? n : n.parentElement; return !!e && e.isConnected && visibile(e) && !e.closest('.sz-nascosto');
+  }
   let cartTiene = 0;
   setInterval(() => {
     if (attivo && attivo.blocco && !visibile(attivo.blocco)) ferma();
+    else if (attivo && attivo.i > 0 && !sulloSchermo(attivo.pezzi[attivo.i - 1])) ferma();      // la frase che si sta leggendo è sparita dallo schermo
     else if (attivo && attivo.commento && !attivo.commento.some(l => l.isConnected && l.textContent.trim())) ferma();      // si è passati alla domanda dopo
     if (attivo && attivo.fumetto && attivo.fumetto.tieni) try { attivo.fumetto.tieni(); } catch (e) {}
     const c = CFG.cartiglio && document.querySelector(CFG.cartiglio);
     if (c) { if (attivo && attivo.blocco === c) { c.classList.add('su'); cartTiene = Date.now(); } else if (cartTiene && Date.now() - cartTiene > 2500) { cartTiene = 0; c.classList.remove('su'); } }
   }, 150);
   document.addEventListener('visibilitychange', () => { if (document.hidden) ferma(); });
+  // ogni pulsante del gioco (Avanti, Verifica, «Comincia da gennaio», una risposta…) interrompe la lettura; non quelli della voce e della barra in alto
+  document.addEventListener('click', e => { const t = e.target && e.target.closest && e.target.closest('button, .btn, [role="button"], a[href], summary');
+    if (t && attivo && !t.closest('.lt-btn, .lt-ang, .hud, #hud, .op-pannello, .tavola')) ferma(); }, true);
   window.addEventListener('message', e => { if (e.data && e.data.origine === 'menu-rinascita' && e.data.tipo === 'pausa') ferma(); });
   window.addEventListener('pagehide', ferma);
 
@@ -6918,7 +6948,12 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
   const bm = CFG.barra === false ? null : document.getElementById('btnMusica');      // nel menu niente «Voce: sì / no»
   if (bm) { const bv = document.createElement('button'); bv.type = 'button'; bv.className = 'btn piccolo'; bv.id = 'btnVoce'; bv.textContent = 'Voce: sì'; bv.setAttribute('aria-pressed', 'true');
     bv.onclick = () => { acceso = !acceso; corpo.classList.toggle('lt-acceso', acceso); bv.textContent = acceso ? 'Voce: sì' : 'Voce: no'; bv.setAttribute('aria-pressed', acceso ? 'true' : 'false'); if (!acceso) ferma(); bv.blur(); };
-    bm.after(bv); const agg = () => { bv.hidden = !corpo.classList.contains('lt-ok'); }; agg(); new MutationObserver(agg).observe(corpo, { attributes: true, attributeFilter: ['class'] }); }
+    const bvel = document.createElement('button'); bvel.type = 'button'; bvel.className = 'btn piccolo'; bvel.id = 'btnVelVoce'; bvel.title = 'Velocità della lettura ad alta voce';
+    bvel.onclick = () => { const ord = ['normale', 'rapida', 'lenta']; nomeVel = ord[(ord.indexOf(nomeVel) + 1) % ord.length]; VELOCITA = VEL[nomeVel]; segnaVel(); bvel.blur();
+      try { localStorage.setItem('rinascita-voce-velocita', nomeVel); } catch (e) {}
+      try { window.parent.postMessage({ origine: 'area-rinascita', area: window.PONTE_AREA && PONTE_AREA.id, tipo: 'velocita', v: nomeVel }, '*'); } catch (e) {}
+      if (attivo) { const a = attivo; parla(a.pezzi.slice(Math.max(0, a.i - 1)), a.btn, a.blocco, a.chi); } };      // si sente subito: la frase in corso riparte con la velocità nuova
+    bm.after(bv); bv.after(bvel); segnaVel(); const agg = () => { bv.hidden = bvel.hidden = !corpo.classList.contains('lt-ok'); }; agg(); new MutationObserver(agg).observe(corpo, { attributes: true, attributeFilter: ['class'] }); }
 })();
 </script>
 <script>
@@ -6976,7 +7011,7 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
   const musica = $$('#btnMusica'), tavola = musica && musica.closest('.tavola');
   if (tavola) {
     const bt = nuovo(false), ancora = $$('#btnEffetti') || musica; ancora.after(bt);
-    const OPZ = ['btnMusica', 'btnVoce', 'btnEffetti', 'btnTesto', 'btnMini'];      // anche «Mappa (M)» (16/11/2026)
+    const OPZ = ['btnMusica', 'btnVoce', 'btnVelVoce', 'btnEffetti', 'btnTesto', 'btnMini'];      // anche «Mappa (M)» (16/11/2026)
     const apri = document.createElement('button'); apri.type = 'button'; apri.className = 'btn op-apri'; apri.textContent = '☰ Opzioni'; apri.setAttribute('aria-expanded', 'false'); apri.setAttribute('aria-haspopup', 'true');
     const pan = document.createElement('div'); pan.className = 'op-pannello'; pan.setAttribute('role', 'group'); pan.setAttribute('aria-label', 'Opzioni');
     const tit = document.createElement('p'); tit.className = 'op-tit'; tit.textContent = 'Opzioni · il gioco è in pausa'; pan.append(tit);
@@ -7004,7 +7039,7 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
     window.addEventListener('keyup', e => { if (aperto) e.stopImmediatePropagation(); }, true);
     sistema(); new MutationObserver(sistema).observe(corpo, { attributes: true, attributeFilter: ['class'] });
     // il pulsante «Voce» della lettura arriva dopo (lettura.js): quando compare, entra anch’esso nel pannello
-    new MutationObserver(() => { const v = $$('#btnVoce'); if (v && v.parentElement !== pan && !corpo.classList.contains('tocco')) sistema(); }).observe(tavola, { childList: true });
+    new MutationObserver(() => { const v = $$('#btnVoce'), w = $$('#btnVelVoce'); if ((v && v.parentElement !== pan || w && w.parentElement !== pan) && !corpo.classList.contains('tocco')) sistema(); }).observe(tavola, { childList: true });
     window.OPZIONI = { apri: spalanca, chiudi, get aperto() { return aperto; } };
   }
   applica(grande, true);
@@ -7088,7 +7123,7 @@ window.TOCCO_AREA = true;
   const primoBtn = cassetto.querySelector('.btn'); cassetto.insertBefore(apri, primoBtn);
   const chiudiCassetto = () => { cassetto.classList.remove('aperto'); apri.setAttribute('aria-expanded', 'false'); misura(); };
   apri.onclick = () => { const a = cassetto.classList.toggle('aperto'); apri.setAttribute('aria-expanded', a ? 'true' : 'false'); apri.blur(); misura(); };
-  cassetto.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b && b !== apri && !/^(btnMusica|btnEffetti|btnVoce|btnTesto|btnMini)$/.test(b.id) && b.textContent !== 'Confermi?' && b.id !== 'btnRiparti') setTimeout(chiudiCassetto, 0); });
+  cassetto.addEventListener('click', e => { const b = e.target.closest('.btn'); if (b && b !== apri && !/^(btnMusica|btnEffetti|btnVoce|btnVelVoce|btnTesto|btnMini)$/.test(b.id) && b.textContent !== 'Confermi?' && b.id !== 'btnRiparti') setTimeout(chiudiCassetto, 0); });
   const bis = $$('#bisaccia');
   function misura() { corpo.style.setProperty('--tc-su', Math.round($$('#hud').getBoundingClientRect().bottom + 6) + 'px'); }
 

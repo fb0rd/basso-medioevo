@@ -348,7 +348,7 @@ table.offerte small{white-space:nowrap}
 .bando .grande{margin:2px 0 4px;font-family:var(--font-titoli);font-size:clamp(2rem,6vw,3rem);line-height:1.1;color:var(--inchiostro)}
 .bando .grande span{color:var(--minio)}
 .bando .altri{margin:0;font-size:.9rem;color:var(--terra)}
-.bando .firma{margin:8px 0 0;font-style:italic;font-size:.95rem}
+.bando .firma{margin:8px 0 0;padding:0 34px;font-style:italic;font-size:.95rem}
 .bando::after{content:"";position:absolute;right:14px;bottom:10px;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#c64a3a,#8d2a1c);box-shadow:0 0 0 2px #6e1f14}
 @media (max-width:640px){.testata .ritratto{width:64px;height:64px}}
 .intro .crediti{font-size:.88rem;color:var(--terra);margin-top:4px}
@@ -2801,7 +2801,6 @@ function apriPedaggio() {
     box.append(el('p', 'dom', `Il gabelliere: «Pedone con mulo carico: paghi ${T} denari». Metti le monete sul banco e premi «Paga».`));
         if (STATO.denari < T) {
       box.append(el('p', 'vuota', STATO.denari ? `Nella tua borsa hai ${fmtDenari(STATO.denari)}: non basta.` : 'Nella tua borsa non hai monete: non puoi entrare in città!'));
-      fb.innerHTML = `<span class="suggerimento"><b>Come procurarti il denaro:</b> vendi le eccedenze che porta il tuo mulo ai compratori del mercato fuori porta e della fiera. ${primaVolta ? 'Sulla mappa sono comparsi i luoghi 9 e 10: completa i loro esercizi per far apparire i compratori. ' : ''}<b>Confronta le offerte</b>: ogni compratore paga prezzi diversi, e qualcuno compra solo una parte delle tue merci.</span>`;
       box.append(fb); if (!STATO.avvisoOfferte) { STATO.avvisoOfferte = 'da mostrare'; } return;
     }
     pannelloMonete(box, fb, T, 'Il banco del gabelliere', 'Paga', 'pedaggio', (sB, resto) => {

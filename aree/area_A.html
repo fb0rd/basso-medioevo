@@ -3011,9 +3011,10 @@ window.IMG_DUELLO = {
 
   /* --- il cartiglio che annuncia il luogo nuovo, e il segnale che pulsa --- */
   const st = document.createElement('style');
-  st.textContent = '#seqCart{position:fixed;left:50%;top:74px;transform:translate(-50%,-8px);z-index:30;max-width:min(560px,calc(100vw - 32px));background:var(--perg-chiara);border:2px solid var(--inchiostro);box-shadow:3px 3px 0 var(--inchiostro),0 0 0 4px rgba(196,147,42,.45);padding:9px 16px;font-size:1.02rem;line-height:1.35;text-align:center;opacity:0;transition:opacity .6s,transform .6s;pointer-events:none}'
+  st.textContent = '#seqCart{position:fixed;left:50%;top:74px;transform:translate(-50%,-8px);z-index:15;max-width:min(560px,calc(100vw - 32px));background:var(--perg-chiara);border:2px solid var(--inchiostro);box-shadow:3px 3px 0 var(--inchiostro),0 0 0 4px rgba(196,147,42,.45);padding:9px 16px;font-size:1.02rem;line-height:1.35;text-align:center;opacity:0;transition:opacity .6s,transform .6s;pointer-events:none}'
     + '#seqCart.su{opacity:1;transform:translate(-50%,0)}#seqCart b{display:block;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--minio)}';
   document.head.append(st);
+  // il cartiglio sta sotto il velo dei popup (livello 15 < 20): se un popup si apre mentre è ancora visibile, non gli finisce sopra (17/11/2026)
   const cart = document.createElement('div'); cart.id = 'seqCart'; cart.setAttribute('role', 'status'); document.body.append(cart);
   let orologio = 0, inAttesa = null; const nuovi = {};
   function annuncia(n) { cart.innerHTML = '<b>Un luogo nuovo sulla mappa</b>' + ANNUNCI[n]; cart.classList.add('su'); clearTimeout(orologio); orologio = setTimeout(() => cart.classList.remove('su'), 7500); }
@@ -3300,7 +3301,7 @@ window.LETTURA_CFG = {
       .replace(/\bcfr\./gi, 'confronta').replace(/(\d)\s*−\s*(\d)/g, '$1 meno $2')
       // i punteggi: «+10 punti» la voce di Android lo legge «più uno zero»; «3/4» «tre barra quattro» (segnalato dalla docente, 16/11/2026)
       .replace(/(^|[^\w\d])\+\s*(\d+)/g, '$1più $2').replace(/(^|[\s(])[−–-]\s*(\d+)(?=\s*punt)/g, '$1meno $2').replace(/(\d)\s*\/\s*(\d)/g, '$1 su $2')
-      .replace(/[«»"“”]/g, '').replace(/\s+,/g, ',').replace(/,(\s*,)+/g, ',').replace(/,\s*([.;:])/g, '$1').replace(/\s*·\s*/g, '. ').replace(/[▸◂▲▼▶]/g, '').trim();
+      .replace(/[«»"“”]/g, '').replace(/\s*\*+/g, '').replace(/\s+,/g, ',').replace(/,(\s*,)+/g, ',').replace(/,\s*([.;:])/g, '$1').replace(/\s*·\s*/g, '. ').replace(/[▸◂▲▼▶]/g, '').trim();
   }
 
   /* ---------- dal testo sullo schermo ai «pezzi» da leggere: una frase alla volta, ciascuna con il suo tratto da colorare ---------- */
@@ -3382,11 +3383,15 @@ window.LETTURA_CFG = {
     if (typeof e.ltPezzi === 'function') return e.ltPezzi().map(t => ({ testo: t }));      // un riquadro che dice da sé che cosa leggere (Area A: il cavallo contro il bue)
     if (e.matches('.battuta')) return battuta(e);
     const b = etichetta(e); if (b) { b.classList.add('lt-nome'); return con(voceDi(b.textContent), frasiDi(e, '', '.lt-nome')); }
+    // un nome in grassetto davanti a una battuta, anche a metà del commento («La porta si apre! La guardia: «…»», Area D): non si legge (17/11/2026)
+    const nomi = [...e.querySelectorAll(':scope > b, :scope > strong')].filter(n => { const t = n.textContent.trim(); return t.length < 40 && /:$/.test(t) && /^\s*«/.test((n.nextSibling && n.nextSibling.textContent) || ''); });
+    if (nomi.length) { nomi.forEach(n => n.classList.add('lt-nome')); return frasiDi(e, '', '.lt-nome' + (e.querySelector('.battuta') ? ', .battuta' : '')).concat(...[...e.querySelectorAll('.battuta')].map(battuta)); }
     const bat = [...e.querySelectorAll('.battuta')]; if (!bat.length) return frasiDi(e);
     return frasiDi(e, '', '.battuta').concat(...bat.map(battuta));
   }
   const narrativa = el => !!el.querySelector('.battuta, .lt-nome') || [...el.querySelectorAll('p')].some(etichetta);
   const LETTERE = 'ABCDEFGH';
+  const GIOCO = '.sim .stat-int, .sim .scena, .sim .scelte-c, .sim .scelte-r, .sim .venditori, .sim .voce-r, .sim .battuta, .sim .carte, .studente-c';      // i giochi con personaggi e scene
   const visibile0 = e => e.getClientRects().length > 0 && !e.closest('[hidden], .sz-nascosto');
   const RESTO = 'h2, h3, h4, p:not(.sopra), li, figcaption, blockquote, .battuta, .scelte-c .btn, .opz label';
   function restoDi(body, solo) {      // solo: senza il titolo (per decidere se serve l’altoparlante)
@@ -3410,6 +3415,8 @@ window.LETTURA_CFG = {
   function pezziDi(blocco) {
     const q = s => [...blocco.querySelectorAll(s)];
     if (typeof blocco.ltPezzi === 'function') return blocco.ltPezzi().map(t => ({ testo: t }));
+    if (blocco.matches('.battuta')) return battuta(blocco);      // l’icona accanto al nome di chi parla: la sola battuta (17/11/2026)
+    if (blocco.matches('.lt-bat')) return parlante(blocco);
     if (blocco.matches('#intro')) return voci(q(':scope > h2, :scope > p:not(.sopra):not(.credito):not(.crediti)'));
     if (blocco.matches('.breve')) {      // con le didascalie delle immagini che si vedono nella stessa schermata
       const fig = [...document.querySelectorAll('#popBody figure.schema > figcaption')].filter(f => f.getClientRects().length && !f.closest('[hidden], .sz-nascosto'));
@@ -3434,13 +3441,14 @@ window.LETTURA_CFG = {
     if (blocco.matches('section.es.att') && !blocco.querySelector('.cloze, ol.ord, .abb, .sim, .riga .vf')) {      // un’attività del gioco (alla porta, al cantiere, in bottega…)
       const out = [], vis = e => !e.hidden && e.getClientRects().length > 0;
       const giro = el => [...el.children].filter(vis).forEach(c => {
-        if (c.matches('.lt-btn, .griglia-ped, .mucchio, .azioni, img, canvas, svg, figure')) return;
+        if (c.matches('.lt-btn, .lt-salta, .griglia-ped, .mucchio, .azioni, img, canvas, svg, figure')) return;      // .lt-salta: già letto in una schermata precedente (il giuramento sotto la firma)
         if (c.matches('.battuta')) out.push(...battuta(c));
         else if (c.matches('.opz')) out.push(...voci([...c.querySelectorAll('label')].filter(vis), i => `Risposta ${LETTERE[i]}:`));
         else if (c.matches('.scelte-c')) out.push(...voci([...c.querySelectorAll('.btn')].filter(vis), i => `Risposta ${LETTERE[i]}:`));
         else if (c.matches('aside')) out.push(...voci([c], 'Nota:'));
+        else if (c.matches('.perg-c')) { out.push(...frasiDi(c)); [...c.querySelectorAll('select')].forEach((s, i) => { if (s.disabled) return; const o = [...s.options].slice(1).map(x => x.text); out.push({ testo: `Spazio ${i + 1}: ${o.slice(0, -1).join(', ')} oppure ${o[o.length - 1]}.`, el: s }); }); }      // il giuramento (Area D)
         else if (c.matches('h3, h4')) return;      // il titolo di una sezione narrativa non si legge (16/11/2026)
-        else if (c.matches('p, .fb, blockquote, ul, ol')) out.push(...parlante(c));
+        else if (c.matches('p, .fb, blockquote, ul, ol, .banner')) out.push(...parlante(c));
         else giro(c);
       });
       giro(blocco); return out;
@@ -3453,6 +3461,23 @@ window.LETTURA_CFG = {
       if (blocco.querySelector('ol.ord')) p = p.concat([{ testo: 'Le frasi da mettere in ordine.' }], voci(q('ol.ord li'), i => `${i + 1}:`));
       if (blocco.querySelector('.abb')) { const col = q('.abb .col'); p = p.concat(tasti([...col[0].querySelectorAll('button')], i => (i ? '' : 'A sinistra:')), tasti([...col[1].querySelectorAll('button')], i => (i ? '' : 'A destra:')), voci(q('.abb > p'))); }
       if (blocco.querySelector('.opz')) p = p.concat(voci(q('.opz label'), i => `Risposta ${LETTERE[i]}:`));
+      // un gioco con personaggi e scene (Area C: Neri e Guccio; Area D: le Arti, il registro del porto, il pesce, il bando, lo studium):
+      // la consegna (finché c’è), poi ciò che si vede, nell’ordine: le battute senza il nome, la scena, la domanda e le risposte, i commenti.
+      // Non si leggono i conti dei punti, i taccuini delle mosse fatte, i disegni (17/11/2026)
+      if (blocco.querySelector(GIOCO)) {
+        const out = q('p.dom').filter(visibile0).flatMap(parlante), scelte = lista => { out.push(...voci(lista.filter(b => visibile0(b) && !b.disabled), i => `Risposta ${LETTERE[i]}:`)); };
+        const giro2 = el => [...el.children].filter(visibile0).forEach(c => {
+          if (c.matches('.lt-btn, .lt-salta, .lt-unita, h4, p.dom, svg, canvas, img, figure, .mucchio, ol.taccuino, .catena, .fatti-p, .tit-t, select, .conto-c, .percorso, .mare, .strada-c, .tab, table')) return;
+          if (c.matches('.battuta')) out.push(...battuta(c));
+          else if (c.matches('.scelte-c, .scelte-r')) { out.push(...voci([...c.querySelectorAll('.dom-c')].filter(visibile0))); scelte([...c.querySelectorAll('button')]); }
+          else if (c.matches('.azioni')) { if (c.closest('.studente-c, .carta')) scelte([...c.querySelectorAll('button:not(.avanti):not(.primario)')]); }
+          else if (c.matches('.perg-c')) { out.push(...frasiDi(c)); [...c.querySelectorAll('select')].forEach((x, k) => { if (x.disabled) return; const o = [...x.options].slice(1).map(y => y.text); out.push({ testo: `Spazio ${k + 1}: ${o.slice(0, -1).join(', ')} oppure ${o[o.length - 1]}.`, el: x }); }); }
+          else if (c.matches('button')) out.push(...frasiDi(c));      // i venditori del bando
+          else if (c.matches('aside')) out.push(...voci([c], 'Nota:'));
+          else if (c.matches('p, li, .fb, .fb-gioco, .dom-c')) out.push(...parlante(c));
+          else giro2(c);
+        });
+        giro2(blocco); return out; }
       if (sim) {      // una simulazione: soltanto le consegne (la frase in grassetto e ciò che la segue sulla stessa riga), non i campi, le caselle, i contatori (16/11/2026)
         const istr = [...new Set(q('.sim div > b:first-child').filter(b => /[.:]$/.test(b.textContent.trim())).map(b => b.parentElement))]      /* «Osserva.», «Costruisci.»: non le schede dei campi */.filter(d => !d.matches('.casella') && !d.closest('[hidden]') && visibile0(d)
           && !(d.firstChild !== d.firstElementChild && d.firstChild.textContent.trim()));
@@ -3523,7 +3548,7 @@ window.LETTURA_CFG = {
     + 'body.lt-ok.lt-acceso .lt-au{display:grid}.lt-au[aria-pressed="true"]{background:var(--inchiostro);color:var(--perg-chiara)}'
     + '.lt-x:focus-visible,.lt-au:focus-visible{outline:3px solid var(--oro);outline-offset:2px}'
     + '#seqCart.lt-con{padding-left:26px;padding-right:26px}'
-    + '.lt-fum{position:fixed;width:0;height:0;z-index:25}.lt-fum .lt-ang{right:-24px}'      // sui fumetti, un po’ più fuori: la mappa rimpicciolita lascia poco margine al testo
+    + '.lt-fum{position:fixed;width:0;height:0;z-index:15}.lt-fum .lt-ang{right:-24px}'      // sui fumetti, un po’ più fuori: la mappa rimpicciolita lascia poco margine al testo
     + '::highlight(lt-frase){background-color:rgba(242,193,74,.6);color:inherit}'
     + '.lt-ora{outline:3px solid var(--oro);outline-offset:2px;background:rgba(242,193,74,.3)}';
   document.head.append(st);
@@ -3532,7 +3557,7 @@ window.LETTURA_CFG = {
     if (blocco.querySelector(':scope .lt-btn[data-lt]') && [...blocco.querySelectorAll('.lt-btn[data-lt]')].some(b => b.ltBlocco === blocco)) return;
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lt-btn' + (come === 'fl' ? ' lt-fl' : '') + (come === 'solo' ? ' lt-solo' : '') + (come === 'resto' ? ' lt-r' : ''); b.dataset.lt = '1'; b.ltBlocco = blocco;
     b.innerHTML = ICONA + '<span class="lt-t">Ascolta</span>'; statoPulsante(b, false);
-    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } attiva(blocco); parla(finito(blocco) || pezziDi(blocco), b, blocco, 'd'); });
+    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } attiva(blocco); parla((blocco.matches('.battuta, .lt-bat') ? null : finito(blocco)) || pezziDi(blocco), b, blocco, 'd'); });
     b.addEventListener('keydown', e => e.stopPropagation());
     dove(b);
   }
@@ -3557,13 +3582,19 @@ window.LETTURA_CFG = {
       body.querySelectorAll('section.es:not(.mg)').forEach(x => { const h = x.querySelector('h4'), n = x.querySelector('.battuta p > b:first-child');
         if (h && !(n && n.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)) altoparlante(x, b => h.append(b), '');
         else if (n) altoparlante(x, b => n.after(b), 'solo');      // la battuta viene prima del titolo: l’icona accanto al nome di chi parla
-        else if (h) altoparlante(x, b => h.append(b), ''); });
+        else if (h) altoparlante(x, b => h.append(b), '');
+        else if (x.matches('.att') && x.textContent.trim().length > 40) altoparlante(x, b => x.prepend(b), 'fl'); });      // un’attività senza titolo né battute (Area D: la festa delle nozze), 17/11/2026
       if (CFG.resto) {      // Area E: i testi rimasti senza altoparlante (percorsi su misura, schemi, giochi) li legge un altoparlante sulla riga in alto
         const s = [...body.querySelectorAll('p.sopra')].find(visibile0);
         if (s && !s.querySelector('.lt-btn') && restoDi(body, true).reduce((n, e) => n + e.textContent.trim().length, 0) > 60) { s.classList.add('lt-resto'); altoparlante(s, b => s.prepend(b), 'resto'); }
       }
       body.querySelectorAll('.mg').forEach(x => { if (x.children.length) altoparlante(x, b => x.prepend(b), 'fl'); });
-      body.querySelectorAll('.lt-leggi').forEach(x => altoparlante(x, b => x.prepend(b), 'fl'));      // riquadri da leggere per intero (Area A: il cavallo contro il bue)
+      body.querySelectorAll('.lt-leggi').forEach(x => altoparlante(x, b => x.prepend(b), 'fl'));
+      if (CFG.battute) {      // ogni battuta di un personaggio ha la sua icona accanto al nome, come quella della prima battuta (richiesta della docente, 17/11/2026)
+        body.querySelectorAll('.battuta').forEach(x => { const n = x.querySelector('p > b:first-child'); if (!n || n.nextElementSibling && n.nextElementSibling.matches('.lt-btn')) return; altoparlante(x, b => n.after(b), 'solo'); });
+        body.querySelectorAll('.stat-int > p, .voce-r > p').forEach(x => { const n = x.querySelector(':scope > b:first-child'); if (n && n.nextElementSibling && n.nextElementSibling.matches('.lt-btn')) return; x.classList.add('lt-bat'); altoparlante(x, b => (n ? n.after(b) : x.prepend(b)), 'solo'); });
+      }
+      body.querySelectorAll('.sim .carte > .carta').forEach(x => { x.classList.add('lt-unita'); altoparlante(x, b => x.prepend(b), 'fl'); });      // ogni situazione dello statuto ha il suo «Ascolta» (17/11/2026)      // riquadri da leggere per intero (Area A: il cavallo contro il bue)
     }
     if (CFG.intro) { const i = document.getElementById('intro'); if (i) altoparlante(i, b => { const h = i.querySelector('h2'); h ? h.before(b) : i.prepend(b); }, 'fl'); }
     if (CFG.cartiglio) { const c = document.querySelector(CFG.cartiglio); if (c && c.textContent.trim() && !c.querySelector('.lt-ang')) {
@@ -3577,26 +3608,38 @@ window.LETTURA_CFG = {
      («Giusto!…», «Non proprio…», la battuta di un personaggio, la conseguenza nel racconto). Il commento è il testo che compare nei riquadri
      «aria-live» o «status» dell’esercizio, quelli che il gioco aggiorna a ogni risposta. Passando alla domanda dopo, il commento vecchio si zittisce. */
   const ASCOLTATI = new WeakSet(); let ultimo = null, gesto = 0;
-  const ambito = el => (el.matches('.lt-resto') ? document.getElementById('popBody') : el.closest('section.es, .mg') || el);
+  const ambito = el => (el.matches('.lt-resto') ? document.getElementById('popBody') : el.closest('.lt-unita, section.es, .mg') || el);      // .lt-unita: una parte che si ascolta da sola (le situazioni dello statuto, Area D)
   // un esercizio (o una sua parte) è finito se è «risolto», oppure se c’è un commento e non resta nulla da scegliere: allora «Ascolta» legge soltanto il commento
   const SCELTE = 'input:not(:disabled):not([type="hidden"]), select:not(:disabled), .opz label, .mg-opz .btn:not(:disabled), .scelte-c .btn:not(:disabled), .mg-voci .btn:not(:disabled)';
+  // la battuta di un personaggio comparsa insieme al commento, senza scelte accanto (Area D: la fine del cantiere, «Lo sapevo che avevi la stoffa…»;
+  // la paga, «Le mura sono chiuse…»): si legge con il commento, nell’ordine dello schermo e senza il nome; dopo il commento, con la nota che la segue (17/11/2026).
+  // recenti: solo le battute appena comparse (per il commento letto da sé)
+  const BATTUTA_T = new WeakMap();
+  function conBattute(l, recenti) {
+    const a = ambito(l); if (!a || a === l) return parlante(l);
+    const bb = [...a.querySelectorAll('.battuta')].filter(b => !l.contains(b) && visibile(b) && !b.parentElement.querySelector('.scelte-c, .opz, .mg-opz, select, input')
+      && (!recenti || Date.now() - (BATTUTA_T.get(b) || 0) < 8000));
+    const prima = bb.filter(b => b.compareDocumentPosition(l) & Node.DOCUMENT_POSITION_FOLLOWING), dopo = bb.filter(b => !prima.includes(b));
+    const seguito = b => { const out = battuta(b); for (let x = b.nextElementSibling; x && x.matches('p') && visibile(x); x = x.nextElementSibling) out.push(...parlante(x)); return out; };
+    return prima.flatMap(battuta).concat(parlante(l), ...dopo.map(seguito));
+  }
   function finito(blocco) {
-    const a = ambito(blocco); if (!a || a === blocco && !a.matches('section.es, .mg')) return null;
+    const a = ambito(blocco); if (!a || a === blocco && !a.matches('.lt-unita, section.es, .mg')) return null;
     const com = [...a.querySelectorAll(VIVO)].filter(l => RISPOSTA.has(l) && visibile(l) && l.textContent.trim() && !l.closest('.lt-btn')), fuori = com.filter(l => !com.some(m => m !== l && m.contains(l)));
     if (!fuori.length) return null;
     const ancora = [...a.querySelectorAll(SCELTE)].some(visibile);
     if (!a.matches('.risolto') && ancora) return null;
-    const pezzi = fuori.flatMap(parlante); return pezzi.length ? pezzi : null;
+    const pezzi = fuori.flatMap(l => conBattute(l, false)); return pezzi.length ? pezzi : null;
   }
   // Nei giochi a domande (i giochi dei cartelli delle aree A e B, i dialoghi e le prove a tappe delle aree C, D, E) ogni domanda ridisegna i suoi pulsanti di risposta:
   // «Ascolta» vale soltanto per la domanda in cui lo si è premuto (richiesta della docente, 17/11/2026). La domanda è cambiata se i pulsanti di risposta
   // di allora non ci sono più e ce ne sono di nuovi; nei giochi .mg anche se il gioco ha rifatto il riquadro (il primo elemento è un altro).
-  const PASSO = new WeakMap(), passoDi = a => [...a.children].find(c => !c.matches('.lt-btn')) || null;
+  const PASSO = new WeakMap(), passoDi = a => (a.matches('.mg') ? [...a.children].find(c => !c.matches('.lt-btn')) || null : a.querySelector('.lt-passo'));      // .lt-passo: una schermata di un’attività a tappe (Area D, la sede dell’Arte)
   const RISP = new WeakMap(), scelteDi = a => [...a.querySelectorAll('button, [role="button"]')].filter(b => !b.matches('.lt-btn, .avanti, .primario') && !b.closest('.lt-btn, .azioni, .fine, .sz-nav') && visibile(b));
   const altraDomanda = x => { const r = RISP.get(x) || []; return r.length > 0 && !r.some(b => b.isConnected) && scelteDi(x).length > 0; };
-  function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); RISP.set(a, scelteDi(a)); if (a.matches('.mg')) PASSO.set(a, passoDi(a)); ultimo = { el: a, padre: a.parentElement, scelte: RISP.get(a) }; }
+  function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); RISP.set(a, scelteDi(a)); if (a.matches('.mg') || passoDi(a)) PASSO.set(a, passoDi(a)); ultimo = { el: a, padre: a.parentElement, scelte: RISP.get(a) }; }
   function attivato(el) {
-    for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) { if (x.matches('.mg') && PASSO.get(x) !== passoDi(x) || altraDomanda(x)) { ASCOLTATI.delete(x); return false; } return true; }
+    for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) { if (PASSO.has(x) && PASSO.get(x) !== passoDi(x) || altraDomanda(x)) { ASCOLTATI.delete(x); return false; } return true; }
     // l’esercizio è stato ridisegnato (una nuova pagina della stessa attività): vale ancora, se sta dove stava il vecchio e non è una domanda nuova, con le sue risposte da scegliere
     if (ultimo && !ultimo.el.isConnected && ultimo.padre && ultimo.padre.isConnected && ultimo.padre.contains(el)) { const n = el.closest('section.es, .mg');
       if (n && ultimo.scelte && ultimo.scelte.length && scelteDi(n).length) return false;
@@ -3604,7 +3647,7 @@ window.LETTURA_CFG = {
     return false;
   }
   ['pointerdown', 'keydown', 'change'].forEach(ev => window.addEventListener(ev, e => { if (!(e.target && e.target.closest && e.target.closest('.lt-btn, .lt-ang'))) gesto = Date.now(); }, true));
-  const VIVO = '[aria-live], [role="status"]', DETTO = new WeakMap(), RISPOSTA = new WeakSet();
+  const VIVO = '[aria-live], [role="status"], section.es p.commento', DETTO = new WeakMap(), RISPOSTA = new WeakSet();
   let daLeggere = new Set(), conta = 0;
   function commento() {
     conta = 0; const lista = [...daLeggere].filter(l => l.isConnected); daLeggere = new Set();
@@ -3612,18 +3655,19 @@ window.LETTURA_CFG = {
     lista.forEach(l => { const t = l.textContent.replace(/\s+/g, ' ').trim(), c = DETTO.has(l), v = DETTO.get(l); DETTO.set(l, t);
       if (!t) RISPOSTA.delete(l); else if (t !== v) { if (c && recente) RISPOSTA.add(l); if (recente) cambiati.push(l); } });      // RISPOSTA: un riquadro già presente, riempito dopo un gesto
     if (!acceso || !corpo.classList.contains('lt-ok') || !recente) return;
-    const nuovi = cambiati.filter(l => visibile(l) && attivato(l))
+    const nuovi = cambiati.filter(l => visibile(l) && attivato(l) && !l.matches('.conto-c') && !/^\s*Punti in palio/i.test(l.textContent))      // il conto dei punti in palio non è un commento (17/11/2026)
       .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
     const fuori = nuovi.filter(l => !nuovi.some(m => m !== l && m.contains(l)));
     if (!fuori.length) return;
     if (attivo && attivo.blocco && attivo.pezzi.some(p => p.salta) && fuori.every(l => attivo.blocco.contains(l))) return;      // si stanno leggendo gli elementi da abbinare: la voce continua
-    const pezzi = fuori.flatMap(parlante); if (!pezzi.length) return;
+    const pezzi = fuori.flatMap(l => conBattute(l, true)); if (!pezzi.length) return;
     parla(pezzi, null, fuori[0], 'd'); if (attivo) attivo.commento = fuori;
   }
   new MutationObserver(ms => {
     ms.forEach(m => {
       const t = m.target.nodeType === 1 ? m.target : m.target.parentElement, l = t && t.closest && t.closest(VIVO); if (l) daLeggere.add(l);
-      m.addedNodes.forEach(n => { if (n.nodeType === 1) { if (n.matches(VIVO)) daLeggere.add(n); n.querySelectorAll(VIVO).forEach(x => daLeggere.add(x)); } });
+      m.addedNodes.forEach(n => { if (n.nodeType === 1) { if (n.matches(VIVO)) daLeggere.add(n); n.querySelectorAll(VIVO).forEach(x => daLeggere.add(x));
+        (n.matches('.battuta') ? [n] : [...n.querySelectorAll('.battuta')]).forEach(x => BATTUTA_T.set(x, Date.now())); } });
     });
     if (daLeggere.size && !conta) conta = setTimeout(commento, 150);
   }).observe(corpo, { childList: true, subtree: true, characterData: true });

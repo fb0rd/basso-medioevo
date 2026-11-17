@@ -4012,8 +4012,14 @@ window.LETTURA_CFG = {
       body.querySelectorAll('.mg').forEach(x => { if (x.children.length) altoparlante(x, b => x.prepend(b), 'fl'); });
       body.querySelectorAll('.lt-leggi').forEach(x => altoparlante(x, b => x.prepend(b), 'fl'));
       if (CFG.battute) {      // ogni battuta di un personaggio ha la sua icona accanto al nome, come quella della prima battuta (richiesta della docente, 17/11/2026)
-        body.querySelectorAll('.battuta').forEach(x => { const n = x.querySelector('p > b:first-child'); if (!n || n.nextElementSibling && n.nextElementSibling.matches('.lt-btn')) return; altoparlante(x, b => n.after(b), 'solo'); });
-        body.querySelectorAll('.stat-int > p, .voce-r > p').forEach(x => { const n = x.querySelector(':scope > b:first-child'); if (n && n.nextElementSibling && n.nextElementSibling.matches('.lt-btn')) return; x.classList.add('lt-bat'); altoparlante(x, b => (n ? n.after(b) : x.prepend(b)), 'solo'); });
+        // ma non dove sarebbe un doppione del «Ascolta» del riquadro: la battuta con le risposte da scegliere (la guardia alla porta),
+        // o la battuta che apre il riquadro subito sotto il titolo con «Ascolta», o la finestra con «Ascolta» sulla riga in alto (richiesta della docente, 18/11/2026)
+        const doppione = x => { const a = x.closest('.lt-unita, section.es, .mg') || (body.querySelector('.lt-resto') ? body : null); if (!a || ![...a.querySelectorAll('.lt-btn[data-lt]')].some(b => !b.closest('.battuta, .lt-bat'))) return false;
+          if (x.parentElement.querySelector(':scope > .scelte-c, :scope > .scelte-r, :scope > .opz, :scope > .mg-opz, :scope > select')) return true;
+          const r = document.createRange(); r.setStart(a, 0); r.setEndBefore(x); const prima = r.cloneContents(); prima.querySelectorAll('h4, .testata, .filetto, .lt-btn, svg, img, figure, .lt-salta').forEach(e => e.remove());
+          return !prima.textContent.trim(); };
+        body.querySelectorAll('.battuta').forEach(x => { const n = x.querySelector('p > b:first-child'); if (!n || n.nextElementSibling && n.nextElementSibling.matches('.lt-btn') || doppione(x)) return; altoparlante(x, b => n.after(b), 'solo'); });
+        body.querySelectorAll('.stat-int > p, .voce-r > p').forEach(x => { const n = x.querySelector(':scope > b:first-child'); if (n && n.nextElementSibling && n.nextElementSibling.matches('.lt-btn') || doppione(x)) return; x.classList.add('lt-bat'); altoparlante(x, b => (n ? n.after(b) : x.prepend(b)), 'solo'); });
       }
       body.querySelectorAll('.sim .carte > .carta').forEach(x => { x.classList.add('lt-unita'); altoparlante(x, b => x.prepend(b), 'fl'); });      // ogni situazione dello statuto ha il suo «Ascolta» (17/11/2026)      // riquadri da leggere per intero (Area A: il cavallo contro il bue)
     }

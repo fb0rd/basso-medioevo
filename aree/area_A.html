@@ -141,7 +141,8 @@ select{font-family:inherit;font-size:1rem;padding:2px 6px;border:1.5px solid var
 .fb .ok{color:var(--ok);font-weight:700}
 .fb .ko{color:var(--ko);font-weight:700}
 .fb .suggerimento{color:var(--lapislazzuli)}
-.sim{display:grid;gap:10px}
+.sim{display:grid;gap:10px;grid-template-columns:minmax(0,1fr)}
+@media (max-width:600px){.sim th,.sim td{padding:3px}.sim td select{width:100%;min-width:0;max-width:100%}}
 .sim .demo{border:1.5px dashed var(--inchiostro);padding:8px 10px;background:var(--perg)}
 .sim .campi{display:flex;gap:8px;margin:6px 0;flex-wrap:wrap}
 .campo{flex:1 1 90px;min-width:84px;border:2px solid var(--inchiostro);padding:8px 6px;text-align:center;font-size:.92rem;line-height:1.2;transition:background .3s}
@@ -1987,7 +1988,7 @@ window.MINIGIOCHI_AREA = 'A'; window.MINIGIOCHI_PUNTI = 35;
           { t: '<b>Le promesse.</b> Che cosa offri alle famiglie, perché lascino il loro villaggio?',
             opz: [['Un censo fisso e leggero e poche corvées', true, 'Pochi obblighi, e leggeri: ecco che cosa convinceva i contadini a trasferirsi sulle terre nuove.'], ['Metà del raccolto e tre giorni di corvée a settimana', false, 'a queste condizioni nessuno lascerebbe il proprio villaggio.'], ['Niente: la terra sarà un dono del monastero', false, 'senza censo il monastero non ricava nulla dalla terra nuova.']] },
           { t: '<b>Il sigillo.</b> I coloni vogliono essere sicuri che le promesse varranno anche con il prossimo abate. Che cosa fai?',
-            opz: [['Le faccio scrivere nella carta e la sigillo', true, 'Scritte e sigillate, le promesse valgono anche per chi verrà dopo: è la <b>carta di franchigia</b>.'], ['Le annuncio a voce la domenica, in chiesa', false, 'le parole si dimenticano e si possono negare: serve un documento scritto.'], ['Le affido alla memoria del priore', false, 'quando il priore non ci sarà più, chi si ricorderà dei patti?']] }
+            opz: [['Le faccio scrivere nella carta e la sigillo', true, 'Scritte e sigillate, le promesse valgono anche per chi verrà dopo: è la <b>carta di franchigia</b>. Attenzione: la «carta» (in latino <i>charta</i>) non è di carta, ma di <b>pergamena</b>, pelle di pecora o di vitello conciata e levigata, che dura per secoli.'], ['Le annuncio a voce la domenica, in chiesa', false, 'le parole si dimenticano e si possono negare: serve un documento scritto.'], ['Le affido alla memoria del priore', false, 'quando il priore non ci sarà più, chi si ricorderà dei patti?']] }
         ],
         fine: 'La carta è sigillata: hai fatto come Sugerio a Vaucresson. Sulla selva del monastero sta per nascere un villaggio nuovo, e i primi coloni sono già in cammino.' },
       { id: 'selva', cartello: 'selva', nome: 'Che cosa dà la selva?', punti: 10, penale: 1, minimo: 4, incorporato: true,      // si gioca dentro il nastro, nella sua seconda sezione
@@ -2010,8 +2011,21 @@ window.MINIGIOCHI_AREA = 'A'; window.MINIGIOCHI_PUNTI = 35;
         fine: 'La foresta dava molto, ma non a tutti allo stesso modo. Quando diventa campo, cambiano il paesaggio e la vita di chi ci viveva attorno.' },
       { id: 'nomi', cartello: 'alture', nome: 'I nomi parlano', punti: 10, penale: 1, minimo: 4, avvio: 'Cominciamo!',
         consegna: ['Dalle terre alte si vede tutta la pianura, punteggiata di villaggi nuovi. Molti esistono ancora oggi, e il loro <b>nome</b> racconta come sono nati.', 'Per ognuno dei sei nomi scegli che cosa racconta: ogni errore costa 1 punto.'],
-        tappe: [['Villanova', 0, 'Un nome frequentissimo in Italia: «villa nuova», villaggio nuovo.'], ['Borgofranco', 1, '«Franco» vuol dire libero: gli abitanti erano esenti da molti obblighi.'], ['Rovereto', 2, 'Il rovere è una quercia: qui, prima delle case, c’era un bosco.'], ['Villafranca', 1, 'Un villaggio «franco», cioè libero da corvées e da molte tasse.'], ['Lugo', 2, 'Dal latino <i>lucus</i>, «bosco»: come Luco.'], ['Querceto', 2, 'Un luogo dove crescevano le querce, prima che arrivasse l’accetta.']].map(([nome, giusta, commento]) => ({
-          t: `Che cosa racconta il nome <b>${nome}</b>?`, fisse: true,
+        tappe: [
+          ['Villanova', 0, 'Un nome frequentissimo in Italia: «villa nuova», villaggio nuovo.', 'villanova', 'Villanova, nel comune di Marsciano (Perugia).',
+            'In Italia ci sono 19 comuni che si chiamano Villanova, o hanno un nome composto con Villanova, e poi decine di frazioni, borghi e località in quasi tutte le regioni.'],
+          ['Borgofranco', 1, '«Franco» vuol dire libero: gli abitanti erano esenti da molti obblighi.', 'borgofranco', 'Borgofranco d’Ivrea (Torino).',
+            'Oggi in Italia i comuni con questo nome sono due, ma nel Medioevo i borghi franchi erano molti di più: tanti, nei secoli, hanno cambiato nome.'],
+          ['Rovereto', 2, 'Il rovere è una quercia: qui, prima delle case, c’era un bosco.', 'rovereto', 'Rovereto (Trento), con il castello.',
+            'Oggi Rovereto è un comune importante del Trentino; altre località più piccole con lo stesso nome sono sparse per l’Italia.'],
+          ['Villafranca', 1, 'Un villaggio «franco», cioè libero da corvées e da molte tasse.', 'villafranca', 'Villafranca di Verona, con le mura del castello.',
+            'In Italia ci sono 8 comuni che si chiamano Villafranca, e diverse frazioni e borghi minori; il nome è molto diffuso anche in Spagna.'],
+          ['Lugo', 2, 'Dal latino <i>lucus</i>, «bosco»: come Luco.', 'lugo', 'Lugo (Ravenna), la Rocca.',
+            'In Italia ci sono due comuni con questo nome e qualche frazione. Alla stessa parola latina <i>lucus</i> si fa risalire anche il nome di Lugano, in Svizzera.'],
+          ['Querceto', 2, 'Un luogo dove crescevano le querce, prima che arrivasse l’accetta.', 'querceto', 'Cerqueto, nel comune di Marsciano (Perugia).',
+            'Querceto o Cerqueto, con due suoni scambiati di posto, come accade spesso nei dialetti dell’Italia centrale: in tutta Italia se ne contano varie decine.']
+        ].map(([nome, giusta, commento, foto, did, oggi]) => ({
+          t: `Che cosa racconta il nome <b>${nome}</b>?`, fisse: true, foto, did, oggi,
           opz: [['Un villaggio nuovo, sorto sulle nuove terre', 'il nome non parla di novità: guarda bene da quale parola deriva.'], ['Un borgo di uomini liberi da molti obblighi', 'il nome non contiene la parola «franco», che vuol dire libero.'], ['Un luogo che prima era un bosco', 'il nome non ricorda né alberi né boschi.']].map(([o, no], i) => [o, i === giusta, i === giusta ? commento : no]) })),
         fine: 'I nomi dei luoghi sono piccoli documenti: conservano la memoria del bosco dissodato, del villaggio appena fondato, della libertà concessa ai coloni.' }
     ]
@@ -2306,6 +2320,7 @@ window.MINIGIOCHI_AREA = 'A'; window.MINIGIOCHI_PUNTI = 35;
   const stile = document.createElement('style');
   stile.textContent = '.mg-invito{border:2px solid var(--inchiostro);background:var(--perg-chiara);padding:10px 14px;margin:12px 0 0;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}'
     + '.mg-invito p{margin:0}.mg-invito small{display:block;color:var(--terra)}'
+    + '.mg-foto{margin:4px 0 10px;text-align:center}.mg-foto img{display:block;margin:0 auto;width:auto;max-width:100%;height:min(210px,calc(100vh - 540px));min-height:130px;border:2px solid var(--inchiostro)}.mg-foto figcaption{font-size:.88rem;color:var(--terra);font-style:italic;margin-top:3px}'
     + '.mg-testa{font-size:.82rem;letter-spacing:.13em;text-transform:uppercase;color:var(--minio);font-weight:700;margin:0 0 6px}'
     + '.mg p{margin:0 0 8px}.mg-opz{display:grid;gap:8px;margin:10px 0 4px}.mg-opz .btn{text-align:left}'
     + '.mg-opz .btn.errata{border-color:var(--ko);background:rgba(156,47,28,.1);opacity:.7;box-shadow:none;cursor:default}'
@@ -2373,10 +2388,12 @@ window.MINIGIOCHI_AREA = 'A'; window.MINIGIOCHI_PUNTI = 35;
     function tappa(i) {
       SC.tappa = i; SC.risolta = false; box.innerHTML = ''; const T = g.tappe[i], testa = el('p', 'mg-testa', ''), agg = () => { testa.textContent = `${i + 1} di ${g.tappe.length} · in palio ${inPalio()} punti`; }; agg();
       const opz = el('div', 'mg-opz'), fb = el('div', 'fb'), dom = el('p', '', T.t); fb.setAttribute('aria-live', 'polite'); box.append(testa, dom, opz, fb);
+      const F = T.foto && window.IMG_B_NOMI && IMG_B_NOMI[T.foto];      // la foto di un paese di oggi (Area B, «I nomi parlano»)
+      if (F) { const fg = el('figure', 'mg-foto'), im = new Image(); im.src = F.src; im.width = F.w; im.height = F.h; im.alt = 'Fotografia: ' + T.did; fg.append(im, el('figcaption', '', T.did)); dom.after(fg); }
       (T.fisse ? T.opz : shuffle(T.opz)).forEach(([testo, giusta, commento]) => { const b = el('button', 'btn', testo); b.type = 'button';
         b.onclick = () => {
           if (!giusta) { b.disabled = true; b.classList.add('errata'); errori++; SC.errT = SC.ora || 0; agg(); suono('sbagliato'); fb.innerHTML = '<span class="ko">No:</span> ' + commento; return; }
-          SC.risolta = true; SC.t0 = SC.ora || 0; opz.remove(); fb.innerHTML = '<span class="ok">Giusto!</span> ' + commento; suono('giusto');
+          SC.risolta = true; SC.t0 = SC.ora || 0; opz.remove(); fb.innerHTML = '<span class="ok">Giusto!</span> ' + commento + (T.oggi ? ' ' + T.oggi : ''); suono('giusto');
           if (g.soloEsito) { fb.style.fontSize = getComputedStyle(dom).fontSize; fb.style.lineHeight = getComputedStyle(dom).lineHeight; dom.remove(); }      // resta solo il commento, grande come la domanda
           pulsante(i + 1 < g.tappe.length ? 'Avanti ▸' : 'Vedi il risultato ▸', () => (i + 1 < g.tappe.length ? tappa(i + 1) : esito())); };
         opz.append(b); });
@@ -2759,7 +2776,7 @@ window.PONTE_AREA = {"emblema": "Pixel art: un bue tira l’aratro pesante nel c
     const f = document.createElement('canvas'); f.width = f.height = 50; const h = f.getContext('2d'); h.fillStyle = INK; h.fillRect(0, 0, 50, 50); h.fillStyle = '#c4932a'; h.fillRect(1, 1, 48, 48); h.fillStyle = INK; h.fillRect(2, 2, 46, 46); h.drawImage(c, 3, 3);
     const intro = $('#intro'), sopra = intro.querySelector('.sopra'), tit = intro.querySelector('h2'), testa = el('div', 'pt-testa'), blocco = el('div', ''), fig = el('figure', ''), im = el('img'); im.src = f.toDataURL(); im.alt = CFG.emblema || ''; fig.append(im);
     intro.insertBefore(testa, sopra); blocco.append(sopra, tit); testa.append(fig, blocco);
-    const st = document.createElement('style'); st.textContent = '.pt-testa{display:flex;gap:20px;align-items:center}.pt-testa figure{margin:0;flex:none}.pt-testa img{display:block;width:118px;height:118px;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 3px 4px rgba(60,35,10,.35))}.pt-testa h2{margin-bottom:0}@media (max-width:640px){.pt-testa{flex-direction:column;gap:8px;text-align:center}.pt-testa img{width:88px;height:88px}}';
+    const st = document.createElement('style'); st.textContent = '.pt-testa{display:flex;gap:20px;align-items:center}.pt-testa figure{margin:0;flex:none}.pt-testa>div{flex:1;min-width:0}.pt-testa img{display:block;width:118px;height:118px;image-rendering:pixelated;image-rendering:crisp-edges;filter:drop-shadow(0 3px 4px rgba(60,35,10,.35))}.pt-testa h2{margin-bottom:0}@media (max-width:640px){.pt-testa{flex-direction:column;gap:8px;text-align:center}.pt-testa img{width:88px;height:88px}}@media (min-width:641px) and (max-height:820px){.pt-testa img{width:92px;height:92px}#intro .tasti{gap:2px 14px;margin:8px 0}}';
     document.head.append(st);
   }
 
@@ -3285,7 +3302,7 @@ window.LETTURA_CFG = {
   }
 
   /* ---------- dal testo sullo schermo ai «pezzi» da leggere: una frase alla volta, ciascuna con il suo tratto da colorare ---------- */
-  const SALTA = '[aria-hidden="true"], body:not(.tocco) .tc-dito, body.tocco .tc-tastiera, .lt-btn, .lt-ang, .fz-guida, sup, .note, select, option, kbd, input, script, style, .badge, .sopra, .credito, .tasti, .mg-testa, .sz-nav';
+  const SALTA = '[aria-hidden="true"], body:not(.tocco) .tc-dito, body.tocco .tc-tastiera, .lt-btn, .lt-ang, .fz-guida, sup, .note, select, option, kbd, input, script, style, .badge, .sopra, .credito, .tasti, .mg-testa, .sz-nav, .btn.avanti';
   function frasiDi(el, prefisso, salta) {
     const seg = []; let T = '';
     const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, { acceptNode(n) {
@@ -3320,6 +3337,8 @@ window.LETTURA_CFG = {
     }).filter(Boolean);
   }
   const voci = (lista, prefisso) => lista.flatMap((el, i) => frasiDi(el, typeof prefisso === 'function' ? prefisso(i, el) : prefisso));
+  // gli elementi da abbinare: la frase resta legata al suo pulsante, che il gioco riscrive a ogni scelta; se il pulsante sparisce (abbinamento fatto), la voce passa al seguente
+  const tasti = (lista, prefisso) => lista.flatMap((el, i) => frasiDi(el, typeof prefisso === 'function' ? prefisso(i, el) : prefisso).map(p => Object.assign(p, { el, range: null, salta: true })));
   const con = (chi, pezzi) => pezzi.map(p => Object.assign(p, { chi }));
   /* le battute di dialogo dentro un testo: le legge la voce di chi parla. CFG.dialoghi = [{ inizio: 'le prime parole della battuta', voce: 'uomo' | 'donna' }] */
   // CFG.dialoghi = [{ nome: 'Tecla', voce: 'donna' }, …]: chi parla è il nome più vicino nei 70 caratteri prima della «, dopo l’ultima battuta chiusa
@@ -3353,7 +3372,8 @@ window.LETTURA_CFG = {
     return con(voceDi(nome), frasiDi(p, '', '.lt-nome'));      // solo la battuta: il nome di chi parla non si legge (16/11/2026)
   }
   // un paragrafo che comincia con il nome di chi parla in grassetto («La guardia: «…»»): come una battuta
-  const etichetta = e => { const b = e.matches('p') && e.querySelector(':scope > b:first-child, :scope > strong:first-child'); if (!b || b.previousSibling && b.previousSibling.textContent.trim()) return null;
+  // anche il commento di un dialogo («La guardia: «…»», con il nome in un riquadro .fb): il nome non si legge (17/11/2026)
+  const etichetta = e => { const b = e.matches('p, .fb, .commento') && e.querySelector(':scope > b:first-child, :scope > strong:first-child, :scope > span.ok:first-child, :scope > span.ko:first-child'); if (!b || b.previousSibling && b.previousSibling.textContent.trim()) return null;
     const t = b.textContent.trim(), dopo = (b.nextSibling && b.nextSibling.textContent || '').trim();
     return t.length < 40 && (/:$/.test(t) || /^:/.test(dopo)) && /«|^:?\s*«/.test(dopo + (b.nextElementSibling ? b.nextElementSibling.textContent : '')) ? b : null; };
   function parlante(e) {      // i pezzi di un elemento qualsiasi: le battute senza il nome, il resto com’è
@@ -3407,7 +3427,7 @@ window.LETTURA_CFG = {
     if (blocco.matches(CFG.cartiglio || '#_')) return frasiDi(blocco, '', 'b');
     if (blocco.matches('.mg')) {      // un gioco: la consegna o la domanda, le risposte possibili, il commento
       const p = voci(q(':scope > p:not(.mg-testa):not(.mg-guida)'));
-      return p.concat(voci(q('.mg-opz .btn:not(:disabled)'), i => `Risposta ${LETTERE[i]}:`), voci(q('.mg-voci .btn'), i => (i ? '' : 'Le voci:')), voci(q(':scope > .fb, .mg-guida')));
+      return p.concat(voci(q('.mg-opz .btn:not(:disabled)'), i => `Risposta ${LETTERE[i]}:`), tasti(q('.mg-voci .btn'), i => (i ? '' : 'Le voci:')), voci(q(':scope > .fb, .mg-guida')));
     }
     if (blocco.matches('section.es.att') && !blocco.querySelector('.cloze, ol.ord, .abb, .sim, .riga .vf')) {      // un’attività del gioco (alla porta, al cantiere, in bottega…)
       const out = [], vis = e => !e.hidden && e.getClientRects().length > 0;
@@ -3429,7 +3449,7 @@ window.LETTURA_CFG = {
       if (blocco.querySelector('.cloze')) { p = p.concat(voci(q('.cloze')));
         q('.cloze select').forEach((s, i) => { const o = [...s.options].slice(1).map(x => x.text); p.push({ testo: `Spazio ${i + 1}: ${o.slice(0, -1).join(', ')} oppure ${o[o.length - 1]}.`, el: s }); }); }
       if (blocco.querySelector('ol.ord')) p = p.concat([{ testo: 'Le frasi da mettere in ordine.' }], voci(q('ol.ord li'), i => `${i + 1}:`));
-      if (blocco.querySelector('.abb')) { const col = q('.abb .col'); p = p.concat(voci([...col[0].querySelectorAll('button')], i => (i ? '' : 'A sinistra:')), voci([...col[1].querySelectorAll('button')], i => (i ? '' : 'A destra:')), voci(q('.abb > p'))); }
+      if (blocco.querySelector('.abb')) { const col = q('.abb .col'); p = p.concat(tasti([...col[0].querySelectorAll('button')], i => (i ? '' : 'A sinistra:')), tasti([...col[1].querySelectorAll('button')], i => (i ? '' : 'A destra:')), voci(q('.abb > p'))); }
       if (blocco.querySelector('.opz')) p = p.concat(voci(q('.opz label'), i => `Risposta ${LETTERE[i]}:`));
       if (sim) {      // una simulazione: soltanto le consegne (la frase in grassetto e ciò che la segue sulla stessa riga), non i campi, le caselle, i contatori (16/11/2026)
         const istr = [...new Set(q('.sim div > b:first-child').filter(b => /[.:]$/.test(b.textContent.trim())).map(b => b.parentElement))]      /* «Osserva.», «Costruisci.»: non le schede dei campi */.filter(d => !d.matches('.casella') && !d.closest('[hidden]') && visibile0(d)
@@ -3474,7 +3494,7 @@ window.LETTURA_CFG = {
   }
   function prossimo(a) {
     if (attivo !== a) return; if (a.i >= a.pezzi.length) { ferma(); return; }
-    { const q0 = a.pezzi[a.i]; if (q0.prima) try { q0.prima(); } catch (e) {} if (!sulloSchermo(q0)) { ferma(); return; } }      // il testo da leggere non c’è più (si è andati avanti): la voce tace
+    { const q0 = a.pezzi[a.i]; if (q0.prima) try { q0.prima(); } catch (e) {} if (!sulloSchermo(q0)) { if (q0.salta) { a.i++; prossimo(a); } else ferma(); return; } }      // il testo da leggere non c’è più (si è andati avanti): la voce tace
     const p = a.pezzi[a.i++], u = new SpeechSynthesisUtterance(perVoce(p.testo)), v = scegli(p.chi || a.chi);
     if (p.prima) try { p.prima(); } catch (e) {}
     u.lang = v.voce ? v.voce.lang : 'it-IT'; if (v.voce) u.voice = v.voce; u.pitch = v.tono; u.rate = VELOCITA;
@@ -3566,11 +3586,19 @@ window.LETTURA_CFG = {
     if (!a.matches('.risolto') && ancora) return null;
     const pezzi = fuori.flatMap(parlante); return pezzi.length ? pezzi : null;
   }
-  function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); ultimo = { el: a, padre: a.parentElement }; }
+  // Nei giochi a domande (i giochi dei cartelli delle aree A e B, i dialoghi e le prove a tappe delle aree C, D, E) ogni domanda ridisegna i suoi pulsanti di risposta:
+  // «Ascolta» vale soltanto per la domanda in cui lo si è premuto (richiesta della docente, 17/11/2026). La domanda è cambiata se i pulsanti di risposta
+  // di allora non ci sono più e ce ne sono di nuovi; nei giochi .mg anche se il gioco ha rifatto il riquadro (il primo elemento è un altro).
+  const PASSO = new WeakMap(), passoDi = a => [...a.children].find(c => !c.matches('.lt-btn')) || null;
+  const RISP = new WeakMap(), scelteDi = a => [...a.querySelectorAll('button, [role="button"]')].filter(b => !b.matches('.lt-btn, .avanti, .primario') && !b.closest('.lt-btn, .azioni, .fine, .sz-nav') && visibile(b));
+  const altraDomanda = x => { const r = RISP.get(x) || []; return r.length > 0 && !r.some(b => b.isConnected) && scelteDi(x).length > 0; };
+  function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); RISP.set(a, scelteDi(a)); if (a.matches('.mg')) PASSO.set(a, passoDi(a)); ultimo = { el: a, padre: a.parentElement, scelte: RISP.get(a) }; }
   function attivato(el) {
-    for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) return true;
-    // l’esercizio è stato ridisegnato (una nuova pagina della stessa attività): vale ancora, se sta dove stava il vecchio
-    if (ultimo && !ultimo.el.isConnected && ultimo.padre && ultimo.padre.isConnected && ultimo.padre.contains(el)) { attiva(el.closest('section.es, .mg') || ultimo.padre); return true; }
+    for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) { if (x.matches('.mg') && PASSO.get(x) !== passoDi(x) || altraDomanda(x)) { ASCOLTATI.delete(x); return false; } return true; }
+    // l’esercizio è stato ridisegnato (una nuova pagina della stessa attività): vale ancora, se sta dove stava il vecchio e non è una domanda nuova, con le sue risposte da scegliere
+    if (ultimo && !ultimo.el.isConnected && ultimo.padre && ultimo.padre.isConnected && ultimo.padre.contains(el)) { const n = el.closest('section.es, .mg');
+      if (n && ultimo.scelte && ultimo.scelte.length && scelteDi(n).length) return false;
+      attiva(n || ultimo.padre); return true; }
     return false;
   }
   ['pointerdown', 'keydown', 'change'].forEach(ev => window.addEventListener(ev, e => { if (!(e.target && e.target.closest && e.target.closest('.lt-btn, .lt-ang'))) gesto = Date.now(); }, true));
@@ -3586,6 +3614,7 @@ window.LETTURA_CFG = {
       .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
     const fuori = nuovi.filter(l => !nuovi.some(m => m !== l && m.contains(l)));
     if (!fuori.length) return;
+    if (attivo && attivo.blocco && attivo.pezzi.some(p => p.salta) && fuori.every(l => attivo.blocco.contains(l))) return;      // si stanno leggendo gli elementi da abbinare: la voce continua
     const pezzi = fuori.flatMap(parlante); if (!pezzi.length) return;
     parla(pezzi, null, fuori[0], 'd'); if (attivo) attivo.commento = fuori;
   }
@@ -3639,7 +3668,7 @@ window.LETTURA_CFG = {
   let cartTiene = 0;
   setInterval(() => {
     if (attivo && attivo.blocco && !visibile(attivo.blocco)) ferma();
-    else if (attivo && attivo.i > 0 && !sulloSchermo(attivo.pezzi[attivo.i - 1])) ferma();      // la frase che si sta leggendo è sparita dallo schermo
+    else if (attivo && attivo.i > 0 && !attivo.pezzi[attivo.i - 1].salta && !sulloSchermo(attivo.pezzi[attivo.i - 1])) ferma();      // la frase che si sta leggendo è sparita dallo schermo
     else if (attivo && attivo.commento && !attivo.commento.some(l => l.isConnected && l.textContent.trim())) ferma();      // si è passati alla domanda dopo
     if (attivo && attivo.fumetto && attivo.fumetto.tieni) try { attivo.fumetto.tieni(); } catch (e) {}
     const c = CFG.cartiglio && document.querySelector(CFG.cartiglio);
@@ -3647,8 +3676,13 @@ window.LETTURA_CFG = {
   }, 150);
   document.addEventListener('visibilitychange', () => { if (document.hidden) ferma(); });
   // ogni pulsante del gioco (Avanti, Verifica, «Comincia da gennaio», una risposta…) interrompe la lettura; non quelli della voce e della barra in alto
+  // Non la interrompono (richiesta della docente, 17/11/2026): le parole e i numeri della xilografia della forgia (Area A), che si accendono soltanto,
+  // e gli elementi di un abbinamento mentre la voce li sta leggendo: si può cominciare ad abbinare ascoltando.
+  const LIBERI = '.fz, .fz-n', ABBINA = '.abb .col button, .mg-voci .btn, .mg-mini > *';
   document.addEventListener('click', e => { const t = e.target && e.target.closest && e.target.closest('button, .btn, [role="button"], a[href], summary');
-    if (t && attivo && !t.closest('.lt-btn, .lt-ang, .hud, #hud, .op-pannello, .tavola')) ferma(); }, true);
+    if (!t || !attivo || t.closest('.lt-btn, .lt-ang, .hud, #hud, .op-pannello, .tavola') || t.closest(LIBERI)) return;
+    if (t.closest(ABBINA) && attivo.blocco && attivo.blocco.contains(t)) return;
+    ferma(); }, true);
   window.addEventListener('message', e => { if (e.data && e.data.origine === 'menu-rinascita' && e.data.tipo === 'pausa') ferma(); });
   window.addEventListener('pagehide', ferma);
 

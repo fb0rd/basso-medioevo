@@ -1988,7 +1988,7 @@ window.MINIGIOCHI_AREA = 'A'; window.MINIGIOCHI_PUNTI = 35;
           { t: '<b>Le promesse.</b> Che cosa offri alle famiglie, perché lascino il loro villaggio?',
             opz: [['Un censo fisso e leggero e poche corvées', true, 'Pochi obblighi, e leggeri: ecco che cosa convinceva i contadini a trasferirsi sulle terre nuove.'], ['Metà del raccolto e tre giorni di corvée a settimana', false, 'a queste condizioni nessuno lascerebbe il proprio villaggio.'], ['Niente: la terra sarà un dono del monastero', false, 'senza censo il monastero non ricava nulla dalla terra nuova.']] },
           { t: '<b>Il sigillo.</b> I coloni vogliono essere sicuri che le promesse varranno anche con il prossimo abate. Che cosa fai?',
-            opz: [['Le faccio scrivere nella carta e la sigillo', true, 'Scritte e sigillate, le promesse valgono anche per chi verrà dopo: è la <b>carta di franchigia</b>. Attenzione: la «carta» (in latino <i>charta</i>) non è di carta, ma di <b>pergamena</b>, pelle di pecora o di vitello conciata e levigata, che dura per secoli.'], ['Le annuncio a voce la domenica, in chiesa', false, 'le parole si dimenticano e si possono negare: serve un documento scritto.'], ['Le affido alla memoria del priore', false, 'quando il priore non ci sarà più, chi si ricorderà dei patti?']] }
+            opz: [['Le faccio scrivere nella carta e la sigillo', true, 'Scritte e sigillate, le promesse valgono anche per chi verrà dopo: è la <b>carta di franchigia</b>. <span class="mg-nota">(Attenzione: la «carta», in latino <i>charta</i>, non è di carta, ma di <b>pergamena</b>, pelle di pecora o di vitello conciata e levigata, che dura per secoli.)</span>'], ['Le annuncio a voce la domenica, in chiesa', false, 'le parole si dimenticano e si possono negare: serve un documento scritto.'], ['Le affido alla memoria del priore', false, 'quando il priore non ci sarà più, chi si ricorderà dei patti?']] }
         ],
         fine: 'La carta è sigillata: hai fatto come Sugerio a Vaucresson. Sulla selva del monastero sta per nascere un villaggio nuovo, e i primi coloni sono già in cammino.' },
       { id: 'selva', cartello: 'selva', nome: 'Che cosa dà la selva?', punti: 10, penale: 1, minimo: 4, incorporato: true,      // si gioca dentro il nastro, nella sua seconda sezione
@@ -2320,6 +2320,7 @@ window.MINIGIOCHI_AREA = 'A'; window.MINIGIOCHI_PUNTI = 35;
   const stile = document.createElement('style');
   stile.textContent = '.mg-invito{border:2px solid var(--inchiostro);background:var(--perg-chiara);padding:10px 14px;margin:12px 0 0;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between}'
     + '.mg-invito p{margin:0}.mg-invito small{display:block;color:var(--terra)}'
+    + '.mg-nota{color:var(--minio)}.mg-nota b{color:var(--minio)}'
     + '.mg-foto{margin:4px 0 10px;text-align:center}.mg-foto img{display:block;margin:0 auto;width:auto;max-width:100%;height:min(210px,calc(100vh - 540px));min-height:130px;border:2px solid var(--inchiostro)}.mg-foto figcaption{font-size:.88rem;color:var(--terra);font-style:italic;margin-top:3px}'
     + '.mg-testa{font-size:.82rem;letter-spacing:.13em;text-transform:uppercase;color:var(--minio);font-weight:700;margin:0 0 6px}'
     + '.mg p{margin:0 0 8px}.mg-opz{display:grid;gap:8px;margin:10px 0 4px}.mg-opz .btn{text-align:left}'
@@ -2711,11 +2712,12 @@ window.PONTE_AREA = {"emblema": "Pixel art: un bue tira l’aratro pesante nel c
     if (fine) { const f = el('figure', 'schema'), im = new Image(); im.width = F.w; im.height = F.h; im.src = F.src; im.alt = F.alt; im.style.cssText = 'display:block;width:auto;max-width:100%;height:auto;max-height:246px;margin:0 auto';
       f.style.cssText = 'clear:both;margin:10px 0 4px'; f.append(im); if (F.did) f.append(el('figcaption', '', F.did)); fine.before(f); }
   }
-  const vicinoUovo = () => UOVO && !(window.UOVO_VIA && window.UOVO_VIA()) && !STATO.modale && !STATO.intro && Math.hypot(G.x - UOVO.pos[0], G.y - UOVO.pos[1]) < 1.25 && !poiVicino();
+  // dove sta l’easter egg: un’area può spostarlo quando la mappa cambia (window.UOVO_POS, es. Area B: la carbonaia nell’ultima fase)
+  const posUovo = () => (window.UOVO_POS && window.UOVO_POS()) || UOVO.pos;
+  const vicinoUovo = () => UOVO && !(window.UOVO_VIA && window.UOVO_VIA()) && !STATO.modale && !STATO.intro && Math.hypot(G.x - posUovo()[0], G.y - posUovo()[1]) < 1.25 && !poiVicino();
   if (UOVO) {
-    const [ux, uy] = UOVO.pos;
-    OGG.push({ k: ux + uy, b: { x0: ux - .3, y0: uy - .3, x1: ux + .3, y1: uy + .3 }, d: (g, t) => {
-      const [sx, sy] = P(ux, uy); g.save(); g.translate(sx, sy); g.fillStyle = 'rgba(42,27,16,.18)'; g.beginPath(); g.ellipse(0, 2, 17, 6, 0, 0, 7); g.fill(); OGGETTI[UOVO.disegno](g, t || tempo);
+    OGG.push({ get k() { const [ux, uy] = posUovo(); return ux + uy; }, get b() { const [ux, uy] = posUovo(); return { x0: ux - .3, y0: uy - .3, x1: ux + .3, y1: uy + .3 }; }, d: (g, t) => {
+      const [ux, uy] = posUovo(), [sx, sy] = P(ux, uy); g.save(); g.translate(sx, sy); g.fillStyle = 'rgba(42,27,16,.18)'; g.beginPath(); g.ellipse(0, 2, 17, 6, 0, 0, 7); g.fill(); OGGETTI[UOVO.disegno](g, t || tempo);
       if (Math.hypot(G.x - ux, G.y - uy) < 2.2) { const b = .5 + .5 * Math.sin(tempo * 4); g.strokeStyle = `rgba(255,236,150,${.35 + .6 * b})`; g.lineWidth = 1.6; [[-17, -30], [16, -22], [-3, -44]].forEach(([a, c], i) => { const r = 2.5 + 2.5 * (i === 1 ? 1 - b : b); g.beginPath(); g.moveTo(a - r, c); g.lineTo(a + r, c); g.moveTo(a, c - r); g.lineTo(a, c + r); g.stroke(); }); }
       g.restore(); } });
     window.addEventListener('keydown', e => { if (e.code === 'Space' && !e.repeat && vicinoUovo()) { e.preventDefault(); e.stopImmediatePropagation(); if (typeof tasti !== 'undefined') tasti.clear(); apriUovo(); } }, true);
@@ -2908,7 +2910,7 @@ window.IMG_DUELLO = {
   window.SEZ_SCHEMA = {
     aratro: [['breve', 'immagine'], ['es0', 'es1'], ['fonte'], ['es2']],      // In breve con l’immagine · esercizi 1 e 2 · la fonte · esercizio 3
     campi: [['fonte'], ['breve', 'es0'], ['es1', 'es2']],                     // la fonte · In breve con la simulazione · esercizi 2 e 3
-    mulino: [['breve', 'fonte'], ['es0', 'es1', 'es2']],                       // In breve con la fonte · i tre esercizi
+    mulino: [['breve', 'fonte'], ['es0'], ['es1', 'es2']],                   // In breve con la fonte · l’abbinamento · gli altri due esercizi (17/11/2026)
     fabbro: [['breve', 'fonte'], ['es0'], ['es1', 'es2']],                     // In breve con la fonte · esercizio 1 · esercizi 2 e 3
     forgia: [['breve'], ['gioco']] };                                          // In breve con la xilografia · il gioco
   window.SEZ_AVANTI = { aratro: { 0: 'Metti alla prova ciò che ricordi' }, campi: { 0: 'La rotazione triennale' }, mulino: { 0: 'Vediamo se hai capito' } };

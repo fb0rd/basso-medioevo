@@ -2680,7 +2680,7 @@ function visibile(p) {
     if (p.tipo === 'prestito') return STATO.listaSpesa;          // il lombardo, dopo il popup «La lista della spesa»
     return STATO.vistoPedaggio && STATO.completati.has(p.luogo.startsWith('Al mercato') ? 'mercato' : 'fiera');   // i compratori, dopo gli esercizi del luogo 9 o 10
   }
-  if (p.info) return true;
+  if (p.info) return p.id !== 'moneta' || STATO.vistoPedaggio;
   if (p.id === 'mercato' || p.id === 'fiera') return STATO.vistoPedaggio;
   return STATO.comprato;           // i luoghi 11 e 12, dopo aver comprato tutto
 }
@@ -2895,7 +2895,7 @@ function pannelloMonete(box, fb, T, nomeBanco, etichetta, cosa, quandoPagato) {
 }
 /* popup che si aprono da soli quando la scheda precedente è chiusa */
 function apriAvvisoOfferte() {
-  const body = testataPopup('La porta della città', 'Dove trovare i compratori', 'gabelliere');
+  const body = testataPopup('La porta della città', 'È tempo di vendere le eccedenze!', 'gabelliere');
   breve(body, ['Per pagare il pedaggio ti servono monete: devi vendere le eccedenze che porta il tuo mulo.',
     'I compratori però si fanno avanti solo con chi conosce il mercato. <b>Completa gli esercizi del luogo 9</b>, il mercato fuori porta, per far apparire le offerte del mugnaio, del fornaio e dell’ortolana; <b>completa quelli del luogo 10</b>, le fiere, per far apparire le offerte dei mercanti e dell’oste.',
     'Poi <b>confronta le offerte</b>: ogni compratore paga prezzi diversi, e qualcuno compra solo una parte delle tue merci.']);
@@ -3361,11 +3361,12 @@ window.PONTE_AREA = {"emblema": "Pixel art: la tenda a strisce della fiera, la b
     if (fine) { const f = el('figure', 'schema'), im = new Image(); im.width = F.w; im.height = F.h; im.src = F.src; im.alt = F.alt; im.style.cssText = 'display:block;width:auto;max-width:100%;height:auto;max-height:246px;margin:0 auto';
       f.style.cssText = 'clear:both;margin:10px 0 4px'; f.append(im); if (F.did) f.append(el('figcaption', '', F.did)); fine.before(f); }
   }
-  const vicinoUovo = () => UOVO && !(window.UOVO_VIA && window.UOVO_VIA()) && !STATO.modale && !STATO.intro && Math.hypot(G.x - UOVO.pos[0], G.y - UOVO.pos[1]) < 1.25 && !poiVicino();
+  // dove sta l’easter egg: un’area può spostarlo quando la mappa cambia (window.UOVO_POS, es. Area B: la carbonaia nell’ultima fase)
+  const posUovo = () => (window.UOVO_POS && window.UOVO_POS()) || UOVO.pos;
+  const vicinoUovo = () => UOVO && !(window.UOVO_VIA && window.UOVO_VIA()) && !STATO.modale && !STATO.intro && Math.hypot(G.x - posUovo()[0], G.y - posUovo()[1]) < 1.25 && !poiVicino();
   if (UOVO) {
-    const [ux, uy] = UOVO.pos;
-    OGG.push({ k: ux + uy, b: { x0: ux - .3, y0: uy - .3, x1: ux + .3, y1: uy + .3 }, d: (g, t) => {
-      const [sx, sy] = P(ux, uy); g.save(); g.translate(sx, sy); g.fillStyle = 'rgba(42,27,16,.18)'; g.beginPath(); g.ellipse(0, 2, 17, 6, 0, 0, 7); g.fill(); OGGETTI[UOVO.disegno](g, t || tempo);
+    OGG.push({ get k() { const [ux, uy] = posUovo(); return ux + uy; }, get b() { const [ux, uy] = posUovo(); return { x0: ux - .3, y0: uy - .3, x1: ux + .3, y1: uy + .3 }; }, d: (g, t) => {
+      const [ux, uy] = posUovo(), [sx, sy] = P(ux, uy); g.save(); g.translate(sx, sy); g.fillStyle = 'rgba(42,27,16,.18)'; g.beginPath(); g.ellipse(0, 2, 17, 6, 0, 0, 7); g.fill(); OGGETTI[UOVO.disegno](g, t || tempo);
       if (Math.hypot(G.x - ux, G.y - uy) < 2.2) { const b = .5 + .5 * Math.sin(tempo * 4); g.strokeStyle = `rgba(255,236,150,${.35 + .6 * b})`; g.lineWidth = 1.6; [[-17, -30], [16, -22], [-3, -44]].forEach(([a, c], i) => { const r = 2.5 + 2.5 * (i === 1 ? 1 - b : b); g.beginPath(); g.moveTo(a - r, c); g.lineTo(a + r, c); g.moveTo(a, c - r); g.lineTo(a, c + r); g.stroke(); }); }
       g.restore(); } });
     window.addEventListener('keydown', e => { if (e.code === 'Space' && !e.repeat && vicinoUovo()) { e.preventDefault(); e.stopImmediatePropagation(); if (typeof tasti !== 'undefined') tasti.clear(); apriUovo(); } }, true);
@@ -3508,8 +3509,19 @@ window.IMG_C = {
   window.SEZ_SCHEMA = Object.assign(window.SEZ_SCHEMA || {}, {
     mercato: [['breve'], ['es0'], ['es1', 'es2']],
     fiera: [['breve'], ['fonte'], ['es0'], ['es1', 'es2']],
-    pedaggio: [['breve', 'immagine'], ['altro']] });      // «altro»: l’avviso del cambiavalute; la tavola e il banco vanno con lui
+    pedaggio: [['breve', 'immagine'], ['altro']],      // «altro»: l’avviso del cambiavalute; la tavola e il banco vanno con lui
+    moneta: [['breve'], ['immagine']] });      // il nastro della moneta: il testo, poi le monete di Messina (17/11/2026)
   window.SEZ_AVANTI = Object.assign(window.SEZ_AVANTI || {}, { pedaggio: { 0: 'Alla porta: paga il pedaggio' } });
+
+  // il nastro della moneta: lira, soldo e denaro, il sistema di Carlo Magno (richiesta della docente, 17/11/2026; testo da approvare)
+  { const M = CONTENUTI.info.find(i => i.id === 'moneta');
+    if (M) M.testo.push('Il sistema delle monete risaliva a <b>Carlo Magno</b>: una <b>lira</b> valeva 20 <b>soldi</b> e un soldo valeva 12 <b>denari</b>, dunque una lira valeva 240 denari. Si coniava però soltanto il denaro d’argento: la lira e il soldo erano <b>monete di conto</b>, servivano per fare i calcoli. Nel Medioevo questo sistema fu adottato, in modi diversi, in molti paesi d’Europa.'); }
+
+  // POI 10, la fonte del conte di Champagne (richiesta della docente, 17/11/2026): la spiegazione ridotta, la riga della citazione integrata, senza la tendina «Analisi»
+  { const F = CONTENUTI.poi.find(p => p.id === 'fiera').fonte;
+    F.opera = 'lettera a Sugerio, abate di Saint-Denis e a quel tempo reggente del re di Francia Luigi VII, partito per la seconda crociata';
+    F.contesto = 'Verso il 1148 alcuni <b>cambiavalute</b> di Vézelay, diretti alla fiera di <b>Provins</b>, vennero assaliti e derubati lungo una strada del re di Francia. Il conte di Champagne, Tebaldo II, scrisse allora infuriato all’abate <b>Sugerio</b> (tua vecchia conoscenza dell’Area B!). I conti di Champagne incassavano tasse sulle vendite, affitti per i banchi e pedaggi, e per questo era fondamentale garantire ai mercanti un <b>salvacondotto</b> (in francese <i>conduit des foires</i>), cioè la protezione lungo le strade dirette alle fiere. Confronta con il manuale, pp. 67-68.';
+    F.domande = F.domande.filter(d => d.tag !== 'Analisi'); }
 
   const ped0 = apriPedaggio;
   apriPedaggio = function () {
@@ -3520,7 +3532,9 @@ window.IMG_C = {
       const f = el('figure', 'schema'), im = new Image(); im.width = I.w; im.height = I.h; im.src = I.src;
       im.alt = 'Miniatura: un mercante con il cappuccio porge una moneta al gabelliere seduto sotto l’arco della porta; dietro di lui il cavallo e un carro coperto';
       // ritagliata (richiesta della docente, 16/11/2026): via la scritta in alto e un po’ di pavimento in basso, resta la scena con i due uomini
-      im.style.cssText = 'display:block;width:auto;max-width:100%;height:min(236px,calc(100vh - 560px));min-height:170px;aspect-ratio:480/500;object-fit:cover;object-position:50% 70%;margin:0 auto'; f.append(im); fig.replaceWith(f);
+      im.style.cssText = 'display:block;width:auto;max-width:100%;height:min(236px,calc(100vh - 560px));min-height:170px;aspect-ratio:480/500;object-fit:cover;object-position:50% 70%;margin:0 auto'; f.append(im);
+      // dentro l’In breve, tra i due paragrafi (richiesta della docente, 17/11/2026)
+      const p1 = document.querySelector('#popBody .breve > p'); f.style.margin = '10px 0'; if (p1) { p1.after(f); fig.remove(); } else fig.replaceWith(f);
     }
     document.querySelectorAll('#popBody .tavola-ped').forEach(x => x.remove());      // la tavola del pedaggio: l’esercizio fa già da tavola (richiesta della docente, 16/11/2026)
     if (ritorno) setTimeout(() => {      // dopo la divisione in sezioni (sezioni.js, che si aggancia dopo)

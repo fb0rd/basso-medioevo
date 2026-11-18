@@ -4003,7 +4003,7 @@ window.LETTURA_CFG = {
       // aree D ed E: se il riquadro comincia con la battuta di un personaggio, senza un racconto prima, l’«Ascolta» del riquadro va accanto al nome di chi parla,
       // non sul titolo (richiesta della docente, 18/11/2026)
       const soloBattuta = (a, x) => { const r = document.createRange(); r.setStart(a, 0); r.setEndBefore(x); const prima = r.cloneContents();
-        prima.querySelectorAll('h4, .testata, .filetto, .lt-btn, svg, img, figure, .lt-salta').forEach(e => e.remove()); return !prima.textContent.trim(); };
+        prima.querySelectorAll('h4, .testata, .filetto, .lt-btn, svg, img, figure, .lt-salta, .luogo-c, p.conv').forEach(e => e.remove()); return prima.textContent.trim().length < 30; };      // una riga corta come «Giornata 1 di 3», o quella dei cambi delle monete, non è un racconto
       body.querySelectorAll('section.es:not(.mg)').forEach(x => { const h = x.querySelector('h4'), n = x.querySelector('.battuta p > b:first-child');
         if (CFG.battute && h && n && soloBattuta(x, n.closest('.battuta'))) altoparlante(x, b => n.after(b), 'solo');
         else if (h && !(n && n.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)) altoparlante(x, b => h.append(b), '');

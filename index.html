@@ -1062,7 +1062,8 @@ window.LETTURA_CFG = {      // nel menu: si ascolta la descrizione del gioco (ti
     + '#seqCart.lt-con{padding-left:26px;padding-right:26px}'
     + '.lt-fum{position:fixed;width:0;height:0;z-index:15}.lt-fum .lt-ang{right:-24px}'      // sui fumetti, un po’ più fuori: la mappa rimpicciolita lascia poco margine al testo
     + '::highlight(lt-frase){background-color:rgba(242,193,74,.6);color:inherit}'
-    + '.lt-ora{outline:3px solid var(--oro);outline-offset:2px;background:rgba(242,193,74,.3)}';
+    + '.lt-ora{outline:3px solid var(--oro);outline-offset:2px;background:rgba(242,193,74,.3)}'
+    + '.lt-versi{clear:both}';      // una fonte in versi (Dante) comincia sotto «Ascolta»: il pulsante non spezza i versi (richiesta della docente, 18/11/2026)
   document.head.append(st);
   const ICONA = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h4l5-4v14l-5-4H3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
   function altoparlante(blocco, dove, come) {      // come: 'fl' (a destra, in alto nel riquadro), 'solo' (solo l’icona)
@@ -1087,7 +1088,8 @@ window.LETTURA_CFG = {      // nel menu: si ascolta la descrizione del gioco (ti
     if (body && STATO.modale === 'riep' && !body.querySelector('.lt-btn')) altoparlante(body, b => { const h = body.querySelector(':scope > h2'); h ? h.before(b) : body.prepend(b); }, 'fl');      // il riepilogo
     if (body && vale) {
       body.querySelectorAll('.breve').forEach(x => altoparlante(x, b => x.prepend(b), 'fl'));
-      body.querySelectorAll('.fonte').forEach(x => altoparlante(x, b => { const t = x.querySelector('.tipo'); t ? t.after(b) : x.prepend(b); }, 'fl'));
+      body.querySelectorAll('.fonte').forEach(x => { altoparlante(x, b => { const t = x.querySelector('.tipo'); t ? t.after(b) : x.prepend(b); }, 'fl');
+        x.querySelectorAll('blockquote').forEach(q => { if (q.querySelector('br')) q.classList.add('lt-versi'); }); });
       body.querySelectorAll('details.guida').forEach(x => { const s = x.querySelector('summary'); if (s) altoparlante(x, b => s.append(b), 'solo'); });
       // i messaggi del gioco in un riquadro (easter egg, fine dell’area): se c’è da leggere, l’altoparlante in alto
       if (tutti && STATO.modale === 'ponte' && [...body.querySelectorAll(':scope > p:not(.sopra)')].reduce((n, p) => n + p.textContent.length, 0) > 120) altoparlante(body, b => { const h = body.querySelector(':scope > h2'); h ? h.before(b) : body.prepend(b); }, 'fl');
@@ -1161,16 +1163,24 @@ window.LETTURA_CFG = {      // nel menu: si ascolta la descrizione del gioco (ti
   const PASSO = new WeakMap(), passoDi = a => (a.matches('.mg') ? [...a.children].find(c => !c.matches('.lt-btn')) || null : a.querySelector('.lt-passo'));      // .lt-passo: una schermata di un’attività a tappe (Area D, la sede dell’Arte)
   const RISP = new WeakMap(), scelteDi = a => [...a.querySelectorAll('button, [role="button"]')].filter(b => !b.matches('.lt-btn, .avanti, .primario') && !b.closest('.lt-btn, .azioni, .fine, .sz-nav') && visibile(b));
   const altraDomanda = x => { const r = RISP.get(x) || []; return r.length > 0 && !r.some(b => b.isConnected) && scelteDi(x).length > 0; };
-  function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); RISP.set(a, scelteDi(a)); if (a.matches('.mg') || passoDi(a)) PASSO.set(a, passoDi(a)); ultimo = { el: a, padre: a.parentElement, scelte: RISP.get(a) }; }
+  // Nei giochi con più domande sullo schermo insieme (Area D: le sette situazioni dello statuto, i tre studenti, i venditori del bando; le righe di un registro…)
+  // «Ascolta» vale per la prima domanda a cui si risponde dopo averlo premuto: rispondendo a un’altra domanda il commento non si legge più,
+  // finché non si preme di nuovo «Ascolta» (richiesta della docente, 18/11/2026). Una domanda è il riquadro che raccoglie le sue risposte;
+  // i pulsanti fuori da una domanda (Verifica, Avanti, Entra…) non cambiano nulla.
+  const DOMANDE = '.carta, .studente-c, .venditori, .scelte-c, .scelte-r, .opz, .mg-opz, .mg-voci, .riga, tr', DOMANDA = new WeakMap(); let tocco = null;
+  function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); DOMANDA.delete(a); RISP.set(a, scelteDi(a)); if (a.matches('.mg') || passoDi(a)) PASSO.set(a, passoDi(a)); ultimo = { el: a, padre: a.parentElement, scelte: RISP.get(a) }; }
   function attivato(el) {
-    for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) { if (PASSO.has(x) && PASSO.get(x) !== passoDi(x) || altraDomanda(x)) { ASCOLTATI.delete(x); return false; } return true; }
+    for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) { if (PASSO.has(x) && PASSO.get(x) !== passoDi(x) || altraDomanda(x)) { ASCOLTATI.delete(x); return false; }
+      const q = tocco && tocco.isConnected && x.contains(tocco) && tocco.closest(DOMANDE);
+      if (q && x.contains(q)) { if (!DOMANDA.has(x)) DOMANDA.set(x, q); else if (DOMANDA.get(x) !== q) { ASCOLTATI.delete(x); DOMANDA.delete(x); return false; } }
+      return true; }
     // l’esercizio è stato ridisegnato (una nuova pagina della stessa attività): vale ancora, se sta dove stava il vecchio e non è una domanda nuova, con le sue risposte da scegliere
     if (ultimo && !ultimo.el.isConnected && ultimo.padre && ultimo.padre.isConnected && ultimo.padre.contains(el)) { const n = el.closest('section.es, .mg');
       if (n && ultimo.scelte && ultimo.scelte.length && scelteDi(n).length) return false;
       attiva(n || ultimo.padre); return true; }
     return false;
   }
-  ['pointerdown', 'keydown', 'change'].forEach(ev => window.addEventListener(ev, e => { if (!(e.target && e.target.closest && e.target.closest('.lt-btn, .lt-ang'))) gesto = Date.now(); }, true));
+  ['pointerdown', 'keydown', 'change'].forEach(ev => window.addEventListener(ev, e => { if (!(e.target && e.target.closest && e.target.closest('.lt-btn, .lt-ang'))) { gesto = Date.now(); tocco = e.target; } }, true));
   const VIVO = '[aria-live], [role="status"], section.es p.commento', DETTO = new WeakMap(), RISPOSTA = new WeakSet();
   let daLeggere = new Set(), conta = 0;
   function commento() {

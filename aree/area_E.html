@@ -748,7 +748,7 @@ figure.stemma-s img{max-width:220px}
 @media (max-width:520px){.nome-a:not(.attiva){display:none}.nome-a.su{transform:translate(-50%,-50px)}}
 .tosata-c .pz-t{cursor:inherit}
 .tosata-c svg{overflow:visible}
-.carta-px canvas{width:100%;max-width:420px;image-rendering:pixelated;border:2px solid var(--inchiostro);box-shadow:0 0 0 2px var(--perg),0 0 0 3px var(--oro);display:block;margin:0 auto}
+.carta-px canvas{width:100%;max-width:300px;image-rendering:pixelated;border:2px solid var(--inchiostro);box-shadow:0 0 0 2px var(--perg),0 0 0 3px var(--oro);display:block;margin:0 auto}
 
 .esiti-c{display:flex;flex-direction:column;gap:8px;margin:6px 0 12px}
 .esito-c{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:2px solid;border-left-width:8px}
@@ -814,6 +814,12 @@ body.buio #popVelo{background:#000 !important;transition:background .6s}
 .sez-c .duomo-f{flex:0 0 250px;margin:0}.sez-c .duomo-f img{max-height:none;width:100%}.sez-c .duomo-f figcaption{font-size:.82rem;line-height:1.3}
 .stili-g .scelta-c img{height:100px}
 @media (max-width:700px){.sez-c{flex-direction:column;align-items:stretch}.sez-c .pix-f,.sez-c .duomo-f{flex:none;align-self:center;max-width:260px}.sez-c .pix-f{order:-1}}
+
+/* richieste della docente, 21/11/2026: la spiegazione della carta prima del gioco (in rosso), la copia della carta a tendina */
+.mappa-g .intro-m{color:var(--minio);font-size:1rem;margin:2px 0 8px}
+.carta-g .perg-c select{font:inherit;font-style:normal;max-width:100%;margin:2px 2px;padding:1px 4px;background:#fffaf0;border:1.5px solid #8a6a3a}
+.carta-g .perg-c select.giusto{border-color:var(--ok,#4a7a2a);background:#e3efd2}.carta-g .perg-c select.errato{border-color:var(--ko,#a3271c);background:#f6dccf}
+.azioni.avvio-riga{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap}.azioni.avvio-riga .conto-c{margin:0}
 </style>
 
 
@@ -939,7 +945,7 @@ const CONTENUTI = {
       inBreve: 'Le trasformazioni economiche e sociali cambiano anche la politica. Nelle città più sviluppate, accanto ai nobili, mercanti, artigiani e professionisti acquistano consapevolezza della loro forza e decidono di <b>governarsi da sé</b>. I cittadini più influenti si costituiscono in un’<b>associazione</b> e, con un <b>giuramento collettivo</b> chiamato <b class="blu-c"><i>coniuratio</i></b>, si assumono il compito di governare: nasce il <b>Comune</b>. Il Comune ha le caratteristiche di uno <b>Stato</b>, con istituzioni, leggi, <b>moneta</b> e <b>tasse</b> proprie: è un potere «dal basso», fondato sul <b>consenso popolare</b>.',
       inBreve2: 'Nell’<b>Italia del Centro-nord</b>, che in teoria è il <b>Regno d’Italia</b> e fa parte dell’<b>Impero</b>, l’imperatore è lontano, oltre le Alpi, e il suo potere è <b>debole</b>. I Comuni ne approfittano: impongono subito il loro potere sul <b>contado</b> e arrivano allo scontro con l’impero. Nelle città d’Oltralpe, invece, l’autonomia fatica ad affermarsi, e nel Sud, sotto il forte <b>Regno normanno</b>, le città non diventano mai del tutto autonome (manuale, pp. 87-89).',
       pagine: 'coniuratio', bottone2: 'Avanti: la forza dei Comuni italiani ▸',
-      didMappa: 'Nella prossima sezione troverai la carta politica dell’Italia nel XII secolo, come quella del manuale (p. 89): le aree colorate sono i regni e le altre entità politiche dell’Italia di allora; i punti rossi sono le città in cui nacque un Comune, con la data d’istituzione (passaci sopra con il mouse o toccali). Cerca la data più antica, Brescia nel 1038, e guarda dove sono le città: quasi tutte nel Centro-nord, nel Regno d’Italia. Nel Regno normanno di Sicilia, invece, nessuna.',
+      didMappa: 'Qui sotto troverai la carta politica dell’Italia nel XII secolo, come quella del manuale (p. 89): le aree colorate sono i regni e le altre entità politiche dell’Italia di allora; i punti rossi sono le città in cui nacque un Comune, con la data d’istituzione (passaci sopra con il mouse o toccali). Cerca la data più antica, Brescia nel 1038, e guarda dove sono le città: quasi tutte nel Centro-nord, nel Regno d’Italia. Nel Regno normanno di Sicilia, invece, nessuna.',
       intro2: '«Buon Dio, giovane, guarda com’è ridotta questa povera carta: l’umidità della sacrestia ha cancellato l’inchiostro in cinque punti. Ricostruisci il testo della carta, se puoi, poi ricopiala parola per parola. Quando hai finito, firma la copia con il tuo signum: così sarà valida come l’originale.»',
       fonte: { testo: '', domande: [], controllata: true },
       esercizi: [
@@ -949,7 +955,7 @@ const CONTENUTI = {
         { tipo: 'confronto', nomeTipo: 'Gioco', punti: 10, q: 'Gioco. Perché i Comuni italiani sono così forti? Per ogni frase, scegli se parla dei Comuni italiani, delle città d’Oltralpe o delle città del Regno di Sicilia. Ogni errore costa 2 punti, fino a un minimo di 3.',
           spiega: 'I Comuni italiani approfittano della debolezza dell’imperatore, conquistano il contado e diventano veri Stati; le città d’Oltralpe restano isole nel mare feudale; nel Regno di Sicilia il re normanno non lascia spazio all’autonomia.',
           hint: 'Chi c’è sopra la città? Un imperatore lontano, un re vicino e forte, o un signore feudale che resta padrone del contado?', concetto: 'La forza dei Comuni italiani' },
-        { tipo: 'giuramento', nomeTipo: 'Gioco', punti: 15, q: 'Gioco. Nell’archivio la carta della coniuratio è rovinata dall’umidità: in cinque punti l’inchiostro è sparito. Ricostruisci il giuramento, un pezzo alla volta, poi firma la copia con il tuo signum. Ogni errore costa 3 punti, fino a un minimo di 3.',
+        { tipo: 'giuramento', nomeTipo: 'Gioco', punti: 15, q: 'Gioco. Nell’archivio la carta della coniuratio è rovinata dall’umidità: in cinque punti l’inchiostro è sparito. Ricostruisci il giuramento: scegli le parole giuste nelle cinque lacune, poi firma la copia con il tuo signum. Ogni errore costa 3 punti, fino a un minimo di 3.',
           spiega: 'Associazione giurata, aiuto reciproco, consoli eletti ogni anno, leggi, tasse e moneta proprie, consenso dei cittadini: sono i caratteri del Comune.',
           hint: 'Il Comune è un potere che nasce «dal basso», dai cittadini che giurano insieme: chi non sta nel giuramento?', concetto: 'La coniuratio e il Comune come Stato' }
       ]
@@ -3472,13 +3478,16 @@ function giocoATappe(ex, cfg) {
   if (cfg.avvio) {      // prima la presentazione e il pulsante; poi resta solo il gioco, con i punti in palio
     reg.hidden = true; const ra = el('div', 'azioni' + (cfg.avvio.solo ? ' avvio-dx' : '')), bc = el('button', 'btn primario comincia-g', cfg.avvio.bottone); bc.type = 'button'; ra.append(bc);
     // «solo»: prima dell’avvio c’è soltanto il pulsante, a destra sotto la battuta; i punti e il riquadro del gioco compaiono dopo
-    if (cfg.avvio.solo) { conto.hidden = scena.hidden = true; box.insertBefore(ra, conto); } else scena.append(ra);
+    if (cfg.avvio.solo) { conto.hidden = scena.hidden = true; box.insertBefore(ra, conto); }
+    else if (cfg.avvio.pulito) { scena.hidden = true; ra.classList.add('avvio-riga'); box.insertBefore(ra, conto); ra.prepend(conto); }      // i punti in palio e il pulsante sulla stessa riga (21/11/2026)
+    else scena.append(ra);
     bc.onclick = () => { const es = box.closest('.es');
       if (cfg.avvio.mantieni) {      // restano l’esercizio e la battuta; spariscono la consegna e l’immagine sopra il riquadro
         if (es) { es.querySelectorAll(':scope > .dom').forEach(x => x.hidden = true); let pr = es.previousElementSibling; while (pr && (pr.tagName === 'FIGURE' || pr.tagName === 'H3')) { pr.hidden = true; pr = pr.previousElementSibling; } }
       } else { box.querySelectorAll(':scope > .stat-int').forEach(x => x.remove());
         if (es) { es.querySelectorAll(':scope > h4, :scope > .dom').forEach(x => x.hidden = true); const h3 = es.previousElementSibling; if (h3 && h3.tagName === 'H3') h3.hidden = true; } }
-      reg.hidden = false; if (cfg.avvio.solo) { ra.remove(); conto.hidden = scena.hidden = false; } SUONI.ui('clic'); mostra(); (es || box).scrollIntoView({ block: 'start', behavior: 'smooth' }); };
+      if (cfg.avvio.pulito) { conto.hidden = true; if (es) { let pr = es.previousElementSibling; while (pr && (pr.tagName === 'FIGURE' || pr.tagName === 'H3')) { pr.hidden = true; pr = pr.previousElementSibling; } } }      // durante il gioco: solo la voce, il nome, le risposte (richiesta della docente, 21/11/2026)
+      reg.hidden = false; if (cfg.avvio.solo) { ra.remove(); conto.hidden = scena.hidden = false; } if (cfg.avvio.pulito) { ra.remove(); scena.hidden = false; } SUONI.ui('clic'); mostra(); (es || box).scrollIntoView({ block: 'start', behavior: 'smooth' }); };
   } else mostra();
   if (cfg.firma) setTimeout(() => { const es = box.closest('.es'), bV = es && es.querySelector(':scope > .azioni .btn.primario'); if (bV) bV.hidden = true; }, 0);
   // senza «Verifica» e «Suggerimento»: a fine gioco il punteggio si registra da solo
@@ -3580,12 +3589,12 @@ const CONSIGLIO = [
   { v: 'disoccupato', n: 'Nanni di Cola, senza lavoro', t: '«La bottega dove lavoravo ha chiuso. Ma sono nato qui!»', ok: 1, c: 'I disoccupati sono esclusi.' }
 ];
 COSTR.consiglio = ex => giocoATappe(ex, {
-  cls: 'consiglio-g', malus: 2, avvio: { bottone: 'Inizia la seduta ▸', mantieni: true, solo: true }, autoVerifica: true,
+  cls: 'consiglio-g', malus: 2, avvio: { bottone: 'Inizia la seduta ▸', pulito: true }, autoVerifica: true,      // (21/11/2026)
   intest: { volto: 'console', nome: 'Messer Bonaccorso Valignani, console', testo: '«Notaio, tieni bene la lista: in Consiglio entra soltanto chi ne ha diritto.»' },
   voci: CONSIGLIO, scelte: () => ['Entra in Consiglio', 'Resta fuori'], giusta: v => v.ok, domanda: 'Che cosa decidi?', inRiga: true,
   commento: (v, g) => g ? `<b class="ok">Giusto.</b> ${v.c}` : `<b class="ko">Messer Bonaccorso:</b> «${v.ok ? 'Ma che fai? Questa persona non ha il diritto di entrare!' : 'Come? Fuori proprio lui? Fallo entrare subito!'}»`,
   registro: { titolo: 'La lista del Consiglio', colonne: ['Nome', 'Alla porta'], riga: v => [v.n, v.ok ? 'resta fuori' : '<b>entra</b>'] },
-  fine: e => `<b>La porta si chiude, il Consiglio comincia.</b> ${e ? `Hai sbagliato ${e === 1 ? 'una volta' : e + ' volte'}.` : 'Nessun errore.'} Ora premi «Verifica».`,
+  fine: e => `<b>La porta si chiude, il Consiglio comincia.</b> ${e ? `Hai sbagliato ${e === 1 ? 'una volta' : e + ' volte'}.` : 'Nessun errore.'}`,
   incompleto: 'Decidi per tutti e nove, prima che la porta si chiuda.', ultimo: 'Chiudi la porta ▸',
   esito: e => 'Su nove persone alla porta, ne sono entrate tre: il governo del Comune spetta a una minoranza.' + (e ? '' : ' La tua lista è perfetta.')
 });
@@ -3633,42 +3642,38 @@ const CARTA = [
   { prima: '. Il Comune avrà ', opz: [['le sue leggi, le sue tasse e la sua moneta', true], ['soltanto un mercato, e nient’altro', false, 'Il Comune ha istituzioni, leggi, moneta e tasse: è uno Stato.'], ['le leggi e le tasse decise dall’imperatore', false, 'Il Comune è svincolato dal potere superiore dell’imperatore.']] },
   { prima: ', e governerà con il consenso ', opz: [['dei cittadini che hanno giurato', true], ['del signore feudale', false, 'È un potere «dal basso», dal consenso popolare.'], ['del papa', false, 'Il papato è un potere «dall’alto», come le monarchie.']] }
 ];
-COSTR.giuramento = ex => {
+COSTR.giuramento = ex => {      // un completamento a tendina sulla pergamena: le cinque lacune insieme (richiesta della docente, 21/11/2026)
   const box = el('div', 'sim carta-g'), PIENI = ex.punti || 15, MALUS = 3, MINIMO = 3;
-  let k = 0, errori = 0, firmata = false;
+  let errori = 0, giusta = false, firmata = false;
   setTimeout(() => { const es = box.closest('.es'), bV = es && es.querySelector(':scope > .azioni .btn.primario'); if (bV) bV.hidden = true; }, 0);
-  const intest = el('div', '');      // la battuta del canonico sta già sopra il riquadro del gioco
-  const perg = el('div', 'perg-c carta-c'), conto = el('p', 'conto-c'), fb = el('p', 'commento'), az = el('div', 'scelte-c');
+  const perg = el('div', 'perg-c carta-c'), conto = el('p', 'conto-c'), fb = el('p', 'commento'), az = el('div', 'azioni');
   const puntiOra = () => Math.max(MINIMO, PIENI - MALUS * errori);
-  const scritte = [];
-  const disegna = () => {
-    perg.innerHTML = '';
-    CARTA.forEach((c, i) => { perg.append(document.createTextNode(c.prima)); const s = el('span', 'lacuna' + (i < k ? ' scritta' : i === k ? ' qui' : ''), i < k ? scritte[i] : '……………'); perg.append(s); });
-    perg.append(document.createTextNode('. Lo giuriamo sui santi Vangeli, nella cattedrale.'));
-    conto.innerHTML = `Punti in palio: <b>${puntiOra()}</b> su ${PIENI}` + (errori ? ` · ${errori} ${errori === 1 ? 'errore' : 'errori'} (−${MALUS} ciascuno, minimo ${MINIMO})` : ` · ogni errore costa ${MALUS} punti`);
-    az.innerHTML = '';
-    if (k >= CARTA.length) { perg.classList.add('firmata-c');
-      az.append(el('p', 'fine-c', firmata ? '' : '<b>La carta è ricostruita!</b> Ora firma la tua copia con il tuo signum, come fanno i notai.'));
-      if (!firmata) { const bf = el('button', 'btn primario firma-libro', '✍ Apponi il tuo signum alla copia'); bf.type = 'button'; az.append(bf);
-        bf.onclick = () => { if (firmata) return; firmata = true; const fs = el('div', 'firma-reg'); fs.append(el('span', '', 'Ego Martinus notarius hoc exemplum fideliter scripsi et signavi (Io, Martino notaio, ho copiato fedelmente questa carta e l’ho firmata)'));
-          if (STATO.signum) { const im = el('img'); im.src = STATO.signum; im.alt = 'Il signum di Martino'; fs.append(im); } else fs.append(el('b', 'signum-t', '✠ signum Martini notarii'));
-          perg.after(fs); az.innerHTML = ''; SUONI.ui('clic'); const es = box.closest('.es'), bV = es && es.querySelector(':scope > .azioni .btn.primario'); if (bV) bV.click(); }; }
-      return; }
-    az.append(el('p', 'dom-c', `Lacuna ${k + 1} di ${CARTA.length}: che cosa c’era scritto?`));
-    shuffle(CARTA[k].opz.map((o, i) => i)).forEach(i => { const [t, g, m] = CARTA[k].opz[i], b = el('button', 'btn scelta-c', t); b.type = 'button';
-      b.onclick = () => { if (box.dataset.blocco === '1') return;
-        if (!g) { b.disabled = true; b.classList.add('errata'); errori++; SUONI.ui('sbagliato'); fb.innerHTML = `<b class="ko">Il canonico:</b> «No: ${m}»`; conto.innerHTML = `Punti in palio: <b>${puntiOra()}</b> su ${PIENI} · ${errori} ${errori === 1 ? 'errore' : 'errori'} (−${MALUS} ciascuno, minimo ${MINIMO})`; return; }
-        scritte[k] = t; k++; SUONI.ui('giusto'); fb.innerHTML = '<b class="ok">Ricopiato.</b>'; disegna(); };
-      az.append(b); });
-  };
-  box.append(intest, perg, conto, az, fb); disegna();
+  const agg = () => { conto.innerHTML = `Punti in palio: <b>${puntiOra()}</b> su ${PIENI}` + (errori ? ` · ${errori} ${errori === 1 ? 'errore' : 'errori'} (−${MALUS} ciascuno, minimo ${MINIMO})` : ` · ogni errore costa ${MALUS} punti`); };
+  const sels = CARTA.map((c, i) => { const sl = el('select'); sl.setAttribute('aria-label', `Lacuna ${i + 1}`); sl.append(new Option('……………', ''));
+    shuffle(c.opz.map((o, k) => k)).forEach(k => sl.append(new Option(c.opz[k][0], k))); sl.onchange = () => sl.classList.remove('giusto', 'errato'); return sl; });
+  CARTA.forEach((c, i) => { perg.append(document.createTextNode(c.prima), sels[i]); });
+  perg.append(document.createTextNode('. Lo giuriamo sui santi Vangeli, nella cattedrale.'));
+  const bc = el('button', 'btn primario', 'Controlla la copia'); bc.type = 'button'; az.append(bc);
+  bc.onclick = () => { if (box.dataset.blocco === '1' || giusta) return;
+    if (sels.some(x => x.value === '')) { fb.innerHTML = '<b class="ko">Manca qualcosa.</b> Scegli le parole per tutte e cinque le lacune.'; return; }
+    const sbagliate = sels.filter((x, i) => !CARTA[i].opz[+x.value][1]);
+    sels.forEach((x, i) => { x.classList.remove('giusto', 'errato'); x.classList.add(CARTA[i].opz[+x.value][1] ? 'giusto' : 'errato'); });
+    if (sbagliate.length) { errori += sbagliate.length; agg(); SUONI.ui('sbagliato'); const i = sels.indexOf(sbagliate[0]);
+      fb.innerHTML = `<b class="ko">Il canonico:</b> «No: ${CARTA[i].opz[+sels[i].value][2]}»` + (sbagliate.length > 1 ? ` <i>(Le lacune sbagliate, in rosso, sono ${sbagliate.length}.)</i>` : ''); return; }
+    giusta = true; sels.forEach(x => x.disabled = true); perg.classList.add('firmata-c'); SUONI.ui('giusto'); fb.innerHTML = '<b class="ok">Ricopiato.</b>';
+    az.innerHTML = ''; az.append(el('p', 'fine-c', '<b>La carta è ricostruita!</b> Ora firma la tua copia con il tuo signum, come fanno i notai.'));
+    const bf = el('button', 'btn primario firma-libro', '✍ Apponi il tuo signum alla copia'); bf.type = 'button'; az.append(bf);
+    bf.onclick = () => { if (firmata) return; firmata = true; const fs = el('div', 'firma-reg'); fs.append(el('span', '', 'Ego Martinus notarius hoc exemplum fideliter scripsi et signavi (Io, Martino notaio, ho copiato fedelmente questa carta e l’ho firmata)'));
+      if (STATO.signum) { const im = el('img'); im.src = STATO.signum; im.alt = 'Il signum di Martino'; fs.append(im); } else fs.append(el('b', 'signum-t', '✠ signum Martini notarii'));
+      perg.after(fs); az.innerHTML = ''; SUONI.ui('clic'); const es = box.closest('.es'), bV = es && es.querySelector(':scope > .azioni .btn.primario'); if (bV) bV.click(); }; };
+  box.append(perg, conto, az, fb); agg();
   return {
     nodo: box,
     verifica() {
-      if (k < CARTA.length || !firmata) return { incompleto: true, msg: 'Ricostruisci tutte e cinque le lacune e firma la copia con il tuo signum.' };
+      if (!giusta || !firmata) return { incompleto: true, msg: 'Ricostruisci tutte e cinque le lacune e firma la copia con il tuo signum.' };
       return { ok: true, punti: puntiOra(), errori, extra: errori ? `Hai ricostruito la carta con ${errori} ${errori === 1 ? 'errore' : 'errori'}.` : 'Il canonico sorride: «La tua copia è più bella dell’originale!»' };
     },
-    blocca() { box.dataset.blocco = '1'; az.querySelectorAll('button').forEach(b => b.disabled = true); }
+    blocca() { box.dataset.blocco = '1'; sels.forEach(x => x.disabled = true); box.querySelectorAll('button').forEach(b => b.disabled = true); }
   };
 };
 
@@ -3873,7 +3878,7 @@ function apriLiberGioco(p) {
 }
 function apriLiberFine(p) {
   const body = $('#popBody'); testaLiber(p, body, 'quarta parte');
-  body.append(battuta('serIacopo', 'Ser Iacopo', '«Il libro è firmato, e il Comune sa finalmente quanti fuochi ha. Guarda: anche nelle altre terre i notai fanno lo stesso lavoro. Ecco una pagina di un registro dei fuochi vero.»'), figuraLiber(), el('h3', '', 'Metti alla prova ciò che ricordi'));
+  body.append(el('h3', '', 'Metti alla prova ciò che ricordi'));      // solo l’esercizio 3: via la battuta di ser Iacopo e la pagina del registro (richiesta della docente, 21/11/2026)
   const ban = el('div', 'banner'); ban.hidden = true; ban.textContent = 'Luogo completato! Puoi chiudere la scheda e proseguire il viaggio.';
   body.append(creaEsercizio(p.esercizi[2], 3, p, 2, () => { if (cetiFatto(p)) ban.hidden = false; }), ban);
   finePoi(body); $('#pagina').scrollTop = 0; setTimeout(() => $('#pagina').focus(), 0);
@@ -3988,7 +3993,12 @@ COSTR.mappa = ex => {
     const av = el('button', 'btn avanti', n + 1 < N ? 'Prossima entità politica ▸' : 'Vedi il risultato ▸'); av.type = 'button'; av.onclick = () => { n++; if (n < N) mostra(); else finito(); };
     const r = el('div', 'azioni'); r.append(av); carta.append(r); carta.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); setTimeout(() => av.focus({ preventScroll: true }), 0); return true; } };
   const mappa = mappaComuni(gioco);
-  box.append(conto, carta, mappa); aggiornaConto(); mostra();
+  box.append(conto, carta, mappa); aggiornaConto();
+  // prima del gioco: la spiegazione della carta, i punti in palio e il pulsante; poi soltanto la vicenda, con il suo «Ascolta», e la carta (richiesta della docente, 21/11/2026)
+  { const P = CONTENUTI.poi.find(q => q.didMappa), intro = el('p', 'intro-m', P ? P.didMappa : ''), ra = el('div', 'azioni'), bc = el('button', 'btn primario comincia-g', 'Inizia il gioco ▸'); bc.type = 'button'; ra.append(bc);
+    carta.hidden = mappa.hidden = true; box.prepend(intro); box.append(ra);
+    bc.onclick = () => { const es = box.closest('.es'); intro.hidden = conto.hidden = true; ra.remove(); carta.hidden = mappa.hidden = false;
+      if (es) es.querySelectorAll(':scope > h4, :scope > .dom').forEach(x => x.hidden = true); SUONI.ui('clic'); mostra(); (es || box).scrollIntoView({ block: 'start', behavior: 'smooth' }); }; }
   // niente «Verifica»: l’ultima vicenda chiude il gioco da sola
   setTimeout(() => { const es = box.closest('.es'), bV = es && es.querySelector(':scope > .azioni .btn.primario'); if (bV) bV.hidden = true; }, 0);
   return { nodo: box, verifica() { if (n < N) return { incompleto: true, msg: 'Abbina ogni vicenda al suo regno o alla sua entità politica.' }; return { ok: true, punti: puntiOra(), errori, extra: errori ? `Hai sbagliato ${errori === 1 ? 'una volta' : errori + ' volte'}.` : 'Nessun errore!' }; }, blocca() { box.dataset.blocco = '1'; } };
@@ -4021,12 +4031,12 @@ const CONFRONTO_V = [
   { t: 'Arrivano allo scontro con l’imperatore, e a volte lo battono.', ok: 0, c: 'I Comuni italiani si uniscono e combattono contro l’imperatore: per esempio a Legnano, nel 1176.' }
 ];
 COSTR.confronto = ex => giocoATappe(ex, {
-  cls: 'confronto-g', malus: 2,
+  cls: 'confronto-g', malus: 2, avvio: { bottone: 'Inizia il gioco ▸', pulito: true }, autoVerifica: true,      // (21/11/2026)
   intest: { volto: 'serIacopo', nome: 'Ser Iacopo', testo: '«Guarda bene la carta, ragazzo. Perché proprio da noi, nel Regno d’Italia, i Comuni sono così forti? Ti leggo alcune frasi: dimmi se parlano dei Comuni italiani, delle città d’Oltralpe o delle città del Regno di Sicilia.»' },
   voci: CONFRONTO_V, scelte: () => CONFRONTO, giusta: v => v.ok, inRiga: true,
   commento: (v, g, i) => g ? `<b class="ok">Esatto.</b> ${v.c}` : `<b class="ko">Ser Iacopo:</b> «${CONFRONTO[i]}? Guarda di nuovo la carta.»`,
   registro: { titolo: 'Tre modi di essere città', colonne: ['Che cosa succede', 'Dove'], riga: v => [v.t, CONFRONTO[v.ok]] },
-  fine: e => `<b>Hai capito il segreto dei Comuni italiani.</b> ${e ? `Hai sbagliato ${e === 1 ? 'una volta' : e + ' volte'}.` : 'Nessun errore.'} Ora premi «Verifica».`,
+  fine: e => `<b>Hai capito il segreto dei Comuni italiani.</b> ${e ? `Hai sbagliato ${e === 1 ? 'una volta' : e + ' volte'}.` : 'Nessun errore.'}`,
   incompleto: 'Rispondi a tutte le frasi.', ultimo: 'Fine ▸',
   esito: () => 'Un imperatore lontano e debole, un contado da conquistare, istituzioni proprie: ecco la forza dei Comuni italiani.'
 });
@@ -4036,7 +4046,7 @@ function apriConiuratio(p) {
   body.append(el('p', 'sopra', `Area ${p.area} · luogo ${p.num} del percorso · prima parte`));
   const h = el('h2', '', p.nome); h.id = 'popTitolo'; body.append(h, el('div', 'filetto'));
   const br = el('div', 'breve'); br.append(el('p', '', `<span class="iniziale">${p.inBreve.charAt(0)}</span>` + p.inBreve.slice(1))); body.append(br);
-  const sz = el('div', 'sezione-c'); sz.append(el('h3', '', 'I Comuni d’Italia nel XII secolo'), el('p', 'evid-c', p.inBreve2), el('p', 'did-m', p.didMappa)); body.append(sz);
+  const sz = el('div', 'sezione-c'); sz.append(el('h3', '', 'I Comuni d’Italia nel XII secolo'), el('p', 'evid-c', p.inBreve2)); body.append(sz);      // la spiegazione della carta è passata nel gioco (21/11/2026)
   const nav = el('div', 'azioni'), bt = el('button', 'btn primario copia-c', 'Metti alla prova ciò che ricordi ▸'); bt.type = 'button'; bt.onclick = () => apriConiuratioGioco(p); nav.append(bt);
   if (STATO.poi[p.id].fatti[0]) { const b2 = el('button', 'btn', p.bottone2); b2.type = 'button'; b2.onclick = () => apriConiuratio2(p); nav.append(b2); }
   body.append(nav);
@@ -4056,7 +4066,7 @@ const ORGANI = {
     d: 'Consolato e Consiglio sono organi <b>elettivi</b>, ma il diritto di partecipare riguarda una <b>minoranza</b>: restano esclusi le donne, i servi, i lavoratori giornalieri, gli immigrati, i disoccupati e le minoranze religiose, come gli ebrei.' }
 };
 function schemaOrgani() {
-  const d = el('div', 'organi-c'), conto = el('p', 'dom-c'), info = el('div', 'info-o'); info.setAttribute('aria-live', 'polite');
+  const d = el('div', 'organi-c'), conto = el('p', 'dom-c'), info = el('div', 'info-o lt-leggi'); info.setAttribute('aria-live', 'polite');      // lt-leggi: ogni parte scelta ha il suo «Ascolta» (21/11/2026)
   const visti = new Set(), aggiorna = () => { conto.innerHTML = `Tocca ogni parte dello schema per scoprire che cosa fa <small>(${visti.size} di 5)</small>${visti.size === 5 ? ' · <b class="ok">Hai esplorato tutto il Comune!</b>' : ''}`; };
   const libro = '<svg viewBox="0 0 60 48" aria-hidden="true"><rect x="6" y="6" width="48" height="36" rx="3" fill="#7a2a1a" stroke="#2a1b10" stroke-width="2"/><rect x="10" y="9" width="40" height="30" fill="#e9dcc0" stroke="#2a1b10"/><line x1="30" y1="9" x2="30" y2="39" stroke="#2a1b10" stroke-width="1.5"/>' + [14, 19, 24, 29, 34].map(y => `<line x1="13" y1="${y}" x2="27" y2="${y}" stroke="#8a6a3a"/><line x1="33" y1="${y}" x2="47" y2="${y}" stroke="#8a6a3a"/>`).join('') + '<rect x="52" y="20" width="6" height="8" fill="#c4932a" stroke="#2a1b10"/></svg>';
   const blocco = k => { const O = ORGANI[k], b = el('button', 'org-b org-' + k); b.type = 'button'; b.dataset.o = k;
@@ -4076,9 +4086,19 @@ function apriConsiglio(p) {
   const body = $('#popBody'); body.innerHTML = ''; STATO.modale = 'poi'; STATO.poiAperto = p; SUONI.ui('apri');
   body.append(el('p', 'sopra', `Area ${p.area} · luogo ${p.num} del percorso · prima parte`));
   const h = el('h2', '', p.nome); h.id = 'popTitolo'; body.append(h, el('div', 'filetto'));
-  body.append(el('p', 'apertura-c', 'Dopo la <i>coniuratio</i> il Comune si dà le sue istituzioni. Scopriamole insieme:'), el('h3', '', 'Come funziona il Comune'), schemaOrgani());
-  const nav = el('div', 'azioni'), bt = el('button', 'btn primario copia-c', 'Metti alla prova ciò che ricordi ▸'); bt.type = 'button'; bt.onclick = () => apriConsiglioEs(p); nav.append(bt); body.append(nav);
+  body.append(el('h3', '', 'Come funziona il Comune'), schemaOrgani());
+  const nav = el('div', 'azioni'), bt = el('button', 'btn primario copia-c', 'Abbina le cariche ▸'); bt.type = 'button'; bt.onclick = () => apriConsiglioAbbina(p); nav.append(bt); body.append(nav);
   finePoi(body); apriVelo($('#popVelo'), $('#pagina'));
+}
+/* luogo 19 · l’abbinamento delle cariche, subito dopo lo schema (richiesta della docente, 21/11/2026): era l’esercizio 1 della pagina degli esercizi */
+function apriConsiglioAbbina(p) {
+  const body = $('#popBody'); body.innerHTML = ''; STATO.modale = 'poi'; STATO.poiAperto = p; SUONI.ui('apri');
+  body.append(el('p', 'sopra', `Area ${p.area} · luogo ${p.num} del percorso · prima parte · l’abbinamento`));
+  const h = el('h2', '', p.nome); h.id = 'popTitolo'; body.append(h, el('div', 'filetto'));
+  const st = STATO.poi[p.id], nav = el('div', 'azioni'), bt = el('button', 'btn primario copia-c', 'Metti alla prova ciò che ricordi ▸'); bt.type = 'button'; bt.onclick = () => apriConsiglioEs(p); nav.append(bt); nav.hidden = !st.fatti[0];
+  body.append(creaEsercizio(Object.assign({}, p.esercizi[0], { q: 'Dopo la <i>coniuratio</i> il Comune si dà le sue istituzioni. Dopo averle studiate nel manuale, abbina a ciascuna carica la sua funzione:' }), 1, p, 0, () => { nav.hidden = false; cetiFatto(p); }), nav);
+  const r = el('div', 'azioni'), b = el('button', 'btn piccolo', '◂ Torna allo schema'); b.type = 'button'; b.onclick = () => apriConsiglio(p); r.append(b); body.append(r);
+  finePoi(body); $('#pagina').scrollTop = 0; setTimeout(() => $('#pagina').focus(), 0);
 }
 function apriConsiglioEs(p) {
   const body = $('#popBody'); body.innerHTML = ''; STATO.modale = 'poi'; STATO.poiAperto = p; SUONI.ui('apri');
@@ -4086,8 +4106,8 @@ function apriConsiglioEs(p) {
   const h = el('h2', '', 'Metti alla prova ciò che ricordi'); h.id = 'popTitolo'; body.append(h, el('div', 'filetto'));
   const st = STATO.poi[p.id], nav = el('div', 'azioni'), bt = el('button', 'btn primario copia-c', 'La seduta del Consiglio ▸'); bt.type = 'button'; bt.onclick = () => apriConsiglioSeduta(p); nav.append(bt);
   const pronto = () => { nav.hidden = !(st.fatti[0] && st.fatti[1]); cetiFatto(p); };
-  body.append(creaEsercizio(p.esercizi[0], 1, p, 0, pronto), creaEsercizio(p.esercizi[1], 2, p, 1, pronto), nav); nav.hidden = !(st.fatti[0] && st.fatti[1]);
-  const r = el('div', 'azioni'), b = el('button', 'btn piccolo', '◂ Torna all’«In breve»'); b.type = 'button'; b.onclick = () => apriConsiglio(p); r.append(b); body.append(r);
+  body.append(creaEsercizio(p.esercizi[1], 2, p, 1, pronto), nav); nav.hidden = !(st.fatti[0] && st.fatti[1]);      // l’esercizio 1 è nella prima pagina, sotto lo schema (21/11/2026)
+  const r = el('div', 'azioni'), b = el('button', 'btn piccolo', '◂ Torna all’abbinamento'); b.type = 'button'; b.onclick = () => apriConsiglioAbbina(p); r.append(b); body.append(r);
   finePoi(body); $('#pagina').scrollTop = 0; setTimeout(() => $('#pagina').focus(), 0);
 }
 function apriConsiglioSeduta(p) {
@@ -4720,7 +4740,10 @@ function aggiornaBisaccia() {
   h += `<p class="merci-b">${iconaMerce('borsa')}<span>La borsa del notaio: la penna d’oca, il calamaio, un rotolo di pergamena</span></p>`;
   if (STATO.lettera) h += `<p class="merci-b">${iconaMerce('lettera')}<span>La lettera di raccomandazione del priore dell’Arte della Lana, sigillata, per ser Iacopo</span></p>`;
   (STATO.ricordi || []).forEach(id => { const [ico, t] = RICORDI[id]; h += `<p class="merci-b">${iconaMerce(ico)}<span>${t}</span></p>`; });
-  h += `<p><b>Borsa:</b> ${fmtBreve(STATO.denari)}</p>`;
+  if (STATO.popolo || (typeof ventiAnni === 'function' && ventiAnni())) {      // a fine partita la borsa ha anche i franchini: l’economia della città li ha fatti suoi (21/11/2026)
+    if (!STATO.borsaFine) STATO.borsaFine = { f: 2 + Math.floor(Math.random() * 6), s: 3 + Math.floor(Math.random() * 15), d: 1 + Math.floor(Math.random() * 11) };
+    const B = STATO.borsaFine; h += `<p><b>Borsa:</b> ${B.f} franchini d’argento, ${B.s} soldi e ${B.d} ${B.d === 1 ? 'denaro' : 'denari'}</p>`;
+  } else h += `<p><b>Borsa:</b> ${fmtBreve(STATO.denari)}</p>`;
   h += `<p><b>Martino:</b> ${STATO.anni} anni${STATO.eletto ? ', ser Martino di Bruno, notaio del Comune' : STATO.assunto ? ', aiutante del notaio' : ''}<br><small>Il Comune di ${NOME_CITTA} è nella fase ${NOMI_FASE()}.</small></p>`;
   const passi = [['Entra nella città vecchia', STATO.entrato], ['Presentati al notaio dei consoli', STATO.assunto], ['Aggiorna il Liber focorum: luogo 17', STATO.completati.has('ceti')],
     ['Impara a leggere la piazza', STATO.infoFatti.has('piazza')], ['Cerca la carta nell’archivio', STATO.archivio], ['Ricostruisci il giuramento: luogo 18', STATO.completati.has('coniuratio')],
@@ -5061,7 +5084,7 @@ function franchinoGrande() {
 /* gli attrezzi del battitore, su una fotografia: bollini con le lettere, la spiegazione, il conio, poi un piccolo abbinamento */
 const ATTREZZI = [
   { k: 'A', id: 'martello', nome: 'Il martello', x: 26.3, y: 48, d: 'Il battitore lo tiene con la mano destra e colpisce la testa del torsello: per monete sottili come il franchino bastano uno o pochi colpi, a freddo.' },
-  { k: 'B', id: 'tondello', nome: 'Il tondello', x: 58.6, y: 39, d: 'Il dischetto d’argento ancora liscio, tagliato da un foglio di metallo: è la moneta prima della battitura.' },
+  { k: 'B', id: 'tondello', nome: 'Il tondello', x: 58.6, y: 39, lato: 'dx', d: 'Il dischetto d’argento ancora liscio, tagliato da un foglio di metallo: è la moneta prima della battitura.' },
   { k: 'C', id: 'pila', nome: 'La pila', x: 62.8, y: 77.5, d: 'Il <b>conio di sotto</b>: un ferro con l’impronta incisa, fissato nel ceppo di legno perché non si muova. Sopra la pila si appoggia il tondello.' },
   { k: 'D', id: 'torsello', nome: 'Il torsello', x: 66.2, y: 22.5, giu: true, d: 'Il <b>conio di sopra</b>: una barra di ferro con l’impronta incisa in fondo. Il battitore la tiene dritta sul tondello con la mano sinistra; a forza di colpi, la testa si sfilaccia e si piega.' }
 ];
@@ -5075,9 +5098,10 @@ function attrezziZecca(poi) {
 function abbinaAttrezzi(w, poi) {
   {
     const D = [['Si tiene nella mano destra e dà il colpo.', 'Il martello'], ['È il dischetto d’argento ancora liscio.', 'Il tondello'], ['È il conio di sotto, fissato nel ceppo.', 'La pila'], ['È il conio di sopra, tenuto dritto con la mano sinistra.', 'Il torsello']];
-    const z = el('div', 'abbina-a'), fb = el('div', 'fb'); fb.setAttribute('aria-live', 'polite'); z.append(el('h4', '', 'Abbina ogni attrezzo alla sua funzione')); w.append(z, fb);
+    const z = el('div', 'abbina-a lt-continua'), fb = el('div', 'fb'); fb.setAttribute('aria-live', 'polite'); z.append(el('h4', '', 'Abbina ogni attrezzo alla sua funzione')); w.append(z, fb);      // lt-continua: «Ascolta» vale per tutte le domande dell’abbinamento (21/11/2026)
     let i = 0; const giro = () => { if (i >= D.length) { z.append(el('p', 'fine-c', '<b>Conosci tutti gli attrezzi del battitore!</b>')); return poi(); }
-      const [f, g] = D[i], riga = el('div', 'riga-a'); riga.append(el('p', 'dom-c', `${i + 1}. ${f}`));
+      const [f, g] = D[i], riga = el('div', 'riga-a'), dc = el('p', 'dom-c', `${i + 1}. ${f}`); riga.append(dc);
+      if (i) { dc.setAttribute('role', 'status'); dc.ltDopo = () => [...riga.querySelectorAll('.scelte-c .btn')].map((b, k) => `Risposta ${'ABCD'[k]}: ${b.textContent}.`); }      // la nuova domanda si legge da sé, se si ascolta
       riga.append(scelte(fb, 'Lo zecchiere', ATTREZZI.map(a => [a.nome, a.nome === g, a.nome === g ? `${g}.` : `«${a.nome}? No: ripensa a che cosa fa.»`]), () => { riga.querySelectorAll('button').forEach(x => x.disabled = true); i++; giro(); }, 'Avanti ▸'));
       z.append(riga); };
     giro();
@@ -5375,7 +5399,6 @@ function apriSangue() {
             atto.append(fs); STATO.eletto = true; SUONI.ui('fanfara'); aggiornaHud();
             p1c.box.append(battuta('giudice', 'Il priore dell’Arte dei giudici e notai', '«Da oggi sei <b>ser Martino di Bruno, notaio del Comune</b>. Che Dio ti dia la pazienza di ser Iacopo!»'),
               battuta('martino', 'Ser Martino di Bruno', '«Farò del mio meglio, messere: ser Iacopo mi ha insegnato tutto quello che so.»'),
-              nota('Ora Martino ha 30 anni ed è il notaio del Comune: in città tutti lo chiamano ser Martino di Bruno. Lo trovi nel pannello «Con te».'),
               el('p', 'scena-v', 'Stai ancora stringendo la mano al priore, quando dalla piazza arrivano urla, un cozzare di spade, il rumore dei banchi rovesciati. Qualcuno spalanca la porta della sala: «Ser Martino! I Valignani e i Camara si scannano in piazza!»'));
             SUONI.ui('grida');
             avantiIn(p1c.box, 'Corri in piazza ▸', () => { STATO.mischia = true; aggiornaHud(); SUONI.cupa(true); SUONI.ui('mischia'); sbloccaPopup(p1c.body); chiudiModale(); }); };
@@ -5570,10 +5593,13 @@ function apriPalazzo(k) {
     STATO[P.stato] = true; STATO.daSvanire.push(P.id); aggiornaHud(); SUONI.ui('monete');
     const tutti = STATO.palazzoV && STATO.palazzoC;
     fb.append(el('div', 'perg-c lettera-c', P.atto), battuta(P.volto, P.chi, tutti ? (k === 'V' ? '«Anche Corrado Camara ha promesso? Allora i Valignani non saranno da meno. Di’ ai consoli che suonino pure la campana.»' : '«Anche Ugo Valignani ha promesso? Allora la torre bianca non sarà da meno. Di’ ai consoli che suonino pure la campana.»') : P.fine));
+    { const sf = el('div', 'stemmi-p piccoli'), f = el('figure', ''), im = el('img'), fam = k === 'V' ? 'valignani' : 'camara'; im.src = stemmaPixel(fam); im.alt = 'Lo stemma dei ' + (k === 'V' ? 'Valignani' : 'Camara');
+      f.append(im, el('figcaption', '', `<b>${k === 'V' ? 'I Valignani' : 'I Camara'}</b>`)); sf.append(f); fb.append(sf); }      // lo stemma della famiglia convinta (21/11/2026)
     if (tutti) fb.append(nota('Hai convinto tutte e due le famiglie! Sulla mappa è comparso un segnale nella loggia dei consoli: il console ti aspetta.'));
     else fb.append(nota(`Ora va’ ${k === 'V' ? 'nel palazzo dei Camara, nella loro contrada a est' : 'nel palazzo dei Valignani, nella loro contrada a ovest'}.`));
     sbloccaPopup(body);
   });
+  box.querySelectorAll(':scope > .nota-blu, :scope > .pazienza-c').forEach(x => x.classList.add('lt-salta'));      // l’«Ascolta» del riquadro accanto al nome di chi parla, non sul titolo (21/11/2026)
   finePopup(body); bloccaPopup(body, P.chi, '«Dove te ne vai, notaio? Non abbiamo finito di parlare.»'); muto(body);
 }
 /* finite le due famiglie: il console aspetta Martino nella loggia, poi la campana dell’Arengo */
@@ -5702,7 +5728,7 @@ function fotoBollini(F, poi) {
   const bott = F.punti.map((a, n) => { const b = el('button', 'bollino-a', a.k); b.type = 'button'; b.style.left = a.x + '%'; b.style.top = a.y + '%'; b.setAttribute('aria-label', `${a.k}: ${a.nome}`); b.hidden = n > 0;
     b.onclick = () => { visti.add(a.k); b.classList.add('visto'); SUONI.ui('clic');
       tela.querySelectorAll('.bollino-a').forEach(x => x.classList.toggle('acceso', x === b));
-      bolla.innerHTML = `<b>${a.k} · ${a.nome}</b><br>${a.d}${a.pix === 'balestriere' ? `<img class="pix-bolla" src="${balestrierePixel()}" alt="${a.pixAlt}">` : ''}<button type="button" class="x-bolla" aria-label="Chiudi la spiegazione" title="Chiudi">×</button>`; bolla.hidden = false; bolla.className = 'bolla-a ' + (a.x > 50 ? 'sx' : 'dx') + ' ' + (a.y > 55 ? 'su' : 'giu');
+      bolla.innerHTML = `<b>${a.k} · ${a.nome}</b><br>${a.d}${a.pix === 'balestriere' ? `<img class="pix-bolla" src="${balestrierePixel()}" alt="${a.pixAlt}">` : ''}<button type="button" class="x-bolla" aria-label="Chiudi la spiegazione" title="Chiudi">×</button>`; bolla.hidden = false; bolla.className = 'bolla-a ' + (a.lato || (a.x > 50 ? 'sx' : 'dx')) + ' ' + (a.y > 55 ? 'su' : 'giu'); bolla.style.width = a.lato === 'dx' && a.x > 50 ? `min(300px, calc(${100 - a.x}% - 30px))` : '';      // lato: la bolla da quella parte (21/11/2026)
       bolla.querySelector('.x-bolla').onclick = e => { e.stopPropagation(); bolla.hidden = true; SUONI.ui('clic'); const nx = bott.find(x => !x.hidden && !x.classList.contains('visto')); if (nx) nx.focus(); };
       bolla.style.left = a.x + '%'; bolla.style.top = a.y + '%';
       (matchMedia('(max-width:620px)').matches ? fig : tela).append(bolla);   // sul telefono la bolla va sotto la foto
@@ -6541,7 +6567,9 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
   window.LETTURA_CFG = {
     intro: true,
     luoghi: '*',
-  battute: true,      // ogni battuta di un personaggio ha la sua icona «Ascolta» accanto al nome (17/11/2026)
+  battute: true,
+  tappe: true,      // i giochi a tappe: dopo la consegna, l’icona accanto a «Vicenda 1 di 8» (21/11/2026)
+  donne: ['Tecla', 'Gemma', 'Agnese'],      // al banco del censimento e alla porta del Consiglio parlano anche delle donne (21/11/2026)      // ogni battuta di un personaggio ha la sua icona «Ascolta» accanto al nome (17/11/2026)
     resto: true,                                 // i luoghi della E sono percorsi su misura: i testi rimasti scoperti li legge l’altoparlante sulla riga in alto
     fumetti: FISSI.map(a => ({
       ref: a, chi: a.volto, voce: 'uomo', attivo: () => a.attivo, get righe() { return a.righe; }, z: a.z, get destra() { return a.destra; },
@@ -6706,9 +6734,13 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
   /* ---------- che cosa si legge in ciascun tipo di riquadro ---------- */
   function pezziDi(blocco) {
     const q = s => [...blocco.querySelectorAll(s)];
-    if (typeof blocco.ltPezzi === 'function') return blocco.ltPezzi().map(t => ({ testo: t }));
+    if (typeof blocco.ltPezzi === 'function') { const t = blocco.ltPezzi(); if (t) return t.map(x => ({ testo: x })); }      // null: si legge come al solito
     if (blocco.matches('.battuta')) return battuta(blocco);      // l’icona accanto al nome di chi parla: la sola battuta (17/11/2026)
     if (blocco.matches('.lt-bat')) return parlante(blocco);
+    if (blocco.matches('.lt-voce')) {      // una voce di un gioco a tappe: chi parla dice la sua battuta (con la sua voce); una frase senza nome si legge con la domanda e le risposte
+      const n = blocco.querySelector(':scope > b'); if (n) n.classList.add('lt-nome');
+      const t = n ? con(voceDi(n.textContent), frasiDi(blocco, '', '.lt-nome, .luogo-c, br')) : frasiDi(blocco, '', '.luogo-c');
+      if (n) return t; const sc = blocco.closest('.carta, .scena'); return t.concat(sc ? voci([...sc.querySelectorAll('.dom-c')].filter(visibile0)).concat(voci([...sc.querySelectorAll('.scelte-c .btn:not(:disabled)')].filter(visibile0), i => `Risposta ${LETTERE[i]}:`)) : []); }
     if (blocco.matches('#intro')) return voci(q(':scope > h2, :scope > p:not(.sopra):not(.credito):not(.crediti)'));
     if (blocco.matches('.breve')) {      // con le didascalie delle immagini che si vedono nella stessa schermata
       const fig = [...document.querySelectorAll('#popBody figure.schema > figcaption')].filter(f => f.getClientRects().length && !f.closest('[hidden], .sz-nascosto'));
@@ -6850,7 +6882,7 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
     if (blocco.querySelector(':scope .lt-btn[data-lt]') && [...blocco.querySelectorAll('.lt-btn[data-lt]')].some(b => b.ltBlocco === blocco)) return;
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lt-btn' + (come === 'fl' ? ' lt-fl' : '') + (come === 'solo' ? ' lt-solo' : '') + (come === 'resto' ? ' lt-r' : ''); b.dataset.lt = '1'; b.ltBlocco = blocco;
     b.innerHTML = ICONA + '<span class="lt-t">Ascolta</span>'; statoPulsante(b, false);
-    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } attiva(blocco); parla((blocco.matches('.battuta, .lt-bat') ? null : finito(blocco)) || pezziDi(blocco), b, blocco, 'd'); });
+    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } attiva(blocco); parla((blocco.matches('.battuta, .lt-bat, .lt-voce') ? null : finito(blocco)) || pezziDi(blocco), b, blocco, 'd'); });
     b.addEventListener('keydown', e => e.stopPropagation());
     dove(b);
   }
@@ -6878,6 +6910,9 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
       const soloBattuta = (a, x) => { const r = document.createRange(); r.setStart(a, 0); r.setEndBefore(x); const prima = r.cloneContents();
         prima.querySelectorAll('h4, .testata, .filetto, .lt-btn, svg, img, figure, .lt-salta, .luogo-c, p.conv').forEach(e => e.remove()); return prima.textContent.trim().length < 30; };      // una riga corta come «Giornata 1 di 3», o quella dei cambi delle monete, non è un racconto
       body.querySelectorAll('section.es:not(.mg)').forEach(x => { const h = x.querySelector('h4'), n = x.querySelector('.battuta p > b:first-child');
+        // un gioco a tappe (Area C, la lettera di cambio): finché c’è la consegna, «Ascolta» sul titolo; poi l’icona accanto al luogo della tappa, che legge la tappa (21/11/2026)
+        const tp = CFG.tappe && x.querySelector('.scena > .luogo-c, .vicenda-c > .luogo-c'), dom = x.querySelector(':scope > p.dom');
+        if (tp && dom && dom.hidden) { x.querySelectorAll('h4 .lt-btn').forEach(b => { if (b.ltBlocco === x && !(attivo && attivo.btn === b)) b.remove(); }); altoparlante(x, b => tp.append(b), 'solo'); return; }
         if (CFG.battute && h && n && soloBattuta(x, n.closest('.battuta'))) altoparlante(x, b => n.after(b), 'solo');
         else if (h && !(n && n.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)) altoparlante(x, b => h.append(b), '');
         else if (n && CFG.battute && !soloBattuta(x, n.closest('.battuta'))) altoparlante(x, b => x.prepend(b), 'fl');      // un racconto prima della battuta: «Ascolta» in alto nel riquadro, la battuta ha la sua icona (18/11/2026)
@@ -6898,6 +6933,8 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
         const doppione = x => { const a = x.closest('.lt-unita, section.es, .mg') || (body.querySelector('.lt-resto') ? body : null); if (!a || ![...a.querySelectorAll('.lt-btn[data-lt]')].some(b => !b.closest('.battuta, .lt-bat'))) return false;
           return soloBattuta(a, x); };
         body.querySelectorAll('.battuta').forEach(x => { const n = x.querySelector('p > b:first-child'); if (!n || n.nextElementSibling && n.nextElementSibling.matches('.lt-btn') || doppione(x)) return; altoparlante(x, b => n.after(b), 'solo'); });
+        body.querySelectorAll('.voce-r > div').forEach(x => { if (x.classList.contains('lt-voce')) return; const n = x.querySelector(':scope > b'), l = x.querySelector(':scope > .luogo-c'); if (!n && !l) return;      // (21/11/2026)
+          x.classList.add('lt-voce'); altoparlante(x, b => (n ? n.after(b) : l.after(b)), 'solo'); });
         body.querySelectorAll('.stat-int > p, .voce-r > p').forEach(x => { const n = x.querySelector(':scope > b:first-child'); if (n && n.nextElementSibling && n.nextElementSibling.matches('.lt-btn') || doppione(x)) return; x.classList.add('lt-bat'); altoparlante(x, b => (n ? n.after(b) : x.prepend(b)), 'solo'); });
       }
       body.querySelectorAll('.sim .carte > .carta').forEach(x => { x.classList.add('lt-unita'); altoparlante(x, b => x.prepend(b), 'fl'); });      // ogni situazione dello statuto ha il suo «Ascolta» (17/11/2026)      // riquadri da leggere per intero (Area A: il cavallo contro il bue)
@@ -6947,11 +6984,11 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
   // «Ascolta» vale per la prima domanda a cui si risponde dopo averlo premuto: rispondendo a un’altra domanda il commento non si legge più,
   // finché non si preme di nuovo «Ascolta» (richiesta della docente, 18/11/2026). Una domanda è il riquadro che raccoglie le sue risposte;
   // i pulsanti fuori da una domanda (Verifica, Avanti, Entra…) non cambiano nulla.
-  const DOMANDE = '.carta, .studente-c, .venditori, .scelte-c, .scelte-r, .opz, .mg-opz, .mg-voci, .riga, tr', DOMANDA = new WeakMap(); let tocco = null;
+  const DOMANDE = '.carta, .studente-c, .venditori, .scelte-c, .scelte-r, .opz, .mg-opz, .mg-voci, .riga', DOMANDA = new WeakMap(); let tocco = null;
   function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); DOMANDA.delete(a); RISP.set(a, scelteDi(a)); if (a.matches('.mg') || passoDi(a)) PASSO.set(a, passoDi(a)); ultimo = { el: a, padre: a.parentElement, scelte: RISP.get(a) }; }
   function attivato(el) {
     for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) { if (PASSO.has(x) && PASSO.get(x) !== passoDi(x) || altraDomanda(x)) { ASCOLTATI.delete(x); return false; }
-      const q = tocco && tocco.isConnected && x.contains(tocco) && tocco.closest(DOMANDE);
+      const q = tocco && tocco.isConnected && x.contains(tocco) && (tocco.closest('.lt-continua') || tocco.closest(DOMANDE));
       if (q && x.contains(q)) { if (!DOMANDA.has(x)) DOMANDA.set(x, q); else if (DOMANDA.get(x) !== q) { ASCOLTATI.delete(x); DOMANDA.delete(x); return false; } }
       return true; }
     // l’esercizio è stato ridisegnato (una nuova pagina della stessa attività): vale ancora, se sta dove stava il vecchio e non è una domanda nuova, con le sue risposte da scegliere
@@ -6974,7 +7011,7 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
     const fuori = nuovi.filter(l => !nuovi.some(m => m !== l && m.contains(l)));
     if (!fuori.length) return;
     if (attivo && attivo.blocco && attivo.pezzi.some(p => p.salta) && fuori.every(l => attivo.blocco.contains(l))) return;      // si stanno leggendo gli elementi da abbinare: la voce continua
-    const pezzi = fuori.flatMap(l => conBattute(l, true)); if (!pezzi.length) return;
+    const pezzi = fuori.flatMap(l => conBattute(l, true).concat(typeof l.ltDopo === 'function' ? (l.ltDopo() || []).map(t => ({ testo: t })) : [])); if (!pezzi.length) return;      // ltDopo: ciò che si legge dopo il commento (Area C, il viaggio: la seconda parte)
     parla(pezzi, null, fuori[0], 'd'); if (attivo) attivo.commento = fuori;
   }
   new MutationObserver(ms => {
@@ -7234,6 +7271,8 @@ window.TOCCO_AREA = true;
   let attivo = false;
   function attiva() {
     if (attivo) return; attivo = true; corpo.classList.add('tocco');
+    // i fumetti sulla mappa che dicono «premi SPAZIO»: sul telefono dicono di toccare il riquadro in basso (richiesta della docente, 21/11/2026)
+    try { if (typeof AVVISI !== 'undefined') AVVISI.forEach(v => (v.righe || []).forEach((r, i) => { v.righe[i] = r.replace(/premi SPAZIO\.?/, 'tocca il riquadro in basso.'); })); } catch (e) {}
     if (bis && (window.innerWidth <= 900 || window.innerHeight <= 520)) bis.open = false;      // su schermi piccoli «Con te» parte chiuso: si apre toccandolo
     misura();
   }

@@ -4008,9 +4008,13 @@ window.LETTURA_CFG = {
   /* ---------- che cosa si legge in ciascun tipo di riquadro ---------- */
   function pezziDi(blocco) {
     const q = s => [...blocco.querySelectorAll(s)];
-    if (typeof blocco.ltPezzi === 'function') return blocco.ltPezzi().map(t => ({ testo: t }));
+    if (typeof blocco.ltPezzi === 'function') { const t = blocco.ltPezzi(); if (t) return t.map(x => ({ testo: x })); }      // null: si legge come al solito
     if (blocco.matches('.battuta')) return battuta(blocco);      // l’icona accanto al nome di chi parla: la sola battuta (17/11/2026)
     if (blocco.matches('.lt-bat')) return parlante(blocco);
+    if (blocco.matches('.lt-voce')) {      // una voce di un gioco a tappe: chi parla dice la sua battuta (con la sua voce); una frase senza nome si legge con la domanda e le risposte
+      const n = blocco.querySelector(':scope > b'); if (n) n.classList.add('lt-nome');
+      const t = n ? con(voceDi(n.textContent), frasiDi(blocco, '', '.lt-nome, .luogo-c, br')) : frasiDi(blocco, '', '.luogo-c');
+      if (n) return t; const sc = blocco.closest('.carta, .scena'); return t.concat(sc ? voci([...sc.querySelectorAll('.dom-c')].filter(visibile0)).concat(voci([...sc.querySelectorAll('.scelte-c .btn:not(:disabled)')].filter(visibile0), i => `Risposta ${LETTERE[i]}:`)) : []); }
     if (blocco.matches('#intro')) return voci(q(':scope > h2, :scope > p:not(.sopra):not(.credito):not(.crediti)'));
     if (blocco.matches('.breve')) {      // con le didascalie delle immagini che si vedono nella stessa schermata
       const fig = [...document.querySelectorAll('#popBody figure.schema > figcaption')].filter(f => f.getClientRects().length && !f.closest('[hidden], .sz-nascosto'));
@@ -4152,7 +4156,7 @@ window.LETTURA_CFG = {
     if (blocco.querySelector(':scope .lt-btn[data-lt]') && [...blocco.querySelectorAll('.lt-btn[data-lt]')].some(b => b.ltBlocco === blocco)) return;
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lt-btn' + (come === 'fl' ? ' lt-fl' : '') + (come === 'solo' ? ' lt-solo' : '') + (come === 'resto' ? ' lt-r' : ''); b.dataset.lt = '1'; b.ltBlocco = blocco;
     b.innerHTML = ICONA + '<span class="lt-t">Ascolta</span>'; statoPulsante(b, false);
-    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } attiva(blocco); parla((blocco.matches('.battuta, .lt-bat') ? null : finito(blocco)) || pezziDi(blocco), b, blocco, 'd'); });
+    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); if (attivo && attivo.btn === b) { ferma(); return; } attiva(blocco); parla((blocco.matches('.battuta, .lt-bat, .lt-voce') ? null : finito(blocco)) || pezziDi(blocco), b, blocco, 'd'); });
     b.addEventListener('keydown', e => e.stopPropagation());
     dove(b);
   }
@@ -4180,6 +4184,9 @@ window.LETTURA_CFG = {
       const soloBattuta = (a, x) => { const r = document.createRange(); r.setStart(a, 0); r.setEndBefore(x); const prima = r.cloneContents();
         prima.querySelectorAll('h4, .testata, .filetto, .lt-btn, svg, img, figure, .lt-salta, .luogo-c, p.conv').forEach(e => e.remove()); return prima.textContent.trim().length < 30; };      // una riga corta come «Giornata 1 di 3», o quella dei cambi delle monete, non è un racconto
       body.querySelectorAll('section.es:not(.mg)').forEach(x => { const h = x.querySelector('h4'), n = x.querySelector('.battuta p > b:first-child');
+        // un gioco a tappe (Area C, la lettera di cambio): finché c’è la consegna, «Ascolta» sul titolo; poi l’icona accanto al luogo della tappa, che legge la tappa (21/11/2026)
+        const tp = CFG.tappe && x.querySelector('.scena > .luogo-c, .vicenda-c > .luogo-c'), dom = x.querySelector(':scope > p.dom');
+        if (tp && dom && dom.hidden) { x.querySelectorAll('h4 .lt-btn').forEach(b => { if (b.ltBlocco === x && !(attivo && attivo.btn === b)) b.remove(); }); altoparlante(x, b => tp.append(b), 'solo'); return; }
         if (CFG.battute && h && n && soloBattuta(x, n.closest('.battuta'))) altoparlante(x, b => n.after(b), 'solo');
         else if (h && !(n && n.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)) altoparlante(x, b => h.append(b), '');
         else if (n && CFG.battute && !soloBattuta(x, n.closest('.battuta'))) altoparlante(x, b => x.prepend(b), 'fl');      // un racconto prima della battuta: «Ascolta» in alto nel riquadro, la battuta ha la sua icona (18/11/2026)
@@ -4200,6 +4207,8 @@ window.LETTURA_CFG = {
         const doppione = x => { const a = x.closest('.lt-unita, section.es, .mg') || (body.querySelector('.lt-resto') ? body : null); if (!a || ![...a.querySelectorAll('.lt-btn[data-lt]')].some(b => !b.closest('.battuta, .lt-bat'))) return false;
           return soloBattuta(a, x); };
         body.querySelectorAll('.battuta').forEach(x => { const n = x.querySelector('p > b:first-child'); if (!n || n.nextElementSibling && n.nextElementSibling.matches('.lt-btn') || doppione(x)) return; altoparlante(x, b => n.after(b), 'solo'); });
+        body.querySelectorAll('.voce-r > div').forEach(x => { if (x.classList.contains('lt-voce')) return; const n = x.querySelector(':scope > b'), l = x.querySelector(':scope > .luogo-c'); if (!n && !l) return;      // (21/11/2026)
+          x.classList.add('lt-voce'); altoparlante(x, b => (n ? n.after(b) : l.after(b)), 'solo'); });
         body.querySelectorAll('.stat-int > p, .voce-r > p').forEach(x => { const n = x.querySelector(':scope > b:first-child'); if (n && n.nextElementSibling && n.nextElementSibling.matches('.lt-btn') || doppione(x)) return; x.classList.add('lt-bat'); altoparlante(x, b => (n ? n.after(b) : x.prepend(b)), 'solo'); });
       }
       body.querySelectorAll('.sim .carte > .carta').forEach(x => { x.classList.add('lt-unita'); altoparlante(x, b => x.prepend(b), 'fl'); });      // ogni situazione dello statuto ha il suo «Ascolta» (17/11/2026)      // riquadri da leggere per intero (Area A: il cavallo contro il bue)
@@ -4249,11 +4258,11 @@ window.LETTURA_CFG = {
   // «Ascolta» vale per la prima domanda a cui si risponde dopo averlo premuto: rispondendo a un’altra domanda il commento non si legge più,
   // finché non si preme di nuovo «Ascolta» (richiesta della docente, 18/11/2026). Una domanda è il riquadro che raccoglie le sue risposte;
   // i pulsanti fuori da una domanda (Verifica, Avanti, Entra…) non cambiano nulla.
-  const DOMANDE = '.carta, .studente-c, .venditori, .scelte-c, .scelte-r, .opz, .mg-opz, .mg-voci, .riga, tr', DOMANDA = new WeakMap(); let tocco = null;
+  const DOMANDE = '.carta, .studente-c, .venditori, .scelte-c, .scelte-r, .opz, .mg-opz, .mg-voci, .riga', DOMANDA = new WeakMap(); let tocco = null;
   function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); DOMANDA.delete(a); RISP.set(a, scelteDi(a)); if (a.matches('.mg') || passoDi(a)) PASSO.set(a, passoDi(a)); ultimo = { el: a, padre: a.parentElement, scelte: RISP.get(a) }; }
   function attivato(el) {
     for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) { if (PASSO.has(x) && PASSO.get(x) !== passoDi(x) || altraDomanda(x)) { ASCOLTATI.delete(x); return false; }
-      const q = tocco && tocco.isConnected && x.contains(tocco) && tocco.closest(DOMANDE);
+      const q = tocco && tocco.isConnected && x.contains(tocco) && (tocco.closest('.lt-continua') || tocco.closest(DOMANDE));
       if (q && x.contains(q)) { if (!DOMANDA.has(x)) DOMANDA.set(x, q); else if (DOMANDA.get(x) !== q) { ASCOLTATI.delete(x); DOMANDA.delete(x); return false; } }
       return true; }
     // l’esercizio è stato ridisegnato (una nuova pagina della stessa attività): vale ancora, se sta dove stava il vecchio e non è una domanda nuova, con le sue risposte da scegliere
@@ -4276,7 +4285,7 @@ window.LETTURA_CFG = {
     const fuori = nuovi.filter(l => !nuovi.some(m => m !== l && m.contains(l)));
     if (!fuori.length) return;
     if (attivo && attivo.blocco && attivo.pezzi.some(p => p.salta) && fuori.every(l => attivo.blocco.contains(l))) return;      // si stanno leggendo gli elementi da abbinare: la voce continua
-    const pezzi = fuori.flatMap(l => conBattute(l, true)); if (!pezzi.length) return;
+    const pezzi = fuori.flatMap(l => conBattute(l, true).concat(typeof l.ltDopo === 'function' ? (l.ltDopo() || []).map(t => ({ testo: t })) : [])); if (!pezzi.length) return;      // ltDopo: ciò che si legge dopo il commento (Area C, il viaggio: la seconda parte)
     parla(pezzi, null, fuori[0], 'd'); if (attivo) attivo.commento = fuori;
   }
   new MutationObserver(ms => {
@@ -4536,6 +4545,8 @@ window.TOCCO_AREA = true;
   let attivo = false;
   function attiva() {
     if (attivo) return; attivo = true; corpo.classList.add('tocco');
+    // i fumetti sulla mappa che dicono «premi SPAZIO»: sul telefono dicono di toccare il riquadro in basso (richiesta della docente, 21/11/2026)
+    try { if (typeof AVVISI !== 'undefined') AVVISI.forEach(v => (v.righe || []).forEach((r, i) => { v.righe[i] = r.replace(/premi SPAZIO\.?/, 'tocca il riquadro in basso.'); })); } catch (e) {}
     if (bis && (window.innerWidth <= 900 || window.innerHeight <= 520)) bis.open = false;      // su schermi piccoli «Con te» parte chiuso: si apre toccandolo
     misura();
   }

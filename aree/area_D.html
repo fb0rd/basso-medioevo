@@ -3845,7 +3845,7 @@ function apriSalti() {
   const az = el('div', 'scelte-c'); TAPPE_TEST.forEach(([id, t]) => { const b = el('button', 'btn scelta-c', t); b.type = 'button'; b.onclick = () => saltaA(id); az.append(b); }); box.append(az);
   finePopup(body);
 }
-window.addEventListener('keydown', e => { if (e.code === 'KeyT' && e.shiftKey && !e.repeat && !(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName))) { e.preventDefault(); if (STATO.bloccato) STATO.bloccato = null; if (STATO.modale) chiudiModale(); STATO.intro = false; $('#introVelo').hidden = true; apriSalti(); } }, true);
+// Maiusc + T (il menu «Salta a…») tolto il 21/11/2026: i giocatori non possono saltare avanti
 
 function creaEsercizio(ex, n, poi, i, onRisolto) {
   const st = STATO.poi[poi.id], box = el('section', 'es');
@@ -5166,6 +5166,67 @@ window.LETTURA_CFG = {
   }
   applica(grande, true);
   window.OPZIONI = Object.assign(window.OPZIONI || {}, { testoGrande: v => applica(v), get grande() { return grande; } });
+})();
+</script>
+<script>
+/* =====================================================================
+   L’USCITA DA UN ESERCIZIO A METÀ · identica nelle cinque aree (richiesta della docente, 21/11/2026)
+   Se il giocatore ha cominciato un esercizio (o un gioco) e lo lascia a metà premendo «Chiudi» o Esc,
+   un piccolo riquadro chiede conferma: il punteggio si registra solo a esercizio completato.
+   Non chiede nulla se il luogo era già completato quando lo si è aperto (è un ripasso facoltativo),
+   se l’esercizio era già stato svolto in passato, o se non lo si è nemmeno toccato.
+   ===================================================================== */
+(function () {
+  'use strict';
+  if (typeof STATO === 'undefined' || typeof chiudiModale !== 'function') return;
+  const corpo = () => document.getElementById('popBody');
+  const ESERCIZI = 'section.es:not(.att), .mg';
+  let gia = false, luogo = null;      // il luogo aperto, e se era già completato all’apertura
+  const completato = p => { if (!p) return false;
+    try { if (STATO.completati && STATO.completati.has && STATO.completati.has(p.id)) return true;
+      if (STATO.infoFatti && STATO.infoFatti.has && STATO.infoFatti.has(p.id)) return true;
+      const s = STATO.poi && STATO.poi[p.id]; if (s && Array.isArray(s.fatti) && s.fatti.length && s.fatti.every(Boolean)) return true; } catch (e) {}
+    return false; };
+  ['apriPoi', 'apriInfo'].forEach(n => { const f0 = window[n]; if (typeof f0 !== 'function') return;
+    window[n] = function (p) { gia = completato(p); luogo = p || null; return f0.apply(this, arguments); }; });
+  // un esercizio già svolto in passato (i suoi punti sono registrati): non serve l’avviso
+  const svolto = e => { if (e.classList.contains('risolto') || e.dataset.giaFatto) return true;
+    const p = STATO.poiAperto || luogo, s = p && STATO.poi && STATO.poi[p.id]; if (!s || !Array.isArray(s.fatti)) return false;
+    const tutti = [...corpo().querySelectorAll('section.es:not(.att)')], i = e.dataset.es != null ? +e.dataset.es : tutti.indexOf(e);
+    return i >= 0 && !!s.fatti[i]; };
+  const inSospeso = () => { const b = corpo(); if (!b || !STATO.modale || STATO.bloccato || gia) return false;
+    return [...b.querySelectorAll(ESERCIZI)].some(e => e.dataset.toccato && !svolto(e) && e.getClientRects().length); };
+  // che cosa conta come «cominciato»: un tocco, una scelta, un tasto dentro l’esercizio (non la voce che legge)
+  ['pointerdown', 'change', 'keydown'].forEach(ev => window.addEventListener(ev, e => {
+    const t = e.target, b = corpo(); if (!t || !t.closest || !b || !b.contains(t) || t.closest('.lt-btn, .lt-ang')) return;
+    const es = t.closest(ESERCIZI); if (es) es.dataset.toccato = '1'; }, true));
+  // il riquadro di conferma
+  const st = document.createElement('style');
+  st.textContent = '.usc-velo{position:fixed;inset:0;z-index:400;background:rgba(30,20,10,.55);display:flex;align-items:center;justify-content:center;padding:16px}'
+    + '.usc-box{max-width:420px;width:100%;background:var(--perg-chiara,#f7edcf);border:3px solid var(--inchiostro,#2a1b10);box-shadow:0 0 0 3px var(--oro,#c4932a),0 10px 30px rgba(0,0,0,.45);padding:16px 18px 14px;text-align:left}'
+    + '.usc-box h3{margin:0 0 6px;font-family:var(--font-titoli,serif);color:var(--minio,#a23a22);font-size:1.3rem}.usc-box p{margin:0 0 10px;line-height:1.4}'
+    + '.usc-box .usc-az{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:4px}';
+  document.head.append(st);
+  let aperto = null;
+  const resta = () => { if (!aperto) return; aperto.remove(); aperto = null; };
+  function chiedi() {
+    if (aperto) return;
+    const v = document.createElement('div'); v.className = 'usc-velo'; v.setAttribute('role', 'alertdialog'); v.setAttribute('aria-modal', 'true'); v.setAttribute('aria-labelledby', 'uscTit');
+    v.innerHTML = '<div class="usc-box"><h3 id="uscTit">Prova in sospeso!</h3><p>Se esci adesso, i progressi di questa prova andranno persi: il punteggio si salva solo quando l’esercizio è completato.</p><p><b>Vuoi uscire lo stesso?</b></p>'
+      + '<div class="usc-az"><button type="button" class="btn usc-esci">Esci comunque</button><button type="button" class="btn primario usc-resta">Resta e completa</button></div></div>';
+    v.querySelector('.usc-resta').onclick = resta;
+    v.querySelector('.usc-esci').onclick = () => { resta(); chiudiModale(); };
+    v.addEventListener('click', e => { if (e.target === v) resta(); });
+    document.body.append(v); aperto = v; setTimeout(() => v.querySelector('.usc-resta').focus(), 30);
+  }
+  // «Chiudi» in fondo alla scheda, ed Esc: prima si chiede
+  window.addEventListener('click', e => {
+    const t = e.target && e.target.closest && e.target.closest('#popBody .fine .btn'); if (!t || t.disabled || !/^\s*Chiudi/.test(t.textContent)) return;
+    if (!inSospeso()) return; e.preventDefault(); e.stopImmediatePropagation(); chiedi(); }, true);
+  window.addEventListener('keydown', e => {
+    if (aperto) { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); resta(); } else if (e.key === 'Tab') { const b = [...aperto.querySelectorAll('button')], i = b.indexOf(document.activeElement); e.preventDefault(); b[(i + (e.shiftKey ? b.length - 1 : 1)) % b.length].focus(); } return; }
+    if (e.key !== 'Escape' || !inSospeso()) return; e.preventDefault(); e.stopImmediatePropagation(); chiedi(); }, true);
+  window.USCITA = { inSospeso, chiedi };
 })();
 </script>
 <script>

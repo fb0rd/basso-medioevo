@@ -3444,7 +3444,8 @@ function giocoATappe(ex, cfg) {
       if (cfg.autoVerifica) { const es = box.closest('.es'), bV = es && es.querySelector(':scope > .azioni .btn.primario'); if (bV) setTimeout(() => { bV.click(); const ban = $('#popBody .banner'); setTimeout(() => (ban && !ban.hidden ? ban : box).scrollIntoView({ block: 'end', behavior: 'smooth' }), 80); }, 0); }
       if (cfg.firma && !firmato) {      // il gioco si chiude con il signum di Martino in fondo al registro: niente «Verifica»
         const ra = el('div', 'azioni'), bf = el('button', 'btn primario firma-libro', '✍ Apponi il tuo signum'); bf.type = 'button'; ra.append(bf); scena.append(ra);
-        bf.onclick = () => { if (firmato) return; firmato = true; bf.disabled = true;
+        setTimeout(() => bf.scrollIntoView({ block: 'center', behavior: 'smooth' }), 120);      // finito il censimento, si scorre fino al signum (21/11/2026)
+        bf.onclick = () => { if (firmato) return; firmato = true; bf.disabled = true; if (cfg.blocca && typeof sbloccaPopup === 'function') sbloccaPopup($('#popBody'));
           const fs = el('div', 'firma-reg'); fs.append(el('span', '', cfg.firma.dicitura));
           if (STATO.signum) { const im = el('img'); im.src = STATO.signum; im.alt = 'Il signum di Martino'; fs.append(im); } else fs.append(el('b', 'signum-t', '✠ signum Martini notarii'));
           // firmato: il registro si chiude, e restano solo il signum e le parole di ser Iacopo, ben in vista
@@ -3469,7 +3470,7 @@ function giocoATappe(ex, cfg) {
         if (!g) { b.disabled = true; b.classList.add('errata'); errori++; aggiorna(); return; }
         az.querySelectorAll('button').forEach(x => x.disabled = true); b.classList.add('giusta');
         if (cfg.registro) { const r = cfg.registro.riga(v, i); r.forEach((c, k) => { righe[n].children[k].innerHTML = c; }); righe[n].classList.add('fatta'); }
-        const av = el('button', 'btn avanti', n + 1 < cfg.voci.length ? 'Avanti ▸' : (cfg.ultimo || 'Fine ▸')); av.type = 'button'; av.onclick = () => { n++; mostra(); }; const ra = el('div', 'azioni'); ra.append(av); scena.append(ra); setTimeout(() => av.focus(), 0); };
+        const av = el('button', 'btn avanti', n + 1 < cfg.voci.length ? 'Avanti ▸' : (cfg.ultimo || 'Fine ▸')); av.type = 'button'; av.onclick = () => { n++; mostra(); if (n < cfg.voci.length) setTimeout(() => scena.scrollIntoView({ block: 'start', behavior: 'smooth' }), 30); }; const ra = el('div', 'azioni'); ra.append(av); scena.append(ra); setTimeout(() => av.focus(), 0); };      // dopo «Avanti» la voce successiva, in cima (21/11/2026)
       az.append(b); });
     scena.append(az, com);
   };
@@ -3487,6 +3488,7 @@ function giocoATappe(ex, cfg) {
       } else { box.querySelectorAll(':scope > .stat-int').forEach(x => x.remove());
         if (es) { es.querySelectorAll(':scope > h4, :scope > .dom').forEach(x => x.hidden = true); const h3 = es.previousElementSibling; if (h3 && h3.tagName === 'H3') h3.hidden = true; } }
       if (cfg.avvio.pulito) { conto.hidden = true; if (es) { let pr = es.previousElementSibling; while (pr && (pr.tagName === 'FIGURE' || pr.tagName === 'H3')) { pr.hidden = true; pr = pr.previousElementSibling; } } }      // durante il gioco: solo la voce, il nome, le risposte (richiesta della docente, 21/11/2026)
+      if (cfg.blocca && typeof bloccaPopup === 'function') bloccaPopup($('#popBody'), cfg.blocca.chi, cfg.blocca.frase);      // (21/11/2026)
       reg.hidden = false; if (cfg.avvio.solo) { ra.remove(); conto.hidden = scena.hidden = false; } if (cfg.avvio.pulito) { ra.remove(); scena.hidden = false; } SUONI.ui('clic'); mostra(); (es || box).scrollIntoView({ block: 'start', behavior: 'smooth' }); };
   } else mostra();
   if (cfg.firma) setTimeout(() => { const es = box.closest('.es'), bV = es && es.querySelector(':scope > .azioni .btn.primario'); if (bV) bV.hidden = true; }, 0);
@@ -3565,6 +3567,7 @@ function figuraLiber() {
 }
 COSTR.libro = ex => { const gioco = giocoATappe(ex, {
   cls: 'libro-g', malus: 2, avvio: { bottone: 'Cominciamo!', presenta: 'Si presenta al banco del censimento:' },
+  blocca: { chi: 'Ser Iacopo', frase: '«Dove vai, ragazzo? Se esci adesso il libro resta a metà: finisci di annotare i fuochi e mettici il tuo signum!»' },      // (21/11/2026)
   intest: { volto: 'serIacopo', nome: 'Ser Iacopo, notaio del Comune', testo: '«Quest’anno il <i>Liber focorum</i> lo aggiorni tu. Ti presento i capifamiglia uno alla volta: accanto al nome io scrivo la contrada, e tu annoti il ceto, la «classe sociale» a cui appartiene. Quando hai finito, in fondo alla pagina metti il tuo signum. Al Consiglio serve sapere chi può governare, chi paga il focatico, chi va aiutato.»' },
   voci: LIBRO, scelte: v => v.opz || CETI, giusta: v => v.ok, domanda: v => v.dom || 'In quale ceto lo annoti?', inRiga: true,
   commento: (v, g, i) => g ? `<b class="ok">Scritto.</b> ${v.c}` : `<b class="ko">Ser Iacopo:</b> ${v.ko ? v.ko[i] : `«${CETI[i]}? Rileggi bene che cosa ti ha detto.»`}`,
@@ -5864,7 +5867,7 @@ function apriSalti() {
   const az = el('div', 'scelte-c'); TAPPE_TEST.forEach(([id, t]) => { const b = el('button', 'btn scelta-c', t); b.type = 'button'; b.onclick = () => saltaA(id); az.append(b); }); box.append(az);
   finePopup(body);
 }
-window.addEventListener('keydown', e => { if (e.code === 'KeyT' && e.shiftKey && !e.repeat && !(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName))) { e.preventDefault(); e.stopImmediatePropagation(); if (STATO.bloccato) STATO.bloccato = null; if (STATO.modale) chiudiModale(); STATO.intro = false; $('#introVelo').hidden = true; apriSalti(); } }, true);
+// Maiusc + T (il menu «Salta a…») tolto il 21/11/2026: i giocatori non possono saltare avanti (richiesta della docente)
 
 /* lo stemma della città, nell’introduzione e nella barra in alto */
 { const im = $('#introStemma'); if (im) im.src = stemmaComunePixel(true); const h = $('#hudStemma'); if (h) h.src = stemmaComunePixel(false); }
@@ -7184,6 +7187,67 @@ window.PONTE_AREA = {"titolo": "Il Comune: consoli, podestà e popolo", "prossim
   }
   applica(grande, true);
   window.OPZIONI = Object.assign(window.OPZIONI || {}, { testoGrande: v => applica(v), get grande() { return grande; } });
+})();
+</script>
+<script>
+/* =====================================================================
+   L’USCITA DA UN ESERCIZIO A METÀ · identica nelle cinque aree (richiesta della docente, 21/11/2026)
+   Se il giocatore ha cominciato un esercizio (o un gioco) e lo lascia a metà premendo «Chiudi» o Esc,
+   un piccolo riquadro chiede conferma: il punteggio si registra solo a esercizio completato.
+   Non chiede nulla se il luogo era già completato quando lo si è aperto (è un ripasso facoltativo),
+   se l’esercizio era già stato svolto in passato, o se non lo si è nemmeno toccato.
+   ===================================================================== */
+(function () {
+  'use strict';
+  if (typeof STATO === 'undefined' || typeof chiudiModale !== 'function') return;
+  const corpo = () => document.getElementById('popBody');
+  const ESERCIZI = 'section.es:not(.att), .mg';
+  let gia = false, luogo = null;      // il luogo aperto, e se era già completato all’apertura
+  const completato = p => { if (!p) return false;
+    try { if (STATO.completati && STATO.completati.has && STATO.completati.has(p.id)) return true;
+      if (STATO.infoFatti && STATO.infoFatti.has && STATO.infoFatti.has(p.id)) return true;
+      const s = STATO.poi && STATO.poi[p.id]; if (s && Array.isArray(s.fatti) && s.fatti.length && s.fatti.every(Boolean)) return true; } catch (e) {}
+    return false; };
+  ['apriPoi', 'apriInfo'].forEach(n => { const f0 = window[n]; if (typeof f0 !== 'function') return;
+    window[n] = function (p) { gia = completato(p); luogo = p || null; return f0.apply(this, arguments); }; });
+  // un esercizio già svolto in passato (i suoi punti sono registrati): non serve l’avviso
+  const svolto = e => { if (e.classList.contains('risolto') || e.dataset.giaFatto) return true;
+    const p = STATO.poiAperto || luogo, s = p && STATO.poi && STATO.poi[p.id]; if (!s || !Array.isArray(s.fatti)) return false;
+    const tutti = [...corpo().querySelectorAll('section.es:not(.att)')], i = e.dataset.es != null ? +e.dataset.es : tutti.indexOf(e);
+    return i >= 0 && !!s.fatti[i]; };
+  const inSospeso = () => { const b = corpo(); if (!b || !STATO.modale || STATO.bloccato || gia) return false;
+    return [...b.querySelectorAll(ESERCIZI)].some(e => e.dataset.toccato && !svolto(e) && e.getClientRects().length); };
+  // che cosa conta come «cominciato»: un tocco, una scelta, un tasto dentro l’esercizio (non la voce che legge)
+  ['pointerdown', 'change', 'keydown'].forEach(ev => window.addEventListener(ev, e => {
+    const t = e.target, b = corpo(); if (!t || !t.closest || !b || !b.contains(t) || t.closest('.lt-btn, .lt-ang')) return;
+    const es = t.closest(ESERCIZI); if (es) es.dataset.toccato = '1'; }, true));
+  // il riquadro di conferma
+  const st = document.createElement('style');
+  st.textContent = '.usc-velo{position:fixed;inset:0;z-index:400;background:rgba(30,20,10,.55);display:flex;align-items:center;justify-content:center;padding:16px}'
+    + '.usc-box{max-width:420px;width:100%;background:var(--perg-chiara,#f7edcf);border:3px solid var(--inchiostro,#2a1b10);box-shadow:0 0 0 3px var(--oro,#c4932a),0 10px 30px rgba(0,0,0,.45);padding:16px 18px 14px;text-align:left}'
+    + '.usc-box h3{margin:0 0 6px;font-family:var(--font-titoli,serif);color:var(--minio,#a23a22);font-size:1.3rem}.usc-box p{margin:0 0 10px;line-height:1.4}'
+    + '.usc-box .usc-az{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:4px}';
+  document.head.append(st);
+  let aperto = null;
+  const resta = () => { if (!aperto) return; aperto.remove(); aperto = null; };
+  function chiedi() {
+    if (aperto) return;
+    const v = document.createElement('div'); v.className = 'usc-velo'; v.setAttribute('role', 'alertdialog'); v.setAttribute('aria-modal', 'true'); v.setAttribute('aria-labelledby', 'uscTit');
+    v.innerHTML = '<div class="usc-box"><h3 id="uscTit">Prova in sospeso!</h3><p>Se esci adesso, i progressi di questa prova andranno persi: il punteggio si salva solo quando l’esercizio è completato.</p><p><b>Vuoi uscire lo stesso?</b></p>'
+      + '<div class="usc-az"><button type="button" class="btn usc-esci">Esci comunque</button><button type="button" class="btn primario usc-resta">Resta e completa</button></div></div>';
+    v.querySelector('.usc-resta').onclick = resta;
+    v.querySelector('.usc-esci').onclick = () => { resta(); chiudiModale(); };
+    v.addEventListener('click', e => { if (e.target === v) resta(); });
+    document.body.append(v); aperto = v; setTimeout(() => v.querySelector('.usc-resta').focus(), 30);
+  }
+  // «Chiudi» in fondo alla scheda, ed Esc: prima si chiede
+  window.addEventListener('click', e => {
+    const t = e.target && e.target.closest && e.target.closest('#popBody .fine .btn'); if (!t || t.disabled || !/^\s*Chiudi/.test(t.textContent)) return;
+    if (!inSospeso()) return; e.preventDefault(); e.stopImmediatePropagation(); chiedi(); }, true);
+  window.addEventListener('keydown', e => {
+    if (aperto) { if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); resta(); } else if (e.key === 'Tab') { const b = [...aperto.querySelectorAll('button')], i = b.indexOf(document.activeElement); e.preventDefault(); b[(i + (e.shiftKey ? b.length - 1 : 1)) % b.length].focus(); } return; }
+    if (e.key !== 'Escape' || !inSospeso()) return; e.preventDefault(); e.stopImmediatePropagation(); chiedi(); }, true);
+  window.USCITA = { inSospeso, chiedi };
 })();
 </script>
 <script>

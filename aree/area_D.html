@@ -5209,7 +5209,7 @@ window.LETTURA_CFG = {
     const tutti = [...corpo().querySelectorAll('section.es:not(.att)')], i = e.dataset.es != null ? +e.dataset.es : tutti.indexOf(e);
     return i >= 0 && !!s.fatti[i]; };
   const inSospeso = () => { const b = corpo(); if (!b || !STATO.modale || STATO.bloccato || gia) return false;
-    return [...b.querySelectorAll(ESERCIZI)].some(e => e.dataset.toccato && !svolto(e) && e.getClientRects().length); };
+    return [...b.querySelectorAll(ESERCIZI)].some(e => e.dataset.toccato && !svolto(e)); };      // anche se l’esercizio cominciato sta su un’altra pagina del luogo (21/11/2026)
   // che cosa conta come «cominciato»: un tocco, una scelta, un tasto dentro l’esercizio (non la voce che legge)
   ['pointerdown', 'change', 'keydown'].forEach(ev => window.addEventListener(ev, e => {
     const t = e.target, b = corpo(); if (!t || !t.closest || !b || !b.contains(t) || t.closest('.lt-btn, .lt-ang')) return;

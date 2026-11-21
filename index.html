@@ -65,6 +65,8 @@ h1{font-family:var(--font-titoli);font-weight:400;font-size:2.5rem;line-height:1
 .uova{display:flex;gap:6px;align-items:center;font-size:.95rem;color:var(--terra)}
 .uova i{display:inline-block;width:13px;height:16px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;border:1.5px solid var(--inchiostro);background:var(--perg)}
 .uova i.trovato{background:var(--oro);box-shadow:0 0 6px 1px rgba(196,147,42,.7)}
+/* l’ovetto d’oro accanto al nome dell’area in cui si è trovato l’easter egg (21/11/2026) */
+.lettera .uovo-a{display:inline-block;width:11px;height:14px;margin-left:7px;vertical-align:-1px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;border:1.5px solid var(--inchiostro);background:var(--oro);box-shadow:0 0 6px 1px rgba(196,147,42,.7)}
 .premio.extra{margin-top:10px;padding:8px 12px}
 .premio.extra .pix{width:68px;height:68px}
 .premio.extra h3{font-size:1.2rem}
@@ -302,7 +304,9 @@ function disegnaMenu() {
     const s = PARTITA.aree[a.id], viva = VIVA && VIVA.id === a.id, card = el('section', 'area' + (cons && cons.id === a.id ? ' consigliata' : ''));
     card.dataset.area = a.id;
     if (cons && cons.id === a.id) card.append(el('span', 'consiglio', completate().length ? 'Prossima tappa' : 'Comincia da qui'));
-    card.append(imgIcona(a.id, ''), el('div', 'lettera', 'Area ' + a.id), el('h2', '', a.titolo), el('div', 'tema', a.tema));
+    const let_ = el('div', 'lettera', 'Area ' + a.id);
+    if (PARTITA.uova.includes(a.id)) { const o = el('i', 'uovo-a'); o.setAttribute('role', 'img'); o.setAttribute('aria-label', 'easter egg trovato'); o.title = 'Easter egg trovato in quest’area'; let_.append(o); }      // l’ovetto d’oro (21/11/2026)
+    card.append(imgIcona(a.id, ''), let_, el('h2', '', a.titolo), el('div', 'tema', a.tema));
     card.append(el('div', 'stato ' + s.stato, ETICHETTE_STATO[s.stato]));
     card.append(el('div', 'punti', s.stato === 'completata' ? `${s.punti} / ${s.max} punti` : ''));
     const b = el('button', 'btn' + (cons && cons.id === a.id ? ' primario' : ''), viva ? 'Riprendi' : s.stato === 'completata' ? 'Rigioca' : 'Entra'); b.type = 'button';
@@ -312,7 +316,7 @@ function disegnaMenu() {
   const n = completate().length;
   $('#totale').innerHTML = `Punteggio generale: <b>${puntiTotali()}</b> / ${maxTotale()} <small>· aree completate: ${n} su ${AREE.length}</small>`;
   $('#tutte').hidden = n < AREE.length;
-  // gli easter egg: quanti, non dove
+  // gli easter egg: quanti (e, sulle schede delle aree, l’ovetto d’oro dove sono stati trovati)
   const u = uovaTrovate(); $('#uova').innerHTML = `<span>Easter egg trovati: <b>${u}</b> / ${AREE.length}</span>` + AREE.map((a, i) => `<i class="${i < u ? 'trovato' : ''}"></i>`).join('');
 }
 

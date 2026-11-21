@@ -3501,6 +3501,9 @@ window.LETTURA_CFG = {
   /* ---------- la lettura: un pezzo dopo l’altro; la frase in corso si colora, la musica si abbassa ---------- */
   const HL = !!(window.CSS && CSS.highlights && typeof Highlight !== 'undefined');
   let attivo = null, acceso = true;
+  // nelle aree (dove c’è la barra con «Voce: sì / no») la voce parte spenta: niente pulsanti «Ascolta» finché non si sceglie «Voce: sì» dalle opzioni;
+  // nel menu resta accesa (richiesta della docente, 21/11/2026). VOCE_ACCESA: solo per le prove automatiche
+  const inArea = CFG.barra !== false && !!document.getElementById('btnMusica'); if (inArea && window.VOCE_ACCESA !== true) acceso = false;
   // la velocità: «normale» è un poco più svelta della voce di base; dal menu si sceglie anche «più rapida» o «più lenta»
   const VEL = { normale: 1.1, rapida: 1.3, lenta: .9 }; let VELOCITA = VEL.normale;
   const NOMI_VEL = { normale: 'Velocità: normale', rapida: 'Velocità: più rapida', lenta: 'Velocità: più lenta' }; let nomeVel = 'normale';
@@ -3570,8 +3573,8 @@ window.LETTURA_CFG = {
 
   /* ---------- dove si mettono gli altoparlanti ---------- */
   let luogo = null;      // l’id del luogo o del nastro aperto (gli altoparlanti compaiono solo nei luoghi della prova)
-  ['apriPoi', 'apriInfo'].forEach(nome => { const f0 = window[nome]; if (typeof f0 !== 'function') return; window[nome] = function (p) { ferma(); ultimo = null; luogo = p && p.id; return f0.apply(this, arguments); }; });
-  if (typeof window.chiudiModale === 'function') { const c0 = window.chiudiModale; window.chiudiModale = function () { ferma(); ultimo = null; luogo = null; return c0.apply(this, arguments); }; }
+  ['apriPoi', 'apriInfo'].forEach(nome => { const f0 = window[nome]; if (typeof f0 !== 'function') return; window[nome] = function (p) { ferma(); nuovaFinestra(); luogo = p && p.id; const r = f0.apply(this, arguments); nuovaFinestra(); return r; }; });
+  if (typeof window.chiudiModale === 'function') { const c0 = window.chiudiModale; window.chiudiModale = function () { ferma(); nuovaFinestra(); luogo = null; const r = c0.apply(this, arguments); nuovaFinestra(); return r; }; }
   function decora() {
     const body = document.getElementById('popBody');
     // altri testi indicati per nome (nel menu: la descrizione del gioco): CFG.blocchi = [{ sel, anche: [selettori letti prima] }]
@@ -3631,7 +3634,15 @@ window.LETTURA_CFG = {
      Se in un esercizio o in un gioco si è premuto «Ascolta», dopo ogni risposta la voce smette di leggere e legge da sé il commento
      («Giusto!…», «Non proprio…», la battuta di un personaggio, la conseguenza nel racconto). Il commento è il testo che compare nei riquadri
      «aria-live» o «status» dell’esercizio, quelli che il gioco aggiorna a ogni risposta. Passando alla domanda dopo, il commento vecchio si zittisce. */
-  const ASCOLTATI = new WeakSet(); let ultimo = null, gesto = 0;
+  const ASCOLTATI = new WeakMap(); let ultimo = null, gesto = 0;      // l’elemento ascoltato → la «finestra» (EPOCA) in cui lo si è ascoltato
+  // Una finestra nuova (un altro popup, un’altra pagina o sezione dello stesso luogo, la finestra chiusa e riaperta) azzera tutto: la lettura automatica
+  // non passa MAI da una finestra all’altra, finché non si preme di nuovo «Ascolta» (richiesta della docente, 21/11/2026).
+  // La finestra si riconosce dal suo titolo (#popTitolo: l’elemento e il testo) e dall’essere aperta o chiusa. Fuori dai popup (#popBody) niente lettura automatica.
+  let EPOCA = 0, firmaEp = null, titoloEp = null;
+  function epoca() { let m = false; try { m = typeof STATO !== 'undefined' && !!STATO.modale; } catch (e) {}
+    const t = document.getElementById('popTitolo'), f = (m ? '1|' : '0|') + (t ? t.textContent : '');
+    if (f !== firmaEp || t !== titoloEp) { firmaEp = f; titoloEp = t; EPOCA++; ultimo = null; } return EPOCA; }
+  const nuovaFinestra = () => { epoca(); EPOCA++; ultimo = null; };
   const ambito = el => (el.matches('.lt-resto') ? document.getElementById('popBody') : el.closest('.lt-unita, section.es, .mg') || el);      // .lt-unita: una parte che si ascolta da sola (le situazioni dello statuto, Area D)
   // un esercizio (o una sua parte) è finito se è «risolto», oppure se c’è un commento e non resta nulla da scegliere: allora «Ascolta» legge soltanto il commento
   const SCELTE = 'input:not(:disabled):not([type="hidden"]), select:not(:disabled), .opz label, .mg-opz .btn:not(:disabled), .scelte-c .btn:not(:disabled), .mg-voci .btn:not(:disabled)';
@@ -3666,14 +3677,16 @@ window.LETTURA_CFG = {
   // finché non si preme di nuovo «Ascolta» (richiesta della docente, 18/11/2026). Una domanda è il riquadro che raccoglie le sue risposte;
   // i pulsanti fuori da una domanda (Verifica, Avanti, Entra…) non cambiano nulla.
   const DOMANDE = '.carta, .studente-c, .venditori, .scelte-c, .scelte-r, .opz, .mg-opz, .mg-voci, .riga', DOMANDA = new WeakMap(); let tocco = null;
-  function attiva(blocco) { const a = ambito(blocco); if (!a) return; ASCOLTATI.add(a); DOMANDA.delete(a); RISP.set(a, scelteDi(a)); if (a.matches('.mg') || passoDi(a)) PASSO.set(a, passoDi(a)); ultimo = { el: a, padre: a.parentElement, scelte: RISP.get(a) }; }
+  function attiva(blocco) { const a = ambito(blocco), pb = document.getElementById('popBody'); if (!a || !pb || !pb.contains(a)) return; ASCOLTATI.set(a, epoca()); DOMANDA.delete(a); RISP.set(a, scelteDi(a)); if (a.matches('.mg') || passoDi(a)) PASSO.set(a, passoDi(a)); ultimo = { el: a, padre: a.parentElement, scelte: RISP.get(a), ep: EPOCA }; }
   function attivato(el) {
-    for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) { if (PASSO.has(x) && PASSO.get(x) !== passoDi(x) || altraDomanda(x)) { ASCOLTATI.delete(x); return false; }
+    const ep = epoca();
+    for (let x = el; x; x = x.parentElement) if (ASCOLTATI.has(x)) { if (ASCOLTATI.get(x) !== ep) { ASCOLTATI.delete(x); continue; }      // ascoltato in un’altra finestra: non vale più
+      if (PASSO.has(x) && PASSO.get(x) !== passoDi(x) || altraDomanda(x)) { ASCOLTATI.delete(x); return false; }
       const q = tocco && tocco.isConnected && x.contains(tocco) && (tocco.closest('.lt-continua') || tocco.closest(DOMANDE));
       if (q && x.contains(q)) { if (!DOMANDA.has(x)) DOMANDA.set(x, q); else if (DOMANDA.get(x) !== q) { ASCOLTATI.delete(x); DOMANDA.delete(x); return false; } }
       return true; }
     // l’esercizio è stato ridisegnato (una nuova pagina della stessa attività): vale ancora, se sta dove stava il vecchio e non è una domanda nuova, con le sue risposte da scegliere
-    if (ultimo && !ultimo.el.isConnected && ultimo.padre && ultimo.padre.isConnected && ultimo.padre.contains(el)) { const n = el.closest('section.es, .mg');
+    if (ultimo && ultimo.ep === ep && !ultimo.el.isConnected && ultimo.padre && ultimo.padre.isConnected && ultimo.padre.contains(el)) { const n = el.closest('section.es, .mg');
       if (n && ultimo.scelte && ultimo.scelte.length && scelteDi(n).length) return false;
       attiva(n || ultimo.padre); return true; }
     return false;
@@ -3745,6 +3758,7 @@ window.LETTURA_CFG = {
   }
   let cartTiene = 0;
   setInterval(() => {
+    epoca();
     if (attivo && attivo.blocco && !visibile(attivo.blocco)) ferma();
     else if (attivo && attivo.i > 0 && !attivo.pezzi[attivo.i - 1].salta && !sulloSchermo(attivo.pezzi[attivo.i - 1])) ferma();      // la frase che si sta leggendo è sparita dallo schermo
     else if (attivo && attivo.commento && !attivo.commento.some(l => l.isConnected && l.textContent.trim())) ferma();      // si è passati alla domanda dopo
@@ -3765,9 +3779,9 @@ window.LETTURA_CFG = {
   window.addEventListener('pagehide', ferma);
 
   /* ---------- «Voce: sì / no» nella barra in alto, accanto a «Musica» ---------- */
-  corpo.classList.add('lt-acceso');
+  corpo.classList.toggle('lt-acceso', acceso);
   const bm = CFG.barra === false ? null : document.getElementById('btnMusica');      // nel menu niente «Voce: sì / no»
-  if (bm) { const bv = document.createElement('button'); bv.type = 'button'; bv.className = 'btn piccolo'; bv.id = 'btnVoce'; bv.textContent = 'Voce: sì'; bv.setAttribute('aria-pressed', 'true');
+  if (bm) { const bv = document.createElement('button'); bv.type = 'button'; bv.className = 'btn piccolo'; bv.id = 'btnVoce'; bv.textContent = acceso ? 'Voce: sì' : 'Voce: no'; bv.setAttribute('aria-pressed', acceso ? 'true' : 'false');
     bv.onclick = () => { acceso = !acceso; corpo.classList.toggle('lt-acceso', acceso); bv.textContent = acceso ? 'Voce: sì' : 'Voce: no'; bv.setAttribute('aria-pressed', acceso ? 'true' : 'false'); if (!acceso) ferma(); bv.blur(); };
     const bvel = document.createElement('button'); bvel.type = 'button'; bvel.className = 'btn piccolo'; bvel.id = 'btnVelVoce'; bvel.title = 'Velocità della lettura ad alta voce';
     bvel.onclick = () => { const ord = ['normale', 'rapida', 'lenta']; nomeVel = ord[(ord.indexOf(nomeVel) + 1) % ord.length]; VELOCITA = VEL[nomeVel]; segnaVel(); bvel.blur();

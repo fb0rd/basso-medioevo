@@ -598,7 +598,7 @@ function apriDocente() {
 window.addEventListener('keydown', e => {
   if (TITOLI.fase !== 'spenti') return;
   if (e.code === 'Escape' && !$('#velo').hidden) { e.preventDefault(); chiudiVelo(); return; }
-  if (e.code === 'KeyT' && e.shiftKey && !e.repeat && !$('#menu').hidden && !sipario.su && !(e.target && /INPUT|SELECT|TEXTAREA/.test(e.target.tagName))) { e.preventDefault(); apriDocente(); }
+  // Maiusc + T (lo strumento della docente) tolto il 21/11/2026: nessuno può più impostare i punteggi dalla tastiera
 });
 
 /* =====================================================================

@@ -84,7 +84,7 @@ h1{font-family:var(--font-titoli);font-weight:400;font-size:2.5rem;line-height:1
 #sipario .filetto{width:min(360px,70vw);margin:16px auto 0}
 #sipario .voce{margin:22px auto 0;max-width:30em;font-style:italic;font-size:1.05rem;color:#d9c18a;line-height:1.4}
 /* l’avviso della voce in due frasi, una dopo l’altra nello stesso posto: il titolo resta fermo (21/11/2026) */
-#sipario .voce{display:grid}#sipario .voce[hidden]{display:none}#sipario .voce>p{grid-area:1/1;margin:0;opacity:0;transition:opacity .45s}#sipario .voce.f1 .v1,#sipario .voce.f2 .v2{opacity:1}
+#sipario .voce{display:grid}#sipario .voce[hidden]{display:none}#sipario .voce>p{grid-area:1/1;margin:0;opacity:0;transition:opacity .9s ease-in-out}#sipario .voce.f1 .v1,#sipario .voce.f2 .v2{opacity:1}
 #sipario .voce .icona{display:inline-grid;place-items:center;width:1.7em;height:1.7em;border:1.5px solid #d9c18a;border-radius:50%;vertical-align:-.45em;margin:0 .2em;font-style:normal}#sipario .voce svg{width:1.05em;height:1.05em}
 
 /* i titoli di testa */
@@ -450,8 +450,8 @@ function apriArea(id, daPassaggio) {
   if (VIVA && VIVA.id !== id) manda('chiudi');      // l’area che lascia il posto chiude i suoi suoni (il telefono regge pochi contesti audio)
   alzaSipario('Area ' + id, a.titolo, daPassaggio && id === 'E' ? 'Vent’anni dopo…' : '', !!daPassaggio); volumeMusica(0, 900);
   const voce = LETTURA_AREE.includes(id), sv = $('#sipVoce'); sv.hidden = !voce;
-  clearTimeout(sv.giro); sv.className = 'voce f1'; if (voce) sv.giro = setTimeout(() => { sv.className = 'voce f2'; }, 2000);      // 2 s l’icona, poi 2,3 s come accendere la voce (21/11/2026)      // l’avviso della lettura ad alta voce, nelle aree che l’hanno
-  const attesa = voce ? 4300 : daPassaggio ? 2600 : 1500, t0 = Date.now();      // con l’avviso della voce, il tempo di leggerlo (anche come accenderla, 21/11/2026)
+  clearTimeout(sv.giro); sv.className = 'voce f1'; if (voce) sv.giro = setTimeout(() => { sv.className = 'voce f2'; }, 3600);      // 3,6 s l’icona, poi 4 s come accendere la voce (21/11/2026)      // l’avviso della lettura ad alta voce, nelle aree che l’hanno
+  const attesa = voce ? 7600 : daPassaggio ? 2600 : 1500, t0 = Date.now();      // con l’avviso della voce, il tempo di leggerlo (anche come accenderla, 21/11/2026)
   setTimeout(() => {
     fermaBrano(300); $('#cornice').innerHTML = ''; const f = document.createElement('iframe'); f.title = `Area ${id}: ${a.titolo}`; f.setAttribute('allow', 'autoplay');
     VIVA = { id, iframe: f, pronta: false, iniziata: false, completata: false };

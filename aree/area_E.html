@@ -5501,7 +5501,7 @@ function votazioneArte() {
     cap.innerHTML = `Mani alzate per Martino di Bruno: <b>${Math.min(k, tot)}</b> su ${N.length}` + (k >= tot ? ' · <b>Eletto!</b>' : '');
   };
   fig.append(cv, cap); disegna(0);
-  let k = 0; const passo = () => { if (!cv.isConnected) return; k++; disegna(k); if (k < tot) setTimeout(passo, 380); else SUONI.ui('giusto'); }; setTimeout(passo, 900);
+  let k = 0; const passo = () => { if (!cv.isConnected) return; k++; disegna(k); if (k < tot) setTimeout(passo, 380); else SUONI.ui('giusto'); }; setTimeout(passo, 5000);      // le mani cominciano ad alzarsi dopo 5 secondi, il tempo di leggere (richiesta della docente, 21/11/2026)
   return fig;
 }
 /* la persuasione: chi ascolta perde la pazienza a ogni parola sbagliata; persa tutta, Martino viene accompagnato alla porta e deve ricominciare */
